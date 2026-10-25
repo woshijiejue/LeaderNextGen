@@ -1,18 +1,21 @@
 package cn.leader.util.player;
 
-import net.minecraft.block.*;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.FoodComponent;
-import net.minecraft.component.type.PotionContentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.item.*;
-import net.minecraft.item.equipment.EquipmentType;
-import net.minecraft.registry.RegistryKey;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.equipment.EquipmentType;
+import net.minecraft.resources.ResourceKey;
 
 import java.util.Arrays;
 import java.util.List;
@@ -131,12 +134,12 @@ public class ItemUtils {
         if (stack.getItem() == Items.TNT) return true;
 
         if (stack.getItem() instanceof PotionItem) {
-            PotionContentsComponent potionContents = stack.getOrDefault(DataComponentTypes.POTION_CONTENTS, PotionContentsComponent.DEFAULT);
+            PotionContents potionContents = stack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.DEFAULT);
 
-            Iterable<StatusEffectInstance> potion = potionContents.getEffects();
+            Iterable<MobEffectInstance> potion = potionContents.getEffects();
 
-            for (StatusEffectInstance effectInstance : potion) {
-                StatusEffect effect = effectInstance.getEffectType().value();
+            for (MobEffectInstance effectInstance : potion) {
+                MobEffect effect = effectInstance.getEffectType().value();
                 if (effect.getName().getString().contains("jump_boost")) {
                     return true;
                 }
@@ -184,7 +187,7 @@ public class ItemUtils {
         return !(block instanceof FluidBlock)
                 && !(block instanceof AirBlock)
                 && !(block instanceof LadderBlock)
-                && !(block instanceof CobwebBlock)
+                && !(block instanceof WebBlock)
                 && !(block instanceof TntBlock)
                 && !(block instanceof PlantBlock)
                 && !(block instanceof FlowerPotBlock)
@@ -241,10 +244,10 @@ public class ItemUtils {
             return false;
         }
 
-        return stack.getComponents().get(DataComponentTypes.FOOD) != null;
+        return stack.getComponents().get(DataComponents.FOOD) != null;
     }
 
-    public static int getEnchantLevel(ItemStack stack, RegistryKey<Enchantment> key) {
+    public static int getEnchantLevel(ItemStack stack, ResourceKey<Enchantment> key) {
         if (stack.isEmpty() || mc.world == null) {
             return 0;
         }
@@ -257,14 +260,14 @@ public class ItemUtils {
             return null;
         }
 
-        var comp = stack.getComponents().get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+        var comp = stack.getComponents().get(DataComponents.ATTRIBUTE_MODIFIERS);
 
         if (comp == null) {
             return null;
         }
 
         for (var entry : comp.modifiers()) {
-            if (entry.attribute().matchesKey(EntityAttributes.ARMOR.getKey().orElseThrow()) || entry.attribute().matchesKey(EntityAttributes.ARMOR_TOUGHNESS.getKey().orElseThrow())) {
+            if (entry.attribute().matchesKey(Attributes.ARMOR.getKey().orElseThrow()) || entry.attribute().matchesKey(Attributes.ARMOR_TOUGHNESS.getKey().orElseThrow())) {
                 return switch (entry.slot()) {
                     case HEAD -> EquipmentType.HELMET;
                     case CHEST -> EquipmentType.CHESTPLATE;
@@ -282,7 +285,7 @@ public class ItemUtils {
         return isFood(stack) || stack.isOf(Items.POTION) || stack.isOf(Items.MILK_BUCKET);
     }
 
-    public static FoodComponent getFoodComponent(ItemStack stack) {
-        return stack.get(DataComponentTypes.FOOD);
+    public static FoodProperties getFoodComponent(ItemStack stack) {
+        return stack.get(DataComponents.FOOD);
     }
 }

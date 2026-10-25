@@ -5,8 +5,8 @@ import cn.leader.module.value.impl.BoolValue;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.entity.LivingEntity;
 
 import java.awt.*;
 
@@ -30,7 +30,7 @@ public final class TargetHUD extends Drag {
     }
 
     @Override
-    public void render(DrawContext context) {
+    public void render(GuiGraphics context) {
         if (mc.player == null || mc.world == null || mc.textRenderer == null) {
             this.width = 0;
             this.height = 0;

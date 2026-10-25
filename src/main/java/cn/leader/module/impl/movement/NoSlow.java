@@ -15,18 +15,18 @@ import cn.leader.util.network.PacketUtil;
 import cn.leader.util.player.EntityUtil;
 import cn.leader.util.player.ItemUtils;
 import lombok.Getter;
-import net.minecraft.item.SwordItem;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket;
-import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket;
-import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.status.ServerboundPingRequestPacket;
+import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket;
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 import static cn.leader.util.network.BlinkUtils.*;
 
@@ -69,7 +69,7 @@ public class NoSlow extends Module {
                     BlinkUtils.startBlink();
                     noSlowBlinked = true;
                     PacketUtil.sendPacket(
-                            new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                            new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
                                     BlockPos.ORIGIN, Direction.DOWN));
                     serverBlocking = false;
                     shouldSetState = true;
@@ -88,7 +88,7 @@ public class NoSlow extends Module {
             }
             if (serverBlocking) {
                 PacketUtil.sendPacket(
-                        new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                        new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
                                 BlockPos.ORIGIN, Direction.DOWN));
                 serverBlocking = false;
             }

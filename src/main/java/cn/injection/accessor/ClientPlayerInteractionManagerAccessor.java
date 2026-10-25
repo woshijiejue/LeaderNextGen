@@ -1,17 +1,17 @@
 package cn.injection.accessor;
 
-import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.network.SequencedPacketCreator;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.multiplayer.ClientLevel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(ClientPlayerInteractionManager.class)
+@Mixin(MultiPlayerGameMode.class)
 public interface ClientPlayerInteractionManagerAccessor {
 
     @Invoker
-    void callSendSequencedPacket(final ClientWorld world, final SequencedPacketCreator packetCreator);
+    void callSendSequencedPacket(final ClientLevel world, final SequencedPacketCreator packetCreator);
 
     @Invoker
     void callSyncSelectedSlot();

@@ -8,8 +8,8 @@ import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.ColorUtil;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.ChatFormatting;
 
 import java.awt.*;
 import java.util.Comparator;
@@ -34,7 +34,7 @@ public final class ModuleList extends Drag {
     }
 
     @Override
-    public void render(DrawContext context) {
+    public void render(GuiGraphics context) {
         if (mc.textRenderer == null) return;
 
         final HUD hud = getModule(HUD.class);
@@ -74,7 +74,7 @@ public final class ModuleList extends Drag {
                     RenderUtil.drawRect(context, x - 2, offsetY, textWidth + 4, FontUtil.getHeight(), ColorUtil.applyAlpha(new Color(0, 0, 0, 120), alpha).getRGB());
                 }
 
-                FontUtil.drawStringWithShadow(context, moduleName + Formatting.GRAY + suffixName, x, offsetY, ColorUtil.applyAlpha(hud.getColor(index++), alpha));
+                FontUtil.drawStringWithShadow(context, moduleName + ChatFormatting.GRAY + suffixName, x, offsetY, ColorUtil.applyAlpha(hud.getColor(index++), alpha));
                 offsetY += FontUtil.getHeight() * alpha;
             }
         }

@@ -2,12 +2,12 @@ package cn.leader.util.player;
 
 import cn.leader.util.IMinecraft;
 import lombok.experimental.UtilityClass;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.ClipContext;
 
 import java.util.Random;
 
@@ -41,23 +41,23 @@ public class AimUtil implements IMinecraft {
      * Closest point of the hitbox to the eyes, pulled slightly inside the box so that a ray
      * aimed at it always intersects the real box (instead of grazing the boundary).
      */
-    public Vec3d aimPoint(LivingEntity entity) {
-        Box box = entity.getBoundingBox().shrink(SURFACE_INSET, SURFACE_INSET, SURFACE_INSET);
+    public Vec3 aimPoint(LivingEntity entity) {
+        AABB box = entity.getBoundingBox().shrink(SURFACE_INSET, SURFACE_INSET, SURFACE_INSET);
 
         if (mc.player == null) {
             return box.getCenter();
         }
 
-        Vec3d eye = mc.player.getEyePos();
-        return new Vec3d(
-                MathHelper.clamp(eye.x, box.minX, box.maxX),
-                MathHelper.clamp(eye.y, box.minY, box.maxY),
-                MathHelper.clamp(eye.z, box.minZ, box.maxZ)
+        Vec3 eye = mc.player.getEyePos();
+        return new Vec3(
+                Mth.clamp(eye.x, box.minX, box.maxX),
+                Mth.clamp(eye.y, box.minY, box.maxY),
+                Mth.clamp(eye.z, box.minZ, box.maxZ)
         );
     }
 
     /** Yaw/pitch pair that points at the given world position. */
-    public float[] rotationTo(Vec3d point) {
+    public float[] rotationTo(Vec3 point) {
         return RotationUtil.getRotations(point);
     }
 
@@ -65,12 +65,12 @@ public class AimUtil implements IMinecraft {
     public double distanceToBox(LivingEntity entity) {
         if (mc.player == null) return Double.MAX_VALUE;
 
-        Box box = entity.getBoundingBox();
-        Vec3d eye = mc.player.getEyePos();
-        Vec3d nearest = new Vec3d(
-                MathHelper.clamp(eye.x, box.minX, box.maxX),
-                MathHelper.clamp(eye.y, box.minY, box.maxY),
-                MathHelper.clamp(eye.z, box.minZ, box.maxZ)
+        AABB box = entity.getBoundingBox();
+        Vec3 eye = mc.player.getEyePos();
+        Vec3 nearest = new Vec3(
+                Mth.clamp(eye.x, box.minX, box.maxX),
+                Mth.clamp(eye.y, box.minY, box.maxY),
+                Mth.clamp(eye.z, box.minZ, box.maxZ)
         );
         return eye.distanceTo(nearest);
     }
@@ -79,13 +79,13 @@ public class AimUtil implements IMinecraft {
     public double angleTo(LivingEntity entity, float[] rotation) {
         if (mc.player == null || rotation == null) return 0.0D;
 
-        Vec3d eye = mc.player.getEyePos();
-        Vec3d delta = entity.getBoundingBox().getCenter().subtract(eye);
+        Vec3 eye = mc.player.getEyePos();
+        Vec3 delta = entity.getBoundingBox().getCenter().subtract(eye);
         if (delta.lengthSquared() < 1.0E-6D) return 0.0D;
 
-        Vec3d look = mc.player.getRotationVector(rotation[1], rotation[0]);
+        Vec3 look = mc.player.getRotationVector(rotation[1], rotation[0]);
         double dot = look.dotProduct(delta.normalize());
-        return Math.toDegrees(Math.acos(MathHelper.clamp(dot, -1.0D, 1.0D)));
+        return Math.toDegrees(Math.acos(Mth.clamp(dot, -1.0D, 1.0D)));
     }
 
     /**
@@ -95,14 +95,14 @@ public class AimUtil implements IMinecraft {
     public double reach(LivingEntity entity, float[] rotation) {
         if (mc.player == null || rotation == null) return -1.0D;
 
-        Vec3d eye = mc.player.getEyePos();
-        Vec3d look = mc.player.getRotationVector(rotation[1], rotation[0]);
-        Vec3d hit = intersect(entity.getBoundingBox(), eye, look);
+        Vec3 eye = mc.player.getEyePos();
+        Vec3 look = mc.player.getRotationVector(rotation[1], rotation[0]);
+        Vec3 hit = intersect(entity.getBoundingBox(), eye, look);
         return hit == null ? -1.0D : eye.distanceTo(hit);
     }
 
     /** Slab method ray/AABB intersection, returns the entry point or {@code null}. */
-    public Vec3d intersect(Box box, Vec3d origin, Vec3d direction) {
+    public Vec3 intersect(AABB box, Vec3 origin, Vec3 direction) {
         double[] o = {origin.x, origin.y, origin.z};
         double[] d = {direction.x, direction.y, direction.z};
         double[] min = {box.minX, box.minY, box.minZ};
@@ -135,12 +135,12 @@ public class AimUtil implements IMinecraft {
     }
 
     /** True when no collidable block sits between the eyes and the point. */
-    public boolean isVisible(Vec3d point) {
+    public boolean isVisible(Vec3 point) {
         if (mc.player == null || mc.world == null) return false;
 
-        Vec3d eye = mc.player.getEyePos();
-        RaycastContext context = new RaycastContext(
-                eye, point, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
+        Vec3 eye = mc.player.getEyePos();
+        ClipContext context = new ClipContext(
+                eye, point, ClipContext.ShapeType.COLLIDER, ClipContext.FluidHandling.NONE, mc.player);
 
         return mc.world.raycast(context).getType() == HitResult.Type.MISS;
     }
@@ -157,16 +157,16 @@ public class AimUtil implements IMinecraft {
 
         double divisor = mouseDivisor();
         if (divisor < 1.0E-6D) {
-            return new float[]{target[0], MathHelper.clamp(target[1], -90.0F, 90.0F)};
+            return new float[]{target[0], Mth.clamp(target[1], -90.0F, 90.0F)};
         }
 
         int limit = Math.max(1, (int) Math.floor(Math.max(1.0F, maxDegrees) / divisor));
 
-        int yawDots = (int) Math.round(MathHelper.wrapDegrees(target[0] - current[0]) / divisor);
+        int yawDots = (int) Math.round(Mth.wrapDegrees(target[0] - current[0]) / divisor);
         int pitchDots = (int) Math.round((target[1] - current[1]) / divisor);
 
-        yawDots = MathHelper.clamp(yawDots, -limit, limit);
-        pitchDots = MathHelper.clamp(pitchDots, -limit, limit);
+        yawDots = Mth.clamp(yawDots, -limit, limit);
+        pitchDots = Mth.clamp(pitchDots, -limit, limit);
 
         // Slightly undershoot large corrections now and then: a human hand does not land
         // exactly on the target every single tick. Undershooting by whole dots keeps the
@@ -178,6 +178,6 @@ public class AimUtil implements IMinecraft {
         float yaw = (float) (current[0] + yawDots * divisor);
         float pitch = (float) (current[1] + pitchDots * divisor);
 
-        return new float[]{yaw, MathHelper.clamp(pitch, -90.0F, 90.0F)};
+        return new float[]{yaw, Mth.clamp(pitch, -90.0F, 90.0F)};
     }
 }

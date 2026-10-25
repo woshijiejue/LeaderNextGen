@@ -7,8 +7,8 @@ import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.ModeValue;
 import cn.leader.module.value.impl.NumberValue;
-import net.minecraft.network.packet.s2c.play.GameStateChangeS2CPacket;
-import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 
 public class WorldTweaks extends Module {
     public final NumberValue ctimeVal = new NumberValue("Time", 21000, 0, 23000);
@@ -20,7 +20,7 @@ public class WorldTweaks extends Module {
 
     public WorldTweaks() {
         super("WorldTweaks", Category.Visual);
-        setDescription("World Adjustment");
+        setDescription("Level Adjustment");
     }
 
     @Override
@@ -45,23 +45,23 @@ public class WorldTweaks extends Module {
     private void onPacket(PacketEvent event) {
         if (mc.world == null) return;
 
-        if (event.getPacket() instanceof WorldTimeUpdateS2CPacket packet) {
+        if (event.getPacket() instanceof ClientboundSetTimePacket packet) {
             oldTime = packet.timeOfDay();
             event.setCancelled(true);
         }
 
-        if (event.getPacket() instanceof GameStateChangeS2CPacket packet && !weather.is("Normal")) {
-            GameStateChangeS2CPacket.Reason reason = packet.getReason();
-            if (reason == GameStateChangeS2CPacket.RAIN_STARTED ||
-                    reason == GameStateChangeS2CPacket.RAIN_STOPPED ||
-                    reason == GameStateChangeS2CPacket.RAIN_GRADIENT_CHANGED ||
-                    reason == GameStateChangeS2CPacket.THUNDER_GRADIENT_CHANGED) {
+        if (event.getPacket() instanceof ClientboundGameEventPacket packet && !weather.is("Normal")) {
+            ClientboundGameEventPacket.Reason reason = packet.getReason();
+            if (reason == ClientboundGameEventPacket.RAIN_STARTED ||
+                    reason == ClientboundGameEventPacket.RAIN_STOPPED ||
+                    reason == ClientboundGameEventPacket.RAIN_GRADIENT_CHANGED ||
+                    reason == ClientboundGameEventPacket.THUNDER_GRADIENT_CHANGED) {
 
-                if (reason == GameStateChangeS2CPacket.RAIN_STARTED) {
+                if (reason == ClientboundGameEventPacket.RAIN_STARTED) {
                     oldRaining = true;
                     oldRainGradient = 1;
                 }
-                if (reason == GameStateChangeS2CPacket.RAIN_STOPPED) {
+                if (reason == ClientboundGameEventPacket.RAIN_STOPPED) {
                     oldRaining = false;
                     oldRainGradient = 0;
                 }

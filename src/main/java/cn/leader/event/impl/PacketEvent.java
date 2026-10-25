@@ -4,7 +4,7 @@ import cn.leader.event.base.Event;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.network.packet.Packet;
+import net.minecraft.network.protocol.Packet;
 
 @Setter
 @Getter

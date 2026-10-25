@@ -1,14 +1,17 @@
 package cn.leader.util.player;
 
 import lombok.experimental.UtilityClass;
-import net.minecraft.block.*;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.AttributeModifierSlot;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.*;
-import net.minecraft.item.equipment.EquipmentType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.equipment.EquipmentType;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -140,7 +143,7 @@ public class InventoryUtils {
         if (itemStack.getItem() == Items.SHIELD) return true;
         if (itemStack.getItem() == Items.END_CRYSTAL)
             return true;
-        if (itemStack.getItem().getComponents().contains(DataComponentTypes.FOOD)) {
+        if (itemStack.getItem().getComponents().contains(DataComponents.FOOD)) {
             return true;
         }
 
@@ -256,7 +259,7 @@ public class InventoryUtils {
         }
 
         float valence = 0;
-        var comp = stack.getComponents().get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+        var comp = stack.getComponents().get(DataComponents.ATTRIBUTE_MODIFIERS);
 
         if (comp != null) {
             double add = 0;
@@ -264,7 +267,7 @@ public class InventoryUtils {
             double addTotal = 0;
 
             for (var entry : comp.modifiers()) {
-                if (entry.slot() == AttributeModifierSlot.MAINHAND && entry.attribute().matchesKey(EntityAttributes.ATTACK_DAMAGE.getKey().orElseThrow())) {
+                if (entry.slot() == EquipmentSlotGroup.MAINHAND && entry.attribute().matchesKey(Attributes.ATTACK_DAMAGE.getKey().orElseThrow())) {
                     switch (entry.modifier().operation()) {
                         case ADD_VALUE -> add += entry.modifier().value();
                         case ADD_MULTIPLIED_BASE -> addBase += entry.modifier().value();
@@ -292,10 +295,10 @@ public class InventoryUtils {
 
         float damage = 0f;
 
-        var attrComp = stack.getComponents().get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+        var attrComp = stack.getComponents().get(DataComponents.ATTRIBUTE_MODIFIERS);
         if (attrComp != null) {
             for (var entry : attrComp.modifiers()) {
-                if (entry.slot() == AttributeModifierSlot.MAINHAND && entry.attribute().matchesKey(EntityAttributes.ATTACK_DAMAGE.getKey().orElseThrow())) {
+                if (entry.slot() == EquipmentSlotGroup.MAINHAND && entry.attribute().matchesKey(Attributes.ATTACK_DAMAGE.getKey().orElseThrow())) {
 
                     var mod = entry.modifier();
                     switch (mod.operation()) {
@@ -429,22 +432,22 @@ public class InventoryUtils {
             return valence;
         }
 
-        var modifiers = stack.getComponents().get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+        var modifiers = stack.getComponents().get(DataComponents.ATTRIBUTE_MODIFIERS);
 
         if (modifiers != null) {
             for (var entry : modifiers.modifiers()) {
-                if (entry.attribute().matchesKey(EntityAttributes.ARMOR.getKey().orElseThrow())) {
+                if (entry.attribute().matchesKey(Attributes.ARMOR.getKey().orElseThrow())) {
                     var mod = entry.modifier();
 
-                    if (mod.operation() == EntityAttributeModifier.Operation.ADD_VALUE) {
+                    if (mod.operation() == AttributeModifier.Operation.ADD_VALUE) {
                         valence += (float) mod.value();
                     }
                 }
 
-                if (entry.attribute().matchesKey(EntityAttributes.ARMOR_TOUGHNESS.getKey().orElseThrow())) {
+                if (entry.attribute().matchesKey(Attributes.ARMOR_TOUGHNESS.getKey().orElseThrow())) {
                     var mod = entry.modifier();
 
-                    if (mod.operation() == EntityAttributeModifier.Operation.ADD_VALUE) {
+                    if (mod.operation() == AttributeModifier.Operation.ADD_VALUE) {
                         valence += (float) mod.value();
                     }
                 }

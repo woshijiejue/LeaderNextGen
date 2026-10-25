@@ -5,7 +5,7 @@ import cn.leader.event.impl.TickEvent;
 import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
-import net.minecraft.client.gui.screen.DeathScreen;
+import net.minecraft.client.gui.screens.DeathScreen;
 
 /**
  * Leaves the death screen as soon as it appears.

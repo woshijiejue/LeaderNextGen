@@ -3,8 +3,8 @@ package cn.leader.util.player;
 import cn.leader.event.impl.MoveInputEvent;
 import cn.leader.util.IMinecraft;
 import lombok.experimental.UtilityClass;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 @UtilityClass
 public class MovementUtil implements IMinecraft {
@@ -17,7 +17,7 @@ public class MovementUtil implements IMinecraft {
         if (mc.player == null || !isMoving()) return;
 
         double yaw = getDirection();
-        mc.player.setVelocity(-MathHelper.sin((float) yaw) * speed, mc.player.getVelocity().y, MathHelper.cos((float) yaw) * speed);
+        mc.player.setVelocity(-Mth.sin((float) yaw) * speed, mc.player.getVelocity().y, Mth.cos((float) yaw) * speed);
     }
 
     public boolean isMoving() {
@@ -57,7 +57,7 @@ public class MovementUtil implements IMinecraft {
 
         float forward = event.getForward();
         float strafe = event.getStrafe();
-        double angle = MathHelper.wrapDegrees(Math.toDegrees(getDirection(mc.player.getYaw(), forward, strafe)));
+        double angle = Mth.wrapDegrees(Math.toDegrees(getDirection(mc.player.getYaw(), forward, strafe)));
 
         if (forward == 0 && strafe == 0) return;
 
@@ -68,7 +68,7 @@ public class MovementUtil implements IMinecraft {
             for (float predictedStrafe = -1F; predictedStrafe <= 1F; predictedStrafe += 1F) {
                 if (predictedStrafe == 0 && predictedForward == 0) continue;
 
-                double predictedAngle = MathHelper.wrapDegrees(Math.toDegrees(getDirection(yaw, predictedForward, predictedStrafe)));
+                double predictedAngle = Mth.wrapDegrees(Math.toDegrees(getDirection(yaw, predictedForward, predictedStrafe)));
                 double difference = Math.abs(angle - predictedAngle);
 
                 if (difference < closestDifference) {
@@ -83,15 +83,15 @@ public class MovementUtil implements IMinecraft {
         event.setStrafe(closestStrafe);
     }
 
-    public Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
+    public Vec3 movementInputToVelocity(Vec3 movementInput, float speed, float yaw) {
         double d = movementInput.lengthSquared();
         if (d < 1.0E-7) {
-            return Vec3d.ZERO;
+            return Vec3.ZERO;
         } else {
-            Vec3d vec3d = (d > 1.0 ? movementInput.normalize() : movementInput).multiply(speed);
-            float f = MathHelper.sin(yaw * ((float) Math.PI / 180F));
-            float g = MathHelper.cos(yaw * ((float) Math.PI / 180F));
-            return new Vec3d(vec3d.x * g - vec3d.z * f, vec3d.y, vec3d.z * g + vec3d.x * f);
+            Vec3 vec3d = (d > 1.0 ? movementInput.normalize() : movementInput).multiply(speed);
+            float f = Mth.sin(yaw * ((float) Math.PI / 180F));
+            float g = Mth.cos(yaw * ((float) Math.PI / 180F));
+            return new Vec3(vec3d.x * g - vec3d.z * f, vec3d.y, vec3d.z * g + vec3d.x * f);
         }
     }
 }

@@ -3,8 +3,8 @@ package cn.leader.module.impl.player;
 import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 
 /**
  * Filters server side NPCs out of targeting.
@@ -23,7 +23,7 @@ public final class AntiBot extends Module {
     }
 
     public boolean isBot(Entity entity) {
-        if (!(entity instanceof PlayerEntity player)) return false;
+        if (!(entity instanceof Player player)) return false;
         if (mc.player == null || mc.world == null) return false;
         if (player == mc.player) return false;
 
@@ -38,7 +38,7 @@ public final class AntiBot extends Module {
             String name = player.getName().getString();
             if (name.isEmpty()) return true;
 
-            for (PlayerEntity other : mc.world.getPlayers()) {
+            for (Player other : mc.world.getPlayers()) {
                 if (other == player) continue;
                 if (other.getName().getString().equalsIgnoreCase(name)) {
                     return true;

@@ -12,7 +12,7 @@ import cn.leader.ui.skia.SkiaManager;
 import cn.leader.util.IMinecraft;
 import cn.leader.util.Util;
 import lombok.Getter;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 import org.apache.logging.log4j.Logger;
 
 /**
@@ -61,8 +61,8 @@ public class Client implements IMinecraft {
         if (announced || mc.player == null) return;
         announced = true;
 
-        Util.log(name + " " + Formatting.GRAY + version + Formatting.DARK_GRAY + "  |  "
-                + Formatting.GRAY + "MC " + minecraftVersion);
+        Util.log(name + " " + ChatFormatting.GRAY + version + ChatFormatting.DARK_GRAY + "  |  "
+                + ChatFormatting.GRAY + "MC " + minecraftVersion);
     }
 
     public void shutdown() {

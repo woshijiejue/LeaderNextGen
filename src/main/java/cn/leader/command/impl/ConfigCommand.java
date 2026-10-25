@@ -5,7 +5,7 @@ import cn.leader.command.Command;
 import cn.leader.config.Config;
 import cn.leader.config.impl.ModuleConfig;
 import cn.leader.util.Util;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ public final class ConfigCommand extends Command {
 
         switch (action) {
             case "list" -> {
-                Util.log(Formatting.BLUE + "Available configs:");
+                Util.log(ChatFormatting.BLUE + "Available configs:");
                 for (final Config config : Client.instance.getConfigManager().getConfigs()) {
                     Util.log("- " + config.getName());
                 }
@@ -52,7 +52,7 @@ public final class ConfigCommand extends Command {
                 }
 
                 targetConfig.save();
-                Util.log(String.format("Saved configuration to " + Formatting.GREEN + "%s.json", configName));
+                Util.log(String.format("Saved configuration to " + ChatFormatting.GREEN + "%s.json", configName));
             }
 
             case "load" -> {
@@ -66,9 +66,9 @@ public final class ConfigCommand extends Command {
 
                 if (targetConfig != null) {
                     targetConfig.load();
-                    Util.log("Loaded config: " + Formatting.AQUA + targetConfig.getName());
+                    Util.log("Loaded config: " + ChatFormatting.AQUA + targetConfig.getName());
                 } else {
-                    Util.log(Formatting.RED + "Config not found in memory: " + configName);
+                    Util.log(ChatFormatting.RED + "Config not found in memory: " + configName);
                 }
             }
         }

@@ -4,12 +4,12 @@ import cn.leader.event.base.Event;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 @Setter
 @Getter
 @AllArgsConstructor
 public class Render3DEvent extends Event {
-    private final MatrixStack matrices;
+    private final PoseStack matrices;
     private final float partialTicks;
 }

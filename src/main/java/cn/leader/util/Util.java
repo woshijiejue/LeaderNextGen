@@ -2,8 +2,8 @@ package cn.leader.util;
 
 import cn.leader.Client;
 import lombok.experimental.UtilityClass;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 @UtilityClass
 public class Util implements IMinecraft{
@@ -15,15 +15,15 @@ public class Util implements IMinecraft{
     public void addChatMessage(String message) {
         if (mc.player == null) return;
 
-        mc.player.sendMessage(Text.literal(message), false);
+        mc.player.sendMessage(Component.literal(message), false);
     }
 
     public void log(String message) {
-        addChatMessage(Formatting.DARK_GRAY + "[" + Formatting.AQUA + Client.name + Formatting.DARK_GRAY + "] " + Formatting.RESET + message);
+        addChatMessage(ChatFormatting.DARK_GRAY + "[" + ChatFormatting.AQUA + Client.name + ChatFormatting.DARK_GRAY + "] " + ChatFormatting.RESET + message);
     }
 
     public void debug(String message) {
-        addChatMessage(Formatting.DARK_GRAY + "[" + Formatting.RED + "Debug" + Formatting.DARK_GRAY + "] " + Formatting.RESET + message);
+        addChatMessage(ChatFormatting.DARK_GRAY + "[" + ChatFormatting.RED + "Debug" + ChatFormatting.DARK_GRAY + "] " + ChatFormatting.RESET + message);
     }
 
     public String getIGN() {

@@ -4,11 +4,11 @@ import cn.leader.event.base.Event;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.multiplayer.ClientLevel;
 
 @Getter
 @Setter
 @AllArgsConstructor
 public class WorldEvent extends Event {
-    public final ClientWorld world;
+    public final ClientLevel world;
 }

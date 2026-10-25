@@ -4,9 +4,9 @@ import cn.leader.module.value.impl.BoolValue;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.network.chat.Component;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -32,14 +32,14 @@ public final class PotionHUD extends Drag {
     }
 
     @Override
-    public void render(DrawContext context) {
+    public void render(GuiGraphics context) {
         if (mc.player == null || mc.textRenderer == null) {
             this.width = 0;
             this.height = 0;
             return;
         }
 
-        List<StatusEffectInstance> effects = new ArrayList<>(mc.player.getStatusEffects());
+        List<MobEffectInstance> effects = new ArrayList<>(mc.player.getStatusEffects());
         if (effects.isEmpty()) {
             this.width = 0;
             this.height = 0;
@@ -47,12 +47,12 @@ public final class PotionHUD extends Drag {
         }
 
         if (sortByDuration.getValue()) {
-            effects.sort(Comparator.comparingInt(StatusEffectInstance::getDuration).reversed());
+            effects.sort(Comparator.comparingInt(MobEffectInstance::getDuration).reversed());
         }
 
         List<String> lines = new ArrayList<>();
-        for (StatusEffectInstance effect : effects) {
-            String name = Text.translatable(effect.getTranslationKey()).getString();
+        for (MobEffectInstance effect : effects) {
+            String name = Component.translatable(effect.getTranslationKey()).getString();
             int amplifier = effect.getAmplifier();
             if (amplifier > 0) {
                 name += " " + roman(amplifier + 1);
@@ -88,7 +88,7 @@ public final class PotionHUD extends Drag {
         }
     }
 
-    private String duration(StatusEffectInstance effect) {
+    private String duration(MobEffectInstance effect) {
         if (effect.isInfinite()) return "*";
 
         int totalSeconds = effect.getDuration() / 20;

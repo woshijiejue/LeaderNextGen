@@ -4,10 +4,10 @@ import cn.injection.accessor.ClientWorldAccessor;
 import cn.leader.util.IMinecraft;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
-import net.minecraft.client.network.PendingUpdateManager;
+import net.minecraft.client.multiplayer.PendingUpdateManager;
 import net.minecraft.client.network.SequencedPacketCreator;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 
 import java.util.ArrayList;
 
@@ -51,7 +51,7 @@ public class PacketUtil implements IMinecraft {
     @SuppressWarnings("unchecked")
     public void receivePacket(Packet<?> packet) {
         if (mc.getNetworkHandler() == null) return;
-        ((Packet<ClientPlayPacketListener>) packet).apply(mc.getNetworkHandler());
+        ((Packet<ClientGamePacketListener>) packet).apply(mc.getNetworkHandler());
     }
 
     public void receivePacketNoEvent(Packet<?> packet) {

@@ -7,9 +7,9 @@ import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.NumberValue;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.BlockHitResult;
 
 /**
  * Swaps to the fastest tool for whatever block is being mined, and back again when mining stops.

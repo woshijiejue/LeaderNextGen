@@ -4,7 +4,7 @@ import cn.leader.event.base.Event;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 
 @Getter
 @Setter

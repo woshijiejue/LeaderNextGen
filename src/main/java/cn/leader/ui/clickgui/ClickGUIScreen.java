@@ -2,9 +2,9 @@ package cn.leader.ui.clickgui;
 
 import cn.leader.module.Category;
 import cn.leader.util.IMinecraft;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public class ClickGUIScreen extends Screen implements IMinecraft {
     private final List<Panel> panels = new ArrayList<>();
 
     public ClickGUIScreen() {
-        super(Text.literal("ClickGUI"));
+        super(Component.literal("ClickGUI"));
         float startX = 20;
         for (Category category : Category.values()) {
             panels.add(new Panel(category, startX, 20));
@@ -26,7 +26,7 @@ public class ClickGUIScreen extends Screen implements IMinecraft {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         for (Panel panel : panels) {
             panel.render(context, mouseX, mouseY);
         }

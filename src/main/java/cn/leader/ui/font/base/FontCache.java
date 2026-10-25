@@ -1,6 +1,6 @@
 package cn.leader.ui.font.base;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 import org.jetbrains.skija.TextBlob;
 
 import java.util.ArrayList;
@@ -51,9 +51,9 @@ public class FontCache {
                         width += flushBuffer(buffer, segmentList, color, font);
                     }
 
-                    Formatting format = Formatting.byCode(text.charAt(++i));
+                    ChatFormatting format = ChatFormatting.byCode(text.charAt(++i));
                     if (format != null) {
-                        if (format == Formatting.RESET) {
+                        if (format == ChatFormatting.RESET) {
                             color = baseColor;
                         } else if (format.getColorValue() != null) {
                             color = (((baseColor >> 24) & 0xFF) << 24) | format.getColorValue();

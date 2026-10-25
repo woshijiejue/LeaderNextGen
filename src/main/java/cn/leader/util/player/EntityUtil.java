@@ -7,18 +7,19 @@ import cn.leader.module.impl.client.ClientSetting;
 import cn.leader.module.impl.player.AntiBot;
 import cn.leader.util.IMinecraft;
 import lombok.experimental.UtilityClass;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.boss.dragon.EnderDragonEntity;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.passive.*;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.animal.*;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.Objects;
@@ -48,7 +49,7 @@ public class EntityUtil implements IMinecraft {
             return false;
         }
 
-        if (livingEntity instanceof PlayerEntity player) {
+        if (livingEntity instanceof Player player) {
             if (checkSelf && player.equals(mc.player)) {
                 return false;
             }
@@ -74,13 +75,13 @@ public class EntityUtil implements IMinecraft {
                 || entity instanceof SlimeEntity
                 || entity instanceof GhastEntity
                 || entity instanceof ShulkerEntity
-                || entity instanceof EnderDragonEntity;
+                || entity instanceof EnderDragon;
     }
     public static void doItemUseWithoutBlock() {
         if (!mc.interactionManager.isBreakingBlock()) {
             ((MinecraftClientAccessor)mc).setItemUseCooldown(4);
             if (!mc.player.isRiding()) {
-                for(Hand hand : Hand.values()) {
+                for(InteractionHand hand : InteractionHand.values()) {
                     ItemStack itemStack = mc.player.getStackInHand(hand);
                     if (!itemStack.isItemEnabled(mc.world.getEnabledFeatures())) {
                         return;
@@ -94,14 +95,14 @@ public class EntityUtil implements IMinecraft {
                                 return;
                             }
 
-                            ActionResult actionResult = mc.interactionManager.interactEntityAtLocation(mc.player, entity, entityHitResult, hand);
+                            InteractionResult actionResult = mc.interactionManager.interactEntityAtLocation(mc.player, entity, entityHitResult, hand);
                             if (!actionResult.isAccepted()) {
                                 actionResult = mc.interactionManager.interactEntity(mc.player, entity, hand);
                             }
 
-                            if (actionResult instanceof ActionResult.Success) {
-                                ActionResult.Success success = (ActionResult.Success) actionResult;
-                                if (success.swingSource() == ActionResult.SwingSource.CLIENT) {
+                            if (actionResult instanceof InteractionResult.Success) {
+                                InteractionResult.Success success = (InteractionResult.Success) actionResult;
+                                if (success.swingSource() == InteractionResult.SwingSource.CLIENT) {
                                     mc.player.swingHand(hand);
                                 }
 
@@ -111,10 +112,10 @@ public class EntityUtil implements IMinecraft {
                     }
 
                     if (!itemStack.isEmpty()) {
-                        ActionResult actionResult3 = interactItem(mc.player, hand);
-                        if (actionResult3 instanceof ActionResult.Success) {
-                            ActionResult.Success success3 = (ActionResult.Success)actionResult3;
-                            if (success3.swingSource() == ActionResult.SwingSource.CLIENT) {
+                        InteractionResult actionResult3 = interactItem(mc.player, hand);
+                        if (actionResult3 instanceof InteractionResult.Success) {
+                            InteractionResult.Success success3 = (InteractionResult.Success)actionResult3;
+                            if (success3.swingSource() == InteractionResult.SwingSource.CLIENT) {
                                 mc.player.swingHand(hand);
                             }
 
@@ -126,20 +127,20 @@ public class EntityUtil implements IMinecraft {
             }
         }
     }
-    public static ActionResult interactItem(PlayerEntity player, Hand hand) {
+    public static InteractionResult interactItem(Player player, InteractionHand hand) {
         ((ClientPlayerInteractionManagerAccessor)mc.interactionManager).callSyncSelectedSlot();
-        MutableObject<ActionResult> mutableObject = new MutableObject();
+        MutableObject<InteractionResult> mutableObject = new MutableObject();
         ((ClientPlayerInteractionManagerAccessor)mc.interactionManager).callSendSequencedPacket(mc.world, (sequence) -> {
-            PlayerInteractItemC2SPacket playerInteractItemC2SPacket = new PlayerInteractItemC2SPacket(hand, sequence, RotationManager.currentRotations[0], RotationManager.currentRotations[1]);
+            ServerboundUseItemPacket playerInteractItemC2SPacket = new ServerboundUseItemPacket(hand, sequence, RotationManager.currentRotations[0], RotationManager.currentRotations[1]);
             ItemStack itemStack = player.getStackInHand(hand);
             if (player.getItemCooldownManager().isCoolingDown(itemStack)) {
-                mutableObject.setValue(ActionResult.PASS);
+                mutableObject.setValue(InteractionResult.PASS);
                 return playerInteractItemC2SPacket;
             } else {
-                ActionResult actionResult = itemStack.use(mc.world, player, hand);
+                InteractionResult actionResult = itemStack.use(mc.world, player, hand);
                 ItemStack itemStack2;
-                if (actionResult instanceof ActionResult.Success) {
-                    ActionResult.Success success = (ActionResult.Success)actionResult;
+                if (actionResult instanceof InteractionResult.Success) {
+                    InteractionResult.Success success = (InteractionResult.Success)actionResult;
                     itemStack2 = (ItemStack)Objects.requireNonNullElseGet(success.getNewHandStack(), () -> player.getStackInHand(hand));
                 } else {
                     itemStack2 = player.getStackInHand(hand);
@@ -151,6 +152,6 @@ public class EntityUtil implements IMinecraft {
                 return playerInteractItemC2SPacket;
             }
         });
-        return (ActionResult)mutableObject.getValue();
+        return (InteractionResult)mutableObject.getValue();
     }
 }

@@ -9,7 +9,7 @@ import net.minecraft.SharedConstants;
  * <p>This is read by the window title mixin, which can run before {@code Client} exists. Keeping
  * it in a plain class means the title never forces {@code Client} (and therefore the
  * {@code IMinecraft.mc} static field) to initialise too early, which would capture a null
- * {@code MinecraftClient} forever.</p>
+ * {@code Minecraft} forever.</p>
  */
 public final class ClientMeta {
 

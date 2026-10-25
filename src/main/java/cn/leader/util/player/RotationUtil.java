@@ -3,48 +3,53 @@ package cn.leader.util.player;
 import cn.leader.util.IMinecraft;
 import cn.injection.accessor.EntityAccessor;
 import lombok.experimental.UtilityClass;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import com.mojang.math.Axis;
+import net.minecraft.world.level.ClipContext;
 
 @UtilityClass
 public class RotationUtil implements IMinecraft {
 
-    public float[] nearestRotation(final Box box) {
+    public float[] nearestRotation(final AABB box) {
         if (mc.player == null) return null;
 
-        final Vec3d targetPoint = getNearestPointBB(box);
+        final Vec3 targetPoint = getNearestPointBB(box);
         return getRotations(targetPoint);
     }
 
-    public Vec3d getNearestPointBB(Box box) {
+    public Vec3 getNearestPointBB(AABB box) {
         if (mc.player == null) return null;
 
-        Vec3d eyePos = mc.player.getEyePos();
+        Vec3 eyePos = mc.player.getEyePos();
 
-        double x = MathHelper.clamp(eyePos.x, box.minX, box.maxX);
-        double y = MathHelper.clamp(eyePos.y, box.minY, box.maxY);
-        double z = MathHelper.clamp(eyePos.z, box.minZ, box.maxZ);
-        Vec3d nearestPoint = new Vec3d(x, y, z);
+        double x = Mth.clamp(eyePos.x, box.minX, box.maxX);
+        double y = Mth.clamp(eyePos.y, box.minY, box.maxY);
+        double z = Mth.clamp(eyePos.z, box.minZ, box.maxZ);
+        Vec3 nearestPoint = new Vec3(x, y, z);
 
         if (isVisible(nearestPoint)) {
             return nearestPoint;
         }
 
-        Box scanBox = box.expand(-0.002);
+        AABB scanBox = box.expand(-0.002);
 
         double stepX = scanBox.getLengthX();
         double stepY = scanBox.getLengthY();
         double stepZ = scanBox.getLengthZ();
 
-        Vec3d bestPoint = null;
+        Vec3 bestPoint = null;
         double minDistanceSq = Double.MAX_VALUE;
 
         for (double sX = scanBox.minX; sX <= scanBox.maxX; sX += stepX / 2.0) {
             for (double sY = scanBox.minY; sY <= scanBox.maxY; sY += stepY / 2.0) {
                 for (double sZ = scanBox.minZ; sZ <= scanBox.maxZ; sZ += stepZ / 2.0) {
-                    Vec3d currentPoint = new Vec3d(sX, sY, sZ);
+                    Vec3 currentPoint = new Vec3(sX, sY, sZ);
 
                     if (isVisible(currentPoint)) {
                         double distSq = eyePos.squaredDistanceTo(currentPoint);
@@ -60,45 +65,45 @@ public class RotationUtil implements IMinecraft {
         return (bestPoint != null) ? bestPoint : nearestPoint;
     }
 
-    public boolean isVisible(Vec3d targetVec) {
+    public boolean isVisible(Vec3 targetVec) {
         if (mc.player == null || mc.world == null) return false;
 
-        Vec3d eyePos = mc.player.getEyePos();
+        Vec3 eyePos = mc.player.getEyePos();
         if (eyePos.squaredDistanceTo(targetVec) > 4096.0) return false;
-        Vec3d lookVec = mc.player.getRotationVec(1);
-        Vec3d toTarget = targetVec.subtract(eyePos).normalize();
+        Vec3 lookVec = mc.player.getRotationVec(1);
+        Vec3 toTarget = targetVec.subtract(eyePos).normalize();
         if (lookVec.dotProduct(toTarget) < 0) return false;
-        RaycastContext context = new RaycastContext(eyePos, targetVec, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
+        ClipContext context = new ClipContext(eyePos, targetVec, ClipContext.ShapeType.COLLIDER, ClipContext.FluidHandling.NONE, mc.player);
         return mc.world.raycast(context).getType() == HitResult.Type.MISS;
     }
 
     public float getDistanceToEntity(LivingEntity target) {
         if (mc.player == null || target == null) return 0.0f;
 
-        Vec3d eyePos = mc.player.getEyePos();
-        Vec3d nearestPoint = getNearestPointBB(target.getBoundingBox());
+        Vec3 eyePos = mc.player.getEyePos();
+        Vec3 nearestPoint = getNearestPointBB(target.getBoundingBox());
         return (float) eyePos.distanceTo(nearestPoint);
     }
 
     public double getRotationDifference(LivingEntity entity) {
         if (mc.player == null || entity == null) return 0;
 
-        Vec3d targetPos = entity.getPos();
+        Vec3 targetPos = entity.getPos();
         float[] neededRotations = RotationUtil.getRotations(targetPos);
         if (neededRotations == null) return 180.0;
 
-        float yawDiff = Math.abs(MathHelper.wrapDegrees(mc.player.getYaw() - neededRotations[0]));
-        float pitchDiff = Math.abs(MathHelper.wrapDegrees(mc.player.getPitch() - neededRotations[1]));
+        float yawDiff = Math.abs(Mth.wrapDegrees(mc.player.getYaw() - neededRotations[0]));
+        float pitchDiff = Math.abs(Mth.wrapDegrees(mc.player.getPitch() - neededRotations[1]));
 
         return Math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff);
     }
 
-    public float[] getRotations(Vec3d target) {
+    public float[] getRotations(Vec3 target) {
         if (mc.player == null) return null;
         return getRotations(mc.player.getEyePos(), target);
     }
 
-    public float[] getRotations(Vec3d origin, Vec3d target) {
+    public float[] getRotations(Vec3 origin, Vec3 target) {
         return getRotations(target.x, target.y, target.z, origin.x, origin.y, origin.z);
     }
 
@@ -121,7 +126,7 @@ public class RotationUtil implements IMinecraft {
         if (speed != 0) {
             float rotationSpeed = (float) speed;
 
-            double deltaYaw = MathHelper.wrapDegrees(targetRotation[0] - lastRotation[0]);
+            double deltaYaw = Mth.wrapDegrees(targetRotation[0] - lastRotation[0]);
             double deltaPitch = pitch - lastPitch;
 
             double distance = Math.sqrt(deltaYaw * deltaYaw + deltaPitch * deltaPitch);
@@ -153,7 +158,7 @@ public class RotationUtil implements IMinecraft {
             // Setting rotations
             if (fixedRotations != null) {
                 yaw = fixedRotations[0];
-                pitch = MathHelper.clamp(fixedRotations[1], -90.0F, 90.0F);
+                pitch = Mth.clamp(fixedRotations[1], -90.0F, 90.0F);
             }
         }
 
@@ -172,6 +177,6 @@ public class RotationUtil implements IMinecraft {
         double multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0F * 0.15D;
         float yaw = previousRotation[0] + (float) (Math.round((rotation[0] - previousRotation[0]) / multiplier) * multiplier);
         float pitch = previousRotation[1] + (float) (Math.round((rotation[1] - previousRotation[1]) / multiplier) * multiplier);
-        return new float[]{yaw, MathHelper.clamp(pitch, -90.0F, 90.0F)};
+        return new float[]{yaw, Mth.clamp(pitch, -90.0F, 90.0F)};
     }
 }

@@ -5,8 +5,8 @@ import cn.leader.module.value.impl.MultiBoolValue;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.PlayerInfo;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ public final class InfoHUD extends Drag {
     }
 
     @Override
-    public void render(DrawContext context) {
+    public void render(GuiGraphics context) {
         if (mc.player == null || mc.textRenderer == null) {
             this.width = 0;
             this.height = 0;
@@ -97,7 +97,7 @@ public final class InfoHUD extends Drag {
     private int latency() {
         if (mc.getNetworkHandler() == null || mc.player == null) return 0;
 
-        PlayerListEntry entry = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
+        PlayerInfo entry = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
         return entry == null ? 0 : entry.getLatency();
     }
 

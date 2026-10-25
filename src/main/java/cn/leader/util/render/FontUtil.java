@@ -2,12 +2,12 @@ package cn.leader.util.render;
 
 import cn.leader.util.IMinecraft;
 import lombok.experimental.UtilityClass;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 
 @UtilityClass
 public final class FontUtil implements IMinecraft {
 
-    public void drawString(DrawContext context, String text, float x, float y, int color, boolean shadow) {
+    public void drawString(GuiGraphics context, String text, float x, float y, int color, boolean shadow) {
         if (mc.textRenderer == null) return;
 
         context.getMatrices().push();
@@ -17,7 +17,7 @@ public final class FontUtil implements IMinecraft {
 
     }
 
-    public void drawStringWithShadow(DrawContext context, String text, float x, float y, int color) {
+    public void drawStringWithShadow(GuiGraphics context, String text, float x, float y, int color) {
         drawString(context, text, x, y, color, true);
     }
 

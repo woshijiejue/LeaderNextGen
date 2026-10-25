@@ -3,9 +3,9 @@ package cn.injection;
 import cn.leader.util.IMinecraft;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.client.gui.screen.ChatInputSuggestor;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.OrderedText;
+import net.minecraft.client.gui.components.CommandSuggestions;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.FormattedText;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,20 +16,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-@Mixin(ChatInputSuggestor.class)
+@Mixin(CommandSuggestions.class)
 public abstract class MixinChatInputSuggestor implements IMinecraft {
 
     @Shadow @Final
-    TextFieldWidget textField;
+    EditBox textField;
 
     @Shadow
     private CompletableFuture<Suggestions> pendingSuggestions;
 
     @Shadow
-    private ChatInputSuggestor.SuggestionWindow window;
+    private CommandSuggestions.SuggestionWindow window;
 
     @Shadow @Final
-    private List<OrderedText> messages;
+    private List<FormattedText> messages;
 
     @Shadow
     boolean completingSuggestions;

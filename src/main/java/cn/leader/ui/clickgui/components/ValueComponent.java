@@ -2,7 +2,7 @@ package cn.leader.ui.clickgui.components;
 
 import cn.leader.module.value.Value;
 import lombok.Getter;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 @Getter
 public abstract class ValueComponent {
     private final Value value;
@@ -12,7 +12,7 @@ public abstract class ValueComponent {
         this.value = value;
     }
 
-    public abstract float render(DrawContext context, int mouseX, int mouseY, float x, float y, float width);
+    public abstract float render(GuiGraphics context, int mouseX, int mouseY, float x, float y, float width);
     public abstract void mouseClicked(int mouseX, int mouseY, int button, float x, float y, float width);
     public void mouseReleased(int mouseX, int mouseY, int button) {}
 

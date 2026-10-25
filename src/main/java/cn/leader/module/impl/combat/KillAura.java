@@ -16,10 +16,10 @@ import cn.leader.util.network.PacketUtil;
 import cn.leader.util.player.AimUtil;
 import cn.leader.util.player.EntityUtil;
 import lombok.Getter;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.SwordItem;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.util.Hand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.world.InteractionHand;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -267,11 +267,11 @@ public class KillAura extends Module {
 
         if (attackMode.is("Packet") || keepSprint.getValue()) {
             ((ClientPlayerInteractionManagerAccessor) mc.interactionManager).callSyncSelectedSlot();
-            PacketUtil.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, mc.player.isSneaking()));
-            mc.player.swingHand(Hand.MAIN_HAND);
+            PacketUtil.sendPacket(ServerboundInteractPacket.attack(entity, mc.player.isSneaking()));
+            mc.player.swingHand(InteractionHand.MAIN_HAND);
         } else {
             mc.interactionManager.attackEntity(mc.player, entity);
-            mc.player.swingHand(Hand.MAIN_HAND);
+            mc.player.swingHand(InteractionHand.MAIN_HAND);
         }
 
         if (keepSprint.getValue() && sprinting) {

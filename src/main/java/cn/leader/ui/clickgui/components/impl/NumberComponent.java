@@ -6,8 +6,8 @@ import cn.leader.module.value.impl.NumberValue;
 import cn.leader.ui.clickgui.components.ValueComponent;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 
 import java.awt.*;
 
@@ -19,10 +19,10 @@ public class NumberComponent extends ValueComponent {
     }
 
     @Override
-    public float render(DrawContext context, int mouseX, int mouseY, float x, float y, float width) {
+    public float render(GuiGraphics context, int mouseX, int mouseY, float x, float y, float width) {
         NumberValue num = (NumberValue) getValue();
         if (dragging) {
-            float percent = MathHelper.clamp((mouseX - x) / width, 0.0f, 1.0f);
+            float percent = Mth.clamp((mouseX - x) / width, 0.0f, 1.0f);
             float val = num.getMin() + (num.getMax() - num.getMin()) * percent;
             num.setValue(Math.round(val / num.getInc()) * num.getInc());
         }

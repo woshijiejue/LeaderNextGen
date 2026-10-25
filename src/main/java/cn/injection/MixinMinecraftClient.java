@@ -5,8 +5,8 @@ import cn.leader.event.impl.TickEvent;
 import cn.leader.event.impl.WorldEvent;
 import cn.leader.util.IMinecraft;
 import cn.leader.util.Util;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import org.apache.logging.log4j.LogManager;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,21 +14,21 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MinecraftClient.class)
+@Mixin(Minecraft.class)
 public abstract class MixinMinecraftClient implements IMinecraft {
 
-    @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;instance:Lnet/minecraft/client/MinecraftClient;", shift = At.Shift.AFTER, opcode = Opcodes.PUTSTATIC))
+    @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;instance:Lnet/minecraft/client/Minecraft;", shift = At.Shift.AFTER, opcode = Opcodes.PUTSTATIC))
     private void preInit(CallbackInfo ci) {
         Client.instance = new Client();
         Client.logger = LogManager.getLogger(Client.name);
     }
 
-    @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;inGameHud:Lnet/minecraft/client/gui/hud/InGameHud;", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
+    @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;inGameHud:Lnet/minecraft/client/gui/hud/Gui;", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void postInit(CallbackInfo ci) {
         Client.instance.init();
     }
 
-    @Inject(method = "stop", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;close()V", shift = At.Shift.AFTER))
+    @Inject(method = "stop", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;close()V", shift = At.Shift.AFTER))
     private void stop(CallbackInfo ci) {
         Client.instance.shutdown();
     }
@@ -49,7 +49,7 @@ public abstract class MixinMinecraftClient implements IMinecraft {
     }
 
     @Inject(method = "setWorld", at = @At("HEAD"))
-    private void setWorld(ClientWorld world, CallbackInfo ci) {
+    private void setWorld(ClientLevel world, CallbackInfo ci) {
         Client.instance.getEventManager().call(new WorldEvent(world));
     }
 }

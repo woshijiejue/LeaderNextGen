@@ -1,7 +1,7 @@
 package cn.injection;
 
 import cn.leader.ClientMeta;
-import net.minecraft.client.util.Window;
+import com.mojang.blaze3d.platform.Window;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;

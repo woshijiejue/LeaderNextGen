@@ -4,8 +4,8 @@ import cn.leader.event.base.annotation.EventTarget;
 import cn.leader.event.impl.UpdateEvent;
 import cn.leader.module.Category;
 import cn.leader.module.Module;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 
 public class Brightness extends Module {
 
@@ -18,13 +18,13 @@ public class Brightness extends Module {
     public void onDisable() {
         if (mc.player == null) return;
 
-        mc.player.removeStatusEffect(StatusEffects.NIGHT_VISION);
+        mc.player.removeStatusEffect(MobEffects.NIGHT_VISION);
     }
 
     @EventTarget
     public void onUpdate(UpdateEvent event) {
         if (mc.player == null) return;
 
-        mc.player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 8963, 0, false, false, false));
+        mc.player.addStatusEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 8963, 0, false, false, false));
     }
 }

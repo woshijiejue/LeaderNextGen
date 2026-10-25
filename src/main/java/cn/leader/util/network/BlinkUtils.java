@@ -7,23 +7,23 @@ import cn.leader.event.base.annotation.EventTarget;
 import cn.leader.event.impl.PacketEvent;
 import cn.leader.util.IMinecraft;
 import lombok.Getter;
-import net.minecraft.client.network.OtherClientPlayerEntity;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket;
-import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket;
-import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.status.ServerboundPingRequestPacket;
+import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket;
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 
 import java.util.concurrent.LinkedBlockingDeque;
 
 
 public class BlinkUtils implements IMinecraft {
     @Getter
-    private static final LinkedBlockingDeque<Packet<ClientPlayPacketListener>> serverPackets = new LinkedBlockingDeque<>();
+    private static final LinkedBlockingDeque<Packet<ClientGamePacketListener>> serverPackets = new LinkedBlockingDeque<>();
     @Getter
     private static final LinkedBlockingDeque<Packet<?>> clientPackets = new LinkedBlockingDeque<>();
     public static boolean blinking = false;
@@ -62,7 +62,7 @@ public class BlinkUtils implements IMinecraft {
         }
     }
 
-    public static void handleMove(PlayerMoveC2SPacket packet, OtherClientPlayerEntity clonePlayer) {
+    public static void handleMove(ServerboundMovePlayerPacket packet, RemotePlayer clonePlayer) {
         double x = packet.getX(clonePlayer.getX());
         double y = packet.getY(clonePlayer.getY());
         double z = packet.getZ(clonePlayer.getZ());
@@ -79,13 +79,13 @@ public class BlinkUtils implements IMinecraft {
         }
     }
 
-    public static void releaseTick(OtherClientPlayerEntity clonePlayer) {
+    public static void releaseTick(RemotePlayer clonePlayer) {
         synchronized (clientPackets) {
             while (!clientPackets.isEmpty()) {
                 Packet<?> poll = clientPackets.poll();
                 PacketUtil.sendPacketNoEvent(poll);
-                if (poll instanceof PlayerMoveC2SPacket) {
-                    handleMove((PlayerMoveC2SPacket) poll, clonePlayer);
+                if (poll instanceof ServerboundMovePlayerPacket) {
+                    handleMove((ServerboundMovePlayerPacket) poll, clonePlayer);
                     break;
                 }
             }
@@ -101,12 +101,12 @@ public class BlinkUtils implements IMinecraft {
 
         Packet<?> packet = event.getPacket();
 
-        if (packet instanceof HandshakeC2SPacket
-                || packet instanceof QueryRequestC2SPacket
-                || packet instanceof QueryPingC2SPacket
-                || packet instanceof GameMessageS2CPacket
-                || packet instanceof DisconnectS2CPacket
-                || packet instanceof EntityS2CPacket) {
+        if (packet instanceof ClientIntentionPacket
+                || packet instanceof ServerboundStatusRequestPacket
+                || packet instanceof ServerboundPingRequestPacket
+                || packet instanceof ClientboundSystemChatPacket
+                || packet instanceof ClientboundDisconnectPacket
+                || packet instanceof ClientboundMoveEntityPacket) {
             return;
         }
 
@@ -120,14 +120,14 @@ public class BlinkUtils implements IMinecraft {
         if (event.getType() == PacketEvent.Type.Received && delaying) {
             event.setCancelled();
             synchronized (BlinkUtils.getServerPackets()) {
-                BlinkUtils.getServerPackets().add((Packet<ClientPlayPacketListener>) packet);
+                BlinkUtils.getServerPackets().add((Packet<ClientGamePacketListener>) packet);
             }
         }
     }
     public static void handleDelayPackets() {
         synchronized (serverPackets) {
             while (!serverPackets.isEmpty()) {
-                Packet<ClientPlayPacketListener> packet = serverPackets.poll();
+                Packet<ClientGamePacketListener> packet = serverPackets.poll();
                 packet.apply(mc.getNetworkHandler());
             }
         }

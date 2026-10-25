@@ -2,9 +2,9 @@ package cn.injection;
 
 import cn.leader.event.impl.MoveInputEvent;
 import cn.leader.util.IMinecraft;
-import net.minecraft.client.input.Input;
-import net.minecraft.client.input.KeyboardInput;
-import net.minecraft.util.PlayerInput;
+import net.minecraft.client.player.Input;
+import net.minecraft.client.player.KeyboardInput;
+import net.minecraft.world.entity.player.Input;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,6 +20,6 @@ public abstract class MixinKeyboardInput extends Input implements IMinecraft {
 
         this.movementForward = event.getForward();
         this.movementSideways = event.getStrafe();
-        this.playerInput = new PlayerInput(this.movementForward > 0, this.movementForward < 0, this.movementSideways > 0, this.movementSideways < 0, event.isJumping(), event.isSneaking(), this.playerInput.sprint());
+        this.playerInput = new Input(this.movementForward > 0, this.movementForward < 0, this.movementSideways > 0, this.movementSideways < 0, event.isJumping(), event.isSneaking(), this.playerInput.sprint());
     }
 }

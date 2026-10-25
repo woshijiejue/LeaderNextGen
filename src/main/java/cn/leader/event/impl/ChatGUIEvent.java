@@ -4,12 +4,12 @@ import cn.leader.event.base.Event;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 
 @Getter
 @Setter
 @AllArgsConstructor
 public class ChatGUIEvent extends Event {
-    private DrawContext context;
+    private GuiGraphics context;
     private int mouseX, mouseY;
 }

@@ -5,8 +5,8 @@ import cn.leader.module.Module;
 import cn.leader.util.animation.Easing;
 import cn.leader.util.animation.EasingAnimation;
 import cn.leader.util.misc.MouseUtil;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.Window;
+import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.platform.Window;
 
 public abstract class Drag extends Module {
     private final EasingAnimation xAnimation = new EasingAnimation(Easing.EASE_OUT_QUART, 300);
@@ -96,5 +96,5 @@ public abstract class Drag extends Module {
         return MouseUtil.isHovered(mouseX, mouseY, x, this.renderY, this.width, this.height);
     }
 
-    public abstract void render(DrawContext context);
+    public abstract void render(GuiGraphics context);
 }

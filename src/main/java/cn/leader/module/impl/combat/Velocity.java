@@ -11,9 +11,9 @@ import cn.leader.module.value.impl.ModeValue;
 import cn.leader.module.value.impl.NumberValue;
 import cn.leader.util.player.MovementUtil;
 import lombok.Getter;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Knockback control, built around one rule: do not lie about our velocity.
@@ -46,7 +46,7 @@ public class Velocity extends Module {
     private final NumberValue reduction = new NumberValue("Reduction", 100, 0, 100, 5, () -> mode.is("Packet"));
     private final BoolValue debug = new BoolValue("Debug", false);
 
-    private Vec3d knockback = Vec3d.ZERO;
+    private Vec3 knockback = Vec3.ZERO;
     private int ticksLeft;
     private boolean jumped;
     private double lastStrength;
@@ -67,7 +67,7 @@ public class Velocity extends Module {
     }
 
     private void reset() {
-        knockback = Vec3d.ZERO;
+        knockback = Vec3.ZERO;
         ticksLeft = 0;
         jumped = false;
         lastStrength = 0.0D;
@@ -77,11 +77,11 @@ public class Velocity extends Module {
     public void onPacket(PacketEvent event) {
         if (mc.player == null) return;
         if (event.getType() != PacketEvent.Type.Received) return;
-        if (!(event.getPacket() instanceof EntityVelocityUpdateS2CPacket packet)) return;
+        if (!(event.getPacket() instanceof ClientboundSetEntityMotionPacket packet)) return;
 
         if (packet.getEntityId() != mc.player.getId()) return;
 
-        Vec3d velocity = new Vec3d(
+        Vec3 velocity = new Vec3(
                 packet.getVelocityX() / 8000.0D,
                 packet.getVelocityY() / 8000.0D,
                 packet.getVelocityZ() / 8000.0D
@@ -95,19 +95,19 @@ public class Velocity extends Module {
         if (mc.player.isClimbing() || mc.player.isTouchingWater()) return;
 
         if (mode.is("Packet")) {
-            double scale = 1.0D - MathHelper.clamp(reduction.getValue() / 100.0D, 0.0D, 1.0D);
+            double scale = 1.0D - Mth.clamp(reduction.getValue() / 100.0D, 0.0D, 1.0D);
             mc.player.setVelocity(velocity.x * scale, velocity.y, velocity.z * scale);
             event.setCancelled(true);
             return;
         }
 
-        knockback = new Vec3d(velocity.x, 0.0D, velocity.z);
+        knockback = new Vec3(velocity.x, 0.0D, velocity.z);
         lastStrength = horizontal;
         jumped = false;
 
         // A stronger hit keeps us busy for longer; a light tap is over in two ticks.
         int derived = (int) Math.ceil(horizontal / 0.12D);
-        ticksLeft = MathHelper.clamp(derived, 2, window.getValue().intValue());
+        ticksLeft = Mth.clamp(derived, 2, window.getValue().intValue());
 
         setSuffix(String.format("%s %.2f", mode.getValue(), horizontal));
     }
@@ -116,7 +116,7 @@ public class Velocity extends Module {
     public void onMoveInput(MoveInputEvent event) {
         if (mc.player == null || mode.is("Packet")) return;
 
-        if (knockback == Vec3d.ZERO || ticksLeft <= 0) {
+        if (knockback == Vec3.ZERO || ticksLeft <= 0) {
             setSuffix(mode.getValue());
             return;
         }
@@ -141,14 +141,14 @@ public class Velocity extends Module {
         ticksLeft--;
 
         if (ticksLeft <= 0) {
-            knockback = Vec3d.ZERO;
+            knockback = Vec3.ZERO;
             setSuffix(mode.getValue());
         }
     }
 
     @EventTarget
     public void onUpdate(UpdateEvent event) {
-        if (knockback == Vec3d.ZERO) setSuffix(mode.getValue());
+        if (knockback == Vec3.ZERO) setSuffix(mode.getValue());
     }
 
     /**
@@ -159,7 +159,7 @@ public class Velocity extends Module {
      * in server space instead would fight the fix and send us sideways.</p>
      */
     private float[] counterStrafe() {
-        Vec3d away = knockback.normalize().multiply(-1.0D);
+        Vec3 away = knockback.normalize().multiply(-1.0D);
         if (away.lengthSquared() < 1.0E-6D) return null;
 
         double wantedYaw = Math.toDegrees(Math.atan2(-away.x, away.z));
@@ -174,7 +174,7 @@ public class Velocity extends Module {
                 if (forward == 0 && strafe == 0) continue;
 
                 double candidate = Math.toDegrees(MovementUtil.getDirection(referenceYaw, forward, strafe));
-                double delta = Math.abs(MathHelper.wrapDegrees(candidate - wantedYaw));
+                double delta = Math.abs(Mth.wrapDegrees(candidate - wantedYaw));
 
                 if (delta < bestDelta) {
                     bestDelta = delta;

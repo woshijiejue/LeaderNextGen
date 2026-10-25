@@ -4,8 +4,8 @@ import cn.leader.module.value.impl.ColorValue;
 import cn.leader.ui.clickgui.components.ValueComponent;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 import java.awt.Color;
 
 public class ColorComponent extends ValueComponent {
@@ -16,7 +16,7 @@ public class ColorComponent extends ValueComponent {
     }
 
     @Override
-    public float render(DrawContext context, int mouseX, int mouseY, float x, float y, float width) {
+    public float render(GuiGraphics context, int mouseX, int mouseY, float x, float y, float width) {
         ColorValue color = (ColorValue) getValue();
         float height = 15;
 
@@ -29,12 +29,12 @@ public class ColorComponent extends ValueComponent {
             float pickerY = y + 15;
 
             if (draggingSB) {
-                float s = MathHelper.clamp((mouseX - x) / width, 0f, 1f);
-                float b = 1f - MathHelper.clamp((mouseY - pickerY) / sbHeight, 0f, 1f);
+                float s = Mth.clamp((mouseX - x) / width, 0f, 1f);
+                float b = 1f - Mth.clamp((mouseY - pickerY) / sbHeight, 0f, 1f);
                 color.setHSB(color.getHue(), s, b);
             }
             if (draggingHue) {
-                float h = MathHelper.clamp((mouseX - x) / width, 0f, 1f);
+                float h = Mth.clamp((mouseX - x) / width, 0f, 1f);
                 color.setHSB(h, color.getSaturation(), color.getBrightness());
             }
 

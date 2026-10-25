@@ -6,7 +6,7 @@ import cn.leader.event.impl.PacketEvent;
 import cn.leader.util.IMinecraft;
 import cn.leader.util.Util;
 import lombok.Getter;
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundChatPacket;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +67,7 @@ public final class CommandManager implements IMinecraft {
 
     @EventTarget
     public void onPacket(PacketEvent event) {
-        if (event.getType() == PacketEvent.Type.Send && event.getPacket() instanceof ChatMessageC2SPacket packet) {
+        if (event.getType() == PacketEvent.Type.Send && event.getPacket() instanceof ServerboundChatPacket packet) {
             String message = packet.chatMessage();
 
             if (message.startsWith(".")) {
