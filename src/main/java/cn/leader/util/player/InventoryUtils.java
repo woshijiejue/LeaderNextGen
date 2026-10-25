@@ -10,7 +10,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.equipment.EquipmentType;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,6 +17,9 @@ import java.util.List;
 
 import static cn.leader.util.IMinecraft.mc;
 import static cn.leader.util.player.ItemUtils.getEnchantLevel;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.item.BlockItem;
 
 public final class InventoryUtils {
 
@@ -78,7 +80,7 @@ public final class InventoryUtils {
         if (item instanceof BlockItem) {
             Block block = Block.getBlockFromItem(item);
             if (block instanceof AirBlock) return false;
-            if (block instanceof StairsBlock) return false;
+            if (block instanceof StairBlock) return false;
             if (block instanceof SlabBlock) return false;
             if (block instanceof FenceBlock) return false;
             if (block instanceof FenceGateBlock) return false;
@@ -91,12 +93,12 @@ public final class InventoryUtils {
             if (block instanceof ConcretePowderBlock) return false;
             if (block instanceof TintedGlassBlock) return false;
             if (block instanceof StainedGlassBlock) return false;
-            if (block instanceof StainedGlassPaneBlock) return false;
+            if (block instanceof StainedGlassIronBarsBlock) return false;
             if (block instanceof BannerBlock) return false;
             if (block instanceof LeavesBlock) return false;
             if (block instanceof SaplingBlock) return false;
             if (block instanceof MushroomBlock) return false;
-            if (block instanceof MushroomPlantBlock) return false;
+            if (block instanceof MushroomBushBlock) return false;
             if (block instanceof FlowerBlock) return false;
             if (block instanceof ComposterBlock) return false;
             if (block instanceof NoteBlock) return false;
@@ -152,7 +154,7 @@ public final class InventoryUtils {
 
 
     public static float getBestSwordDamage() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof SwordItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getSwordDamage).max(Float::compareTo).orElse(0f);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.SWORDS) && ItemUtils.isValidItem(item)).map(InventoryUtils::getSwordDamage).max(Float::compareTo).orElse(0f);
     }
 
     public static float getBestAxeScore() {
@@ -188,7 +190,7 @@ public final class InventoryUtils {
     }
 
     public static ItemStack getBestSword() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof SwordItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(stack -> (int) (getSwordDamage(stack) * 100))).orElse(null);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.SWORDS) && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(stack -> (int) (getSwordDamage(stack) * 100))).orElse(null);
     }
 
     public static ItemStack getBestAxe() {

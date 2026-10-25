@@ -14,13 +14,15 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.equipment.EquipmentType;
 import net.minecraft.resources.ResourceKey;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static cn.leader.util.IMinecraft.mc;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.item.BlockItem;
 
 
 public class ItemUtils {
@@ -80,7 +82,7 @@ public class ItemUtils {
                 return false;
             }
 
-            if (block instanceof PlantBlock) {
+            if (block instanceof BushBlock) {
                 return false;
             }
 
@@ -179,24 +181,24 @@ public class ItemUtils {
 
     public static boolean isNotInBlockBlacklist(Block block) {
         BlockState blockState = block.getDefaultState();
-        if (block instanceof SnowBlock
-                && (!blockState.contains(SnowBlock.LAYERS) || blockState.get(SnowBlock.LAYERS) < 8)) {
+        if (block == Blocks.SNOW
+                && (!blockState.hasProperty(net.minecraft.world.level.block.SnowLayerBlock.LAYERS) || blockState.getValue(net.minecraft.world.level.block.SnowLayerBlock.LAYERS) < 8)) {
             return false;
         }
 
-        return !(block instanceof FluidBlock)
+        return !(block instanceof LiquidBlock)
                 && !(block instanceof AirBlock)
                 && !(block instanceof LadderBlock)
                 && !(block instanceof WebBlock)
                 && !(block instanceof TntBlock)
-                && !(block instanceof PlantBlock)
+                && !(block instanceof BushBlock)
                 && !(block instanceof FlowerPotBlock)
                 && !(block instanceof SlabBlock)
-                && !(block instanceof StairsBlock)
+                && !(block instanceof StairBlock)
                 && !(block instanceof FenceBlock)
                 && !(block instanceof WallBlock)
                 && !(block instanceof CarpetBlock)
-                && !(block instanceof PaneBlock)
+                && !(block instanceof IronBarsBlock)
                 && !(block instanceof SignBlock)
                 && !(block instanceof AbstractPressurePlateBlock)
                 && !(block instanceof ButtonBlock)
