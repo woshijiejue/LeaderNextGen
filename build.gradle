@@ -1,7 +1,6 @@
 plugins {
     id 'net.fabricmc.fabric-loom' version "${loom_version}"
     id 'maven-publish'
-    id 'io.freefair.lombok' version '8.6'
 }
 
 version = project.mod_version
@@ -23,6 +22,10 @@ dependencies {
     // Yarn is not published for these versions.
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Lombok is wired manually: the freefair plugin does not support Gradle 9.8 / JDK 25 yet.
+    compileOnly "org.projectlombok:lombok:${project.lombok_version}"
+    annotationProcessor "org.projectlombok:lombok:${project.lombok_version}"
 
     // Skija
     implementation "org.jetbrains.skija:skija-shared:${project.skija_version}"
@@ -51,7 +54,13 @@ def toolchainJavaVersion = 25
 
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
+    // JDK 23+ no longer runs annotation processors implicitly; Lombok needs this.
+    it.options.compilerArgs << "-proc:full"
+    it.options.compilerArgs << "-Xmaxerrs" << "10000"
     it.options.release.set(targetJavaVersion)
+    // Fork javac: Lombok is far more reliable outside Gradle's in-process compiler on JDK 25.
+    it.options.fork = true
+    it.options.forkOptions.executable = "C:/Users/19127/AppData/Local/Temp/jdk25/jdk-25/bin/javac.exe"
 }
 
 java {
@@ -73,5 +82,11 @@ publishing {
         }
     }
     repositories {
+    }
+}
+tasks.named('compileJava') {
+    doFirst {
+        println "DEBUG_ALL_ARGS=" + options.allCompilerArgs
+        println "DEBUG_PROC_PATH=" + options.annotationProcessorPath?.files?.collect { it.name }
     }
 }
