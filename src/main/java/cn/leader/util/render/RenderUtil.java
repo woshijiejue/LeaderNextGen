@@ -16,7 +16,17 @@ public final class RenderUtil implements IMinecraft {
     public static final Matrix4f lastWorldSpaceMatrix = new Matrix4f();
 
     public static @NotNull Vec3 worldSpaceToScreenSpace(@NotNull Vec3 pos) {
-        return mc.gameRenderer.projectPointToScreen(pos);
+        // projectPointToScreen returns normalised device coordinates (-1..1), not pixels.
+        Vec3 ndc = mc.gameRenderer.projectPointToScreen(pos);
+
+        double width = mc.getWindow().getGuiScaledWidth();
+        double height = mc.getWindow().getGuiScaledHeight();
+
+        double screenX = (ndc.x + 1.0D) * 0.5D * width;
+        double screenY = (1.0D - ndc.y) * 0.5D * height;
+        double depth = (ndc.z + 1.0D) * 0.5D; // 0 = at the camera, 1 = far plane
+
+        return new Vec3(screenX, screenY, depth);
     }
 
     public static @NotNull Vec3[] getVectors(@NotNull Entity ent) {
