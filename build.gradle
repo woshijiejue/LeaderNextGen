@@ -1,0 +1,77 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    id 'maven-publish'
+    id 'io.freefair.lombok' version '8.6'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    maven {
+        url = 'https://packages.jetbrains.team/maven/p/skija/maven'
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    // No mappings declaration: Fabric Loom 1.19 supplies Mojang official mappings for 26.x,
+    // Yarn is not published for these versions.
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Skija
+    implementation "org.jetbrains.skija:skija-shared:${project.skija_version}"
+    include "org.jetbrains.skija:skija-shared:${project.skija_version}"
+    implementation "org.jetbrains.skija:skija-windows:${project.skija_version}"
+    include "org.jetbrains.skija:skija-windows:${project.skija_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", project.minecraft_version
+    inputs.property "loader_version", project.loader_version
+    filteringCharset "UTF-8"
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version,
+                "minecraft_version": project.minecraft_version,
+                "loader_version": project.loader_version
+    }
+}
+
+// Minecraft 26.x ships Java 25 class files, so the compiler must be 25 capable even though our
+// own bytecode target stays at 21 (Mixin compatibility level JAVA_21).
+def targetJavaVersion = 21
+def toolchainJavaVersion = 25
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    it.options.release.set(targetJavaVersion)
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(toolchainJavaVersion)
+    withSourcesJar()
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.archives_base_name}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = project.archives_base_name
+            from components.java
+        }
+    }
+    repositories {
+    }
+}
