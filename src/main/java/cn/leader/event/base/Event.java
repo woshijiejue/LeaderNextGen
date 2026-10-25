@@ -15,6 +15,10 @@ public class Event {
     public static class StateEvent extends Event {
         private boolean pre = true;
 
+        public boolean isPre() {
+            return pre;
+        }
+
         public boolean isPost() {
             return !pre;
         }
@@ -27,9 +31,5 @@ public class Event {
     public boolean isCancelled() {
         return this.cancelled;
     }
-
-        public boolean isPre() {
-            return this.pre;
-        }
 
 }

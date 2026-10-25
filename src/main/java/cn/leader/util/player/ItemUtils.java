@@ -49,7 +49,7 @@ public class ItemUtils {
                 return false;
             }
 
-            var string = itemStack.getName().getString();
+            var string = itemStack.getHoverName().getString();
 
             if (string.contains("Click") || string.contains("Right") || string.contains("点击") || string.contains("Teleport") || string.contains("使用") || string.contains("传送")) {
                 return false;
@@ -69,7 +69,7 @@ public class ItemUtils {
         if (stack != null && !stack.isEmpty() && stack.getItem() instanceof BlockItem && stack.getCount() > 0) {
             if (!isValidItem(stack)) return false;
 
-            var string = stack.getName().getString();
+            var string = stack.getHoverName().getString();
             var block = ((BlockItem) stack.getItem()).getBlock();
 
             if (isSca && block instanceof TntBlock) {
@@ -86,7 +86,7 @@ public class ItemUtils {
                 return false;
             }
 
-            if (block instanceof FungusBlock) {
+            if (block instanceof NetherFungusBlock) {
                 return false;
             }
 
@@ -131,18 +131,18 @@ public class ItemUtils {
 
         if (isGodItem(stack)) return true;
 
-        if (stack.getName().getString().contains("点击使用")) return true;
+        if (stack.getHoverName().getString().contains("点击使用")) return true;
 
         if (stack.getItem() == Items.TNT) return true;
 
-        if (stack.getItem() instanceof PotionItem) {
-            PotionContents potionContents = stack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.DEFAULT);
+        if (stack.getItem() instanceof net.minecraft.world.item.PotionItem) {
+            PotionContents potionContents = stack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 
-            Iterable<MobEffectInstance> potion = potionContents.getEffects();
+            Iterable<MobEffectInstance> potion = potionContents.getAllEffects();
 
             for (MobEffectInstance effectInstance : potion) {
-                MobEffect effect = effectInstance.getEffectType().value();
-                if (effect.getName().getString().contains("jump_boost")) {
+                MobEffect effect = effectInstance.getEffect().value();
+                if (effect.getDescriptionId().contains("jump_boost")) {
                     return true;
                 }
 //                if (effect.getCategory() == StatusEffectCategory.HARMFUL)
@@ -152,7 +152,7 @@ public class ItemUtils {
 
         if (stack.getItem() == Items.COMPASS) return true;
 
-        if (stack.getItem() instanceof FireChargeItem) return true;
+        if (stack.getItem() instanceof net.minecraft.world.item.FireChargeItem) return true;
 
         if (stack.is(net.minecraft.tags.ItemTags.SHOVELS)) {
             return InventoryUtils.getBestShovel() == stack;
@@ -200,13 +200,13 @@ public class ItemUtils {
                 && !(block instanceof CarpetBlock)
                 && !(block instanceof IronBarsBlock)
                 && !(block instanceof SignBlock)
-                && !(block instanceof AbstractPressurePlateBlock)
+                && !(block instanceof BasePressurePlateBlock)
                 && !(block instanceof ButtonBlock)
                 && !(block instanceof LeverBlock)
                 && !(block instanceof TorchBlock)
                 && !(block instanceof LanternBlock)
                 && !(block instanceof DoorBlock)
-                && !(block instanceof TrapdoorBlock)
+                && !(block instanceof TrapDoorBlock)
                 && !(block instanceof AbstractBannerBlock)
                 && !(block instanceof SkullBlock)
                 && !(block instanceof BedBlock)
@@ -222,8 +222,8 @@ public class ItemUtils {
                 && !(block instanceof BlastFurnaceBlock)
                 && !(block instanceof RepeaterBlock)
                 && !(block instanceof ComparatorBlock)
-                && !(block instanceof TripwireBlock)
-                && !(block instanceof TripwireHookBlock)
+                && !(block instanceof TripWireBlock)
+                && !(block instanceof TripWireHookBlock)
                 && !(block instanceof EndPortalFrameBlock)
                 && !(block instanceof EndPortalBlock)
                 && !(block instanceof AbstractCauldronBlock)
@@ -236,8 +236,8 @@ public class ItemUtils {
                 && !(block instanceof StructureVoidBlock)
                 && !(block instanceof BarrierBlock)
                 && !(block instanceof LightBlock)
-                && !(block instanceof PistonHeadBlock)
-                && !(block instanceof PistonExtensionBlock)
+                && !(block instanceof net.minecraft.world.level.block.piston.PistonHeadBlock)
+                && !(block instanceof net.minecraft.world.level.block.piston.MovingPistonBlock)
                 && !(block instanceof FallingBlock);
     }
 
@@ -254,37 +254,31 @@ public class ItemUtils {
             return 0;
         }
 
-        return EnchantmentHelper.getLevel(mc.level.getRegistryManager().getOrThrow(key.getRegistryRef()).getOrThrow(key), stack);
+        return EnchantmentHelper.getItemEnchantmentLevel(mc.level.registryAccess().lookupOrThrow(key.registryKey()).getOrThrow(key), stack);
+    }
+
+    public static boolean isArmor(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        var equippable = stack.get(DataComponents.EQUIPPABLE);
+        return equippable != null && equippable.slot().getType() == net.minecraft.world.entity.EquipmentSlot.Type.HUMANOID_ARMOR;
     }
 
     public static EquipmentType getEquipmentType(ItemStack stack) {
-        if (stack.isEmpty() || !(stack.getItem() instanceof ArmorItem)) {
+        if (!isArmor(stack)) {
             return null;
         }
 
-        var comp = stack.getComponents().get(DataComponents.ATTRIBUTE_MODIFIERS);
-
-        if (comp == null) {
-            return null;
-        }
-
-        for (var entry : comp.modifiers()) {
-            if (entry.attribute().matchesKey(Attributes.ARMOR.getKey().orElseThrow()) || entry.attribute().matchesKey(Attributes.ARMOR_TOUGHNESS.getKey().orElseThrow())) {
-                return switch (entry.slot()) {
-                    case HEAD -> EquipmentType.HELMET;
-                    case CHEST -> EquipmentType.CHESTPLATE;
-                    case LEGS -> EquipmentType.LEGGINGS;
-                    case FEET -> EquipmentType.BOOTS;
-                    default -> null;
-                };
-            }
-        }
-
-        return null;
+        return switch (stack.get(DataComponents.EQUIPPABLE).slot()) {
+            case HEAD -> EquipmentType.HELMET;
+            case CHEST -> EquipmentType.CHESTPLATE;
+            case LEGS -> EquipmentType.LEGGINGS;
+            case FEET -> EquipmentType.BOOTS;
+            default -> null;
+        };
     }
 
     public static boolean isConsumable(ItemStack stack) {
-        return isFood(stack) || stack.isOf(Items.POTION) || stack.isOf(Items.MILK_BUCKET);
+        return isFood(stack) || stack.is(Items.POTION) || stack.is(Items.MILK_BUCKET);
     }
 
     public static FoodProperties getFoodComponent(ItemStack stack) {

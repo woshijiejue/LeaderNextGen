@@ -31,7 +31,7 @@ public final class AutoTool extends Module {
     public void onUpdate(UpdateEvent event) {
         if (mc.player == null || mc.level == null || mc.gameMode == null) return;
 
-        if (!mc.gameMode.isBreakingBlock() || !(mc.hitResult instanceof BlockHitResult hit)) {
+        if (!mc.gameMode.isDestroying() || !(mc.hitResult instanceof BlockHitResult hit)) {
             restore();
             return;
         }
@@ -41,7 +41,7 @@ public final class AutoTool extends Module {
         int best = bestSlot(state);
         if (best == -1) return;
 
-        int current = mc.player.getInventory().selected;
+        int current = mc.player.getInventory().getSelectedSlot();
         if (best == current) return;
 
         if (previousSlot == -1) {
@@ -64,7 +64,7 @@ public final class AutoTool extends Module {
             ItemStack stack = mc.player.getInventory().getItem(slot);
             if (stack.isEmpty()) continue;
 
-            float speed = stack.getMiningSpeedMultiplier(state);
+            float speed = stack.getDestroySpeed(state);
             if (speed > bestSpeed) {
                 bestSpeed = speed;
                 bestSlot = slot;

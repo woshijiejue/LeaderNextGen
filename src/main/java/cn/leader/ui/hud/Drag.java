@@ -30,8 +30,8 @@ public abstract class Drag extends Module {
 
     public void updatePos() {
         Window window = mc.getWindow();
-        float scaledWidth = (float) window.getWidth();
-        float scaledHeight = (float) window.getHeight();
+        float scaledWidth = (float) window.getGuiScaledWidth();
+        float scaledHeight = (float) window.getGuiScaledHeight();
 
         float targetX = this.percentX * scaledWidth;
         float targetY = this.percentY * scaledHeight;
@@ -70,8 +70,8 @@ public abstract class Drag extends Module {
 
         if (this.dragging) {
             Window window = mc.getWindow();
-            float scaledWidth = (float) window.getWidth();
-            float scaledHeight = (float) window.getHeight();
+            float scaledWidth = (float) window.getGuiScaledWidth();
+            float scaledHeight = (float) window.getGuiScaledHeight();
             float deltaPercentX = ((float)mouseX - this.lastMouseX) / scaledWidth;
             float deltaPercentY = ((float)mouseY - this.lastMouseY) / scaledHeight;
 

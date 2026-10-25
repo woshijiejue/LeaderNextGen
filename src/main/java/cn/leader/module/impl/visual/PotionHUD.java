@@ -52,7 +52,7 @@ public final class PotionHUD extends Drag {
 
         List<String> lines = new ArrayList<>();
         for (MobEffectInstance effect : effects) {
-            String name = Component.translatable(effect.getTranslationKey()).getString();
+            String name = Component.translatable(effect.getDescriptionId()).getString();
             int amplifier = effect.getAmplifier();
             if (amplifier > 0) {
                 name += " " + roman(amplifier + 1);
@@ -82,14 +82,14 @@ public final class PotionHUD extends Drag {
 
         float y = renderY + padding;
         for (int index = 0; index < lines.size(); index++) {
-            int color = effects.get(index).isInfinite() ? 0xFFFFC857 : 0xFFD8D8D8;
+            int color = effects.get(index).isInfiniteDuration() ? 0xFFFFC857 : 0xFFD8D8D8;
             FontUtil.drawStringWithShadow(context, lines.get(index), renderX + padding, y, color);
             y += textHeight;
         }
     }
 
     private String duration(MobEffectInstance effect) {
-        if (effect.isInfinite()) return "*";
+        if (effect.isInfiniteDuration()) return "*";
 
         int totalSeconds = effect.getDuration() / 20;
         int minutes = totalSeconds / 60;

@@ -21,7 +21,7 @@ public class TargetManager implements IMinecraft {
         if (mc.level == null) return;
 
         targets.clear();
-        for (Entity entity : mc.level.getEntities()) {
+        for (Entity entity : mc.level.entitiesForRendering()) {
             if (entity instanceof LivingEntity livingEntity) {
                 targets.add(livingEntity);
             }

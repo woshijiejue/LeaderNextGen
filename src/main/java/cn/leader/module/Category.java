@@ -10,4 +10,12 @@ public enum Category {
     Client("Client");
 
     public final String name;
+
+    Category(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return this.name;
+    }
 }

@@ -32,20 +32,20 @@ public abstract class MixinLivingEntity implements IMinecraft {
         }
     }
 
-    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
+    @Redirect(method = "jumpFromGround", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F"))
     private float jump(LivingEntity entity) {
         if (mc.player == null || mc.level == null) return entity.getYRot();
 
         if (entity == mc.player) {
             JumpEvent event = new JumpEvent(entity.getYRot());
             instance.getEventManager().call(event);
-            return event.getYRot();
+            return event.getYaw();
         }
 
         return entity.getYRot();
     }
 
-    @Redirect(method = "turnHead", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
+    @Redirect(method = "tickHeadTurn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F"))
     private float turnHead(LivingEntity entity) {
         if (entity == mc.player) {
             RotationEvent event = new RotationEvent(new float[]{entity.getYRot(), 0}, new float[]{0, 0});
@@ -56,7 +56,7 @@ public abstract class MixinLivingEntity implements IMinecraft {
         return entity.getYRot();
     }
 
-    @Inject(method = "getHandSwingDuration", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getCurrentSwingDuration", at = @At("HEAD"), cancellable = true)
     public void getHandSwingDuration(CallbackInfoReturnable<Integer> cir) {
         Animation animation = instance.getModuleManager().getModule(Animation.class);
 

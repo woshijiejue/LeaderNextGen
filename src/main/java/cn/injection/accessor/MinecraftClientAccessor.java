@@ -7,10 +7,10 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(Minecraft.class)
 public interface MinecraftClientAccessor {
 
-    @Accessor("itemUseCooldown")
+    @Accessor("rightClickDelay")
     int getItemUseCooldown();
 
-    @Accessor("itemUseCooldown")
+    @Accessor("rightClickDelay")
     void setItemUseCooldown(int cooldown);
 
 }

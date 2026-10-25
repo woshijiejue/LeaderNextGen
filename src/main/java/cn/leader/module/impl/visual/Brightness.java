@@ -18,13 +18,13 @@ public class Brightness extends Module {
     public void onDisable() {
         if (mc.player == null) return;
 
-        mc.player.removeStatusEffect(MobEffects.NIGHT_VISION);
+        mc.player.removeEffect(MobEffects.NIGHT_VISION);
     }
 
     @EventTarget
     public void onUpdate(UpdateEvent event) {
         if (mc.player == null) return;
 
-        mc.player.addStatusEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 8963, 0, false, false, false));
+        mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 8963, 0, false, false, false));
     }
 }

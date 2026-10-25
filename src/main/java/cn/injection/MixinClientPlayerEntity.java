@@ -13,6 +13,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,17 +29,17 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayer imple
     @Shadow
     public ClientInput input;
     @Shadow
-    protected int ticksLeftToDoubleTapSprint;
+    protected int sprintTriggerTime;
     @Shadow
-    private double lastX;
+    private double xLast;
     @Shadow
-    private double lastBaseY;
+    private double yLast;
     @Shadow
-    private double lastZ;
+    private double zLast;
     @Shadow
-    private float lastYaw;
+    private float yRotLast;
     @Shadow
-    private float lastPitch;
+    private float xRotLast;
     @Shadow
     private boolean lastOnGround;
     @Shadow
@@ -46,19 +47,19 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayer imple
     @Shadow
     private boolean autoJumpEnabled;
     @Shadow
-    private int ticksSinceLastPositionPacketSent;
+    private int positionReminder;
 
     @Shadow
     @Final
-    public ClientPacketListener networkHandler;
+    public ClientPacketListener connection;
     @Shadow
     @Final
-    protected Minecraft client;
+    protected Minecraft minecraft;
 
     @Shadow
-    protected abstract void sendSprintingPacket();
+    protected abstract void sendIsSprintingIfNeeded();
     @Shadow
-    protected abstract boolean isCamera();
+    protected abstract boolean isControlledCamera();
 
     public MixinClientPlayerEntity(final ClientLevel world, final GameProfile profile) {
         super(world, profile);
@@ -70,7 +71,7 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayer imple
         instance.getEventManager().call(new UpdateEvent());
     }
 
-    @Inject(method = "tickMovement", at = @At("HEAD"))
+    @Inject(method = "aiStep", at = @At("HEAD"))
     private void tickMovement(final CallbackInfo ci) {
         instance.getEventManager().call(new LivingUpdateEvent());
     }
@@ -88,68 +89,64 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayer imple
         }
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/LocalPlayer;isUsingItem()Z"))
-    private boolean tickMovement(final LocalPlayer player) {
-        if (this.isUsingItem() && !this.hasVehicle()) {
-            final SlowEvent event = new SlowEvent(0.2F, 0.2F);
-            instance.getEventManager().call(event);
+    @Redirect(method = "modifyInput", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec2;scale(F)Lnet/minecraft/world/phys/Vec2;", ordinal = 1))
+    private Vec2 itemUseSlowdown(final Vec2 move, final float multiplier) {
+        final SlowEvent event = new SlowEvent(multiplier, multiplier);
+        instance.getEventManager().call(event);
 
-            if (!event.isCancelled()) {
-                this.input.movementSideways *= event.getSideways();
-                this.input.movementForward *= event.getForward();
-                this.ticksLeftToDoubleTapSprint = 0;
-            }
-            return false;
+        if (event.isCancelled()) {
+            return move;
         }
 
-        return this.isUsingItem();
+        this.sprintTriggerTime = 0;
+        return new Vec2(move.x * event.getSideways(), move.y * event.getForward());
     }
 
-    @Inject(method = "sendMovementPackets", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendPosition", at = @At("HEAD"), cancellable = true)
     private void sendMovementPackets(final CallbackInfo ci) {
-        this.sendSprintingPacket();
+        this.sendIsSprintingIfNeeded();
 
-        if (this.isCamera()) {
+        if (this.isControlledCamera()) {
             MotionEvent event = new MotionEvent(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot(), this.onGround(), this.horizontalCollision);
             instance.getEventManager().call(event);
 
             if (!event.isCancelled()) {
-                double d = event.getX() - this.lastX;
-                double e = event.getY() - this.lastBaseY;
-                double f = event.getZ() - this.lastZ;
-                double g = event.getYRot() - this.lastYaw;
-                double h = event.getXRot() - this.lastPitch;
+                double d = event.getX() - this.xLast;
+                double e = event.getY() - this.yLast;
+                double f = event.getZ() - this.zLast;
+                double g = event.getYRot() - this.yRotLast;
+                double h = event.getXRot() - this.xRotLast;
 
-                ++this.ticksSinceLastPositionPacketSent;
+                ++this.positionReminder;
 
-                boolean isPosChanged = Mth.squaredMagnitude(d, e, f) > Mth.square(2.0E-4) || this.ticksSinceLastPositionPacketSent >= 20;
+                boolean isPosChanged = Mth.lengthSquared(d, e, f) > Mth.square(2.0E-4) || this.positionReminder >= 20;
                 boolean isLookChanged = g != 0.0 || h != 0.0;
 
                 if (isPosChanged && isLookChanged) {
-                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.Full(event.getX(), event.getY(), event.getZ(), event.getYRot(), event.getXRot(), event.onGround(), event.isHorizontalCollision()));
+                    this.connection.send(new ServerboundMovePlayerPacket.PosRot(event.getX(), event.getY(), event.getZ(), event.getYRot(), event.getXRot(), event.isOnGround(), event.isHorizontalCollision()));
                 } else if (isPosChanged) {
-                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.PositionAndOnGround(event.getX(), event.getY(), event.getZ(), event.onGround(), event.isHorizontalCollision()));
+                    this.connection.send(new ServerboundMovePlayerPacket.Pos(event.getX(), event.getY(), event.getZ(), event.isOnGround(), event.isHorizontalCollision()));
                 } else if (isLookChanged) {
-                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.LookAndOnGround(event.getYRot(), event.getXRot(), event.onGround(), event.isHorizontalCollision()));
-                } else if (this.lastOnGround != event.onGround() || this.lastHorizontalCollision != event.isHorizontalCollision()) {
-                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.OnGroundOnly(event.onGround(), event.isHorizontalCollision()));
+                    this.connection.send(new ServerboundMovePlayerPacket.Rot(event.getYRot(), event.getXRot(), event.isOnGround(), event.isHorizontalCollision()));
+                } else if (this.lastOnGround != event.isOnGround() || this.lastHorizontalCollision != event.isHorizontalCollision()) {
+                    this.connection.send(new ServerboundMovePlayerPacket.StatusOnly(event.isOnGround(), event.isHorizontalCollision()));
                 }
 
                 if (isPosChanged) {
-                    this.lastX = event.getX();
-                    this.lastBaseY = event.getY();
-                    this.lastZ = event.getZ();
-                    this.ticksSinceLastPositionPacketSent = 0;
+                    this.xLast = event.getX();
+                    this.yLast = event.getY();
+                    this.zLast = event.getZ();
+                    this.positionReminder = 0;
                 }
 
                 if (isLookChanged) {
-                    this.lastYaw = event.getYRot();
-                    this.lastPitch = event.getXRot();
+                    this.yRotLast = event.getYRot();
+                    this.xRotLast = event.getXRot();
                 }
 
-                this.lastOnGround = event.onGround();
+                this.lastOnGround = event.isOnGround();
                 this.lastHorizontalCollision = event.isHorizontalCollision();
-                this.autoJumpEnabled = this.client.options.getAutoJump().getValue();
+                this.autoJumpEnabled = this.minecraft.options.autoJump().get();
             }
 
             event.setPost();

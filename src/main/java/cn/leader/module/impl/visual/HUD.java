@@ -48,7 +48,7 @@ public class HUD extends Module {
 
         for (Module module : instance.getModuleManager().getModuleMap().values()) {
             if (module instanceof Drag drag && drag.isEnabled()) {
-                drag.onChatGUI(event.getMouseX(), event.getMouseY(), GLFW.glfwGetMouseButton(mc.getWindow().getHandle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS);
+                drag.onChatGUI(event.getMouseX(), event.getMouseY(), GLFW.glfwGetMouseButton(mc.getWindow().handle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS);
             }
         }
     }

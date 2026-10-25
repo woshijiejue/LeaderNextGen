@@ -29,7 +29,7 @@ public final class AntiBot extends Module {
 
         if (notInTab.getValue()) {
             if (mc.getConnection() == null) return false;
-            if (mc.getConnection().getPlayerListEntry(player.getUUID()) == null) {
+            if (mc.getConnection().getPlayerInfo(player.getUUID()) == null) {
                 return true;
             }
         }
@@ -38,7 +38,7 @@ public final class AntiBot extends Module {
             String name = player.getName().getString();
             if (name.isEmpty()) return true;
 
-            for (Player other : mc.level.getPlayers()) {
+            for (Player other : mc.level.players()) {
                 if (other == player) continue;
                 if (other.getName().getString().equalsIgnoreCase(name)) {
                     return true;

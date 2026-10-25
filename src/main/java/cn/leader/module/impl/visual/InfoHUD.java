@@ -46,7 +46,7 @@ public final class InfoHUD extends Drag {
         List<String> content = new ArrayList<>();
 
         if (lines.isEnabled("FPS")) {
-            content.add("FPS " + mc.getCurrentFps());
+            content.add("FPS " + mc.getFps());
         }
 
         if (lines.isEnabled("Ping")) {
@@ -97,7 +97,7 @@ public final class InfoHUD extends Drag {
     private int latency() {
         if (mc.getConnection() == null || mc.player == null) return 0;
 
-        PlayerInfo entry = mc.getConnection().getPlayerListEntry(mc.player.getUUID());
+        PlayerInfo entry = mc.getConnection().getPlayerInfo(mc.player.getUUID());
         return entry == null ? 0 : entry.getLatency();
     }
 

@@ -77,10 +77,6 @@ public class SkiaFont {
         return this.fontHeight;
     }
 
-        public float getOffsetX() {
-            return this.offsetX;
-        }
-
 
     public Shaper getShaper() {
         return this.shaper;

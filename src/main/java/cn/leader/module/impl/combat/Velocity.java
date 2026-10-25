@@ -77,20 +77,16 @@ public class Velocity extends Module {
         if (event.getType() != PacketEvent.Type.Received) return;
         if (!(event.getPacket() instanceof ClientboundSetEntityMotionPacket packet)) return;
 
-        if (packet.getEntityId() != mc.player.getId()) return;
+        if (packet.id() != mc.player.getId()) return;
 
-        Vec3 velocity = new Vec3(
-                packet.getVelocityX() / 8000.0D,
-                packet.getVelocityY() / 8000.0D,
-                packet.getVelocityZ() / 8000.0D
-        );
+        Vec3 velocity = packet.movement();
 
         double horizontal = Math.hypot(velocity.x, velocity.z);
 
         // Servers (and vanilla itself) love sending velocity packets that do nothing: pure
         // downward pushes, damage jitter, riding corrections. Only horizontal pushes matter here.
         if (horizontal < 0.02D) return;
-        if (mc.player.isClimbing() || mc.player.isInWater()) return;
+        if (mc.player.onClimbable() || mc.player.isInWater()) return;
 
         if (mode.is("Packet")) {
             double scale = 1.0D - Mth.clamp(reduction.getValue() / 100.0D, 0.0D, 1.0D);
@@ -157,8 +153,8 @@ public class Velocity extends Module {
      * in server space instead would fight the fix and send us sideways.</p>
      */
     private float[] counterStrafe() {
-        Vec3 away = knockback.normalize().multiply(-1.0D);
-        if (away.lengthSquared() < 1.0E-6D) return null;
+        Vec3 away = knockback.normalize().scale(-1.0D);
+        if (away.lengthSqr() < 1.0E-6D) return null;
 
         double wantedYaw = Math.toDegrees(Math.atan2(-away.x, away.z));
         float referenceYaw = mc.player.getYRot();
@@ -204,17 +200,5 @@ public class Velocity extends Module {
     public boolean isJumped() {
         return this.jumped;
     }
-
-        public float getBestForward() {
-            return this.bestForward;
-        }
-
-        public float getBestStrafe() {
-            return this.bestStrafe;
-        }
-
-        public double getBestDelta() {
-            return this.bestDelta;
-        }
 
 }

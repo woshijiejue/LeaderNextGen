@@ -35,11 +35,11 @@ public final class RotationUtil implements IMinecraft {
             return nearestPoint;
         }
 
-        AABB scanBox = box.expand(-0.002);
+        AABB scanBox = box.deflate(0.002);
 
-        double stepX = scanBox.getLengthX();
-        double stepY = scanBox.getLengthY();
-        double stepZ = scanBox.getLengthZ();
+        double stepX = scanBox.getXsize();
+        double stepY = scanBox.getYsize();
+        double stepZ = scanBox.getZsize();
 
         Vec3 bestPoint = null;
         double minDistanceSq = Double.MAX_VALUE;
@@ -50,7 +50,7 @@ public final class RotationUtil implements IMinecraft {
                     Vec3 currentPoint = new Vec3(sX, sY, sZ);
 
                     if (isVisible(currentPoint)) {
-                        double distSq = eyePos.squaredDistanceTo(currentPoint);
+                        double distSq = eyePos.distanceToSqr(currentPoint);
                         if (distSq < minDistanceSq) {
                             minDistanceSq = distSq;
                             bestPoint = currentPoint;
@@ -67,12 +67,12 @@ public final class RotationUtil implements IMinecraft {
         if (mc.player == null || mc.level == null) return false;
 
         Vec3 eyePos = mc.player.getEyePosition();
-        if (eyePos.squaredDistanceTo(targetVec) > 4096.0) return false;
-        Vec3 lookVec = mc.player.getRotationVec(1);
+        if (eyePos.distanceToSqr(targetVec) > 4096.0) return false;
+        Vec3 lookVec = mc.player.getViewVector(1);
         Vec3 toTarget = targetVec.subtract(eyePos).normalize();
-        if (lookVec.dotProduct(toTarget) < 0) return false;
-        ClipContext context = new ClipContext(eyePos, targetVec, ClipContext.ShapeType.COLLIDER, ClipContext.FluidHandling.NONE, mc.player);
-        return mc.level.raycast(context).getType() == HitResult.Type.MISS;
+        if (lookVec.dot(toTarget) < 0) return false;
+        ClipContext context = new ClipContext(eyePos, targetVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player);
+        return mc.level.clip(context).getType() == HitResult.Type.MISS;
     }
 
     public static float getDistanceToEntity(LivingEntity target) {
@@ -171,7 +171,7 @@ public final class RotationUtil implements IMinecraft {
     }
 
     public static float[] applySensitivityPatch(float[] rotation, float[] previousRotation) {
-        float mouseSensitivity = (float) (mc.options.getMouseSensitivity().getValue() * (1 + Math.random() / 10000000) * 0.6F + 0.2F);
+        float mouseSensitivity = (float) (mc.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6F + 0.2F);
         double multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0F * 0.15D;
         float yaw = previousRotation[0] + (float) (Math.round((rotation[0] - previousRotation[0]) / multiplier) * multiplier);
         float pitch = previousRotation[1] + (float) (Math.round((rotation[1] - previousRotation[1]) / multiplier) * multiplier);

@@ -34,7 +34,7 @@ public final class ESP extends Module {
         if (mc.player == null || mc.level == null) return;
 
         for (Entity entity : instance.getTargetManager().getTargets()) {
-            if (entity.equals(mc.player) && mc.options.getPerspective().isFirstPerson()) continue;
+            if (entity.equals(mc.player) && mc.options.getCameraType().isFirstPerson()) continue;
 
             if (EntityUtil.isSelected(entity)) {
                 drawBox(entity, e.getContext());

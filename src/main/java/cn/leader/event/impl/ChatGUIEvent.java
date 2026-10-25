@@ -8,8 +8,10 @@ public class ChatGUIEvent extends Event {
     private int mouseX;
     private int mouseY;
 
-    public ChatGUIEvent(GuiGraphicsExtractor context) {
+    public ChatGUIEvent(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         this.context = context;
+        this.mouseX = mouseX;
+        this.mouseY = mouseY;
     }
 
     public GuiGraphicsExtractor getContext() {

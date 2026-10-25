@@ -79,7 +79,7 @@ public class RotationManager implements IMinecraft {
         lastRotations = previous;
         requestTicks = Math.max(0, requestTicks - 1);
 
-        mc.gameRenderer.updateCrosshairTarget(1.0F);
+        // Crosshair picking is handled by the 26.2 render extraction pipeline.
     }
 
     @EventTarget
@@ -96,7 +96,7 @@ public class RotationManager implements IMinecraft {
     public void onStrafe(StrafeEvent event) {
         if (mc.player == null || !isActive() || correctMovement == MovementCorrection.None) return;
 
-        event.setYRot(currentRotations[0]);
+        event.setYaw(currentRotations[0]);
     }
 
     @EventTarget
@@ -104,7 +104,7 @@ public class RotationManager implements IMinecraft {
     public void onJump(JumpEvent event) {
         if (mc.player == null || !isActive() || correctMovement == MovementCorrection.None) return;
 
-        event.setYRot(currentRotations[0]);
+        event.setYaw(currentRotations[0]);
     }
 
     @EventTarget

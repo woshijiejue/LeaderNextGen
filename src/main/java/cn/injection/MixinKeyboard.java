@@ -11,10 +11,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(KeyboardHandler.class)
 public class MixinKeyboard implements IMinecraft {
 
-    @Inject(method = "onKey", at = @At(value="HEAD"))
-    private void onKey(long window, int key, int scancode, int action, int modifiers, CallbackInfo ci) {
+    @Inject(method = "keyPress", at = @At(value="HEAD"))
+    private void onKey(long window, int action, net.minecraft.client.input.KeyEvent keyEvent, CallbackInfo ci) {
         if (action == 1) {
-            KeyEvent event = new KeyEvent(key);
+            KeyEvent event = new KeyEvent(keyEvent.key());
             instance.getEventManager().call(event);
         }
     }

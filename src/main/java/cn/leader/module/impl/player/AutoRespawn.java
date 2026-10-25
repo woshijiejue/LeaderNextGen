@@ -23,12 +23,12 @@ public final class AutoRespawn extends Module {
     @EventTarget
     public void onTick(TickEvent event) {
         if (mc.player == null) return;
-        if (!(Client.currentScreen instanceof DeathScreen)) return;
+        if (!(mc.gui.screen() instanceof DeathScreen)) return;
 
-        mc.player.requestRespawn();
+        mc.player.respawn();
 
         if (closeScreen.getValue()) {
-            mc.setScreen(null);
+            mc.setScreenAndShow(null);
         }
     }
 }

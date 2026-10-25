@@ -9,6 +9,6 @@ import java.util.List;
 @Mixin(LivingEntity.class)
 public interface LivingEntityAccessor {
 
-    @Accessor("jumpingCooldown")
+    @Accessor("noJumpDelay")
     void setJumpCooldown(int val);
 }

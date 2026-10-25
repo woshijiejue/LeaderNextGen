@@ -23,12 +23,12 @@ public abstract class MixinMinecraftClient implements IMinecraft {
         Client.logger = LogManager.getLogger(Client.name);
     }
 
-    @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;inGameHud:Lnet/minecraft/client/gui/hud/Gui;", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
+    @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;gui:Lnet/minecraft/client/gui/Gui;", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void postInit(CallbackInfo ci) {
         Client.instance.init();
     }
 
-    @Inject(method = "stop", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;close()V", shift = At.Shift.AFTER))
+    @Inject(method = "close", at = @At("HEAD"))
     private void stop(CallbackInfo ci) {
         Client.instance.shutdown();
     }
@@ -48,12 +48,7 @@ public abstract class MixinMinecraftClient implements IMinecraft {
         Client.instance.getEventManager().call(new TickEvent());
     }
 
-    @Inject(method = "setScreenAndShow", at = @At("HEAD"))
-    private void leaderNextgen$screen(net.minecraft.client.gui.screens.Screen screen, CallbackInfo ci) {
-        Client.currentScreen = screen;
-    }
-
-    @Inject(method = "setWorld", at = @At("HEAD"))
+    @Inject(method = "setLevel", at = @At("HEAD"))
     private void setWorld(ClientLevel world, CallbackInfo ci) {
         Client.instance.getEventManager().call(new WorldEvent(world));
     }

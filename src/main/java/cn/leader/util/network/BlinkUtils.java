@@ -64,14 +64,14 @@ public class BlinkUtils implements IMinecraft {
         double y = packet.getY(clonePlayer.getY());
         double z = packet.getZ(clonePlayer.getZ());
 
-        float yaw = packet.getYaw(clonePlayer.getYRot());
-        float pitch = packet.getPitch(clonePlayer.getXRot());
+        float yaw = packet.getYRot(clonePlayer.getYRot());
+        float pitch = packet.getXRot(clonePlayer.getXRot());
 
-        clonePlayer.updatePositionAndAngles(x, y, z, yaw, pitch);
+        clonePlayer.absSnapTo(x, y, z, yaw, pitch);
 
-        if (packet.changesLook()) {
+        if (packet.hasRotation()) {
             clonePlayer.setYRot(yaw);
-            clonePlayer.setHeadYaw(yaw);
+            clonePlayer.setYHeadRot(yaw);
             clonePlayer.setXRot(pitch);
         }
     }
@@ -88,6 +88,14 @@ public class BlinkUtils implements IMinecraft {
             }
         }
     }
+    public static LinkedBlockingDeque<Packet<ClientGamePacketListener>> getServerPackets() {
+        return serverPackets;
+    }
+
+    public static LinkedBlockingDeque<Packet<?>> getClientPackets() {
+        return clientPackets;
+    }
+
     public BlinkUtils() {
         instance.getEventManager().register(this);
     }
@@ -125,7 +133,7 @@ public class BlinkUtils implements IMinecraft {
         synchronized (serverPackets) {
             while (!serverPackets.isEmpty()) {
                 Packet<ClientGamePacketListener> packet = serverPackets.poll();
-                packet.apply(mc.getConnection());
+                packet.handle(mc.getConnection());
             }
         }
     }

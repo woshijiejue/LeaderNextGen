@@ -31,7 +31,7 @@ public final class AimUtil implements IMinecraft {
      * Sensitivity S becomes {@code (0.6S + 0.2)^3 * 8 * 0.15} degrees of yaw per dot.
      */
     public static double mouseDivisor() {
-        double sensitivity = mc.options.getMouseSensitivity().getValue() * 0.6D + 0.2D;
+        double sensitivity = mc.options.sensitivity().get() * 0.6D + 0.2D;
         return sensitivity * sensitivity * sensitivity * 8.0D * 0.15D;
     }
 
@@ -40,7 +40,7 @@ public final class AimUtil implements IMinecraft {
      * aimed at it always intersects the real box (instead of grazing the boundary).
      */
     public static Vec3 aimPoint(LivingEntity entity) {
-        AABB box = entity.getBoundingBox().shrink(SURFACE_INSET, SURFACE_INSET, SURFACE_INSET);
+        AABB box = entity.getBoundingBox().deflate(SURFACE_INSET);
 
         if (mc.player == null) {
             return box.getCenter();
@@ -79,10 +79,10 @@ public final class AimUtil implements IMinecraft {
 
         Vec3 eye = mc.player.getEyePosition();
         Vec3 delta = entity.getBoundingBox().getCenter().subtract(eye);
-        if (delta.lengthSquared() < 1.0E-6D) return 0.0D;
+        if (delta.lengthSqr() < 1.0E-6D) return 0.0D;
 
         Vec3 look = mc.player.calculateViewVector(rotation[1], rotation[0]);
-        double dot = look.dotProduct(delta.normalize());
+        double dot = look.dot(delta.normalize());
         return Math.toDegrees(Math.acos(Mth.clamp(dot, -1.0D, 1.0D)));
     }
 
@@ -129,7 +129,7 @@ public final class AimUtil implements IMinecraft {
             if (near > far) return null;
         }
 
-        return origin.add(direction.multiply(near));
+        return origin.add(direction.scale(near));
     }
 
     /** True when no collidable block sits between the eyes and the point. */
@@ -138,9 +138,9 @@ public final class AimUtil implements IMinecraft {
 
         Vec3 eye = mc.player.getEyePosition();
         ClipContext context = new ClipContext(
-                eye, point, ClipContext.ShapeType.COLLIDER, ClipContext.FluidHandling.NONE, mc.player);
+                eye, point, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player);
 
-        return mc.level.raycast(context).getType() == HitResult.Type.MISS;
+        return mc.level.clip(context).getType() == HitResult.Type.MISS;
     }
 
     /**

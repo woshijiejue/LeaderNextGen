@@ -26,6 +26,7 @@ public final class ModuleList extends Drag {
         setDescription("Module list");
         percentX = 0.95F;
         percentY = 0.05F;
+        setEnabled(true);
     }
 
     @Override

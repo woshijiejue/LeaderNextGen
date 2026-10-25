@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClientLevel.class)
 public class MixinClientWorld implements IMinecraft {
 
-    @Inject(method = "tickEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;resetPosition()V", shift = At.Shift.AFTER), cancellable = true)
+    @Inject(method = "tickNonPassenger", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setOldPosAndRot()V", shift = At.Shift.AFTER), cancellable = true)
     private void tickEntity(Entity entity, CallbackInfo ci) {
         if (Util.skipTicks > 0 && entity == IMinecraft.mc.player) {
             Util.skipTicks--;

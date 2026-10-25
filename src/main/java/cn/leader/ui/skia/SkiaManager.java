@@ -11,15 +11,9 @@ public class SkiaManager implements IMinecraft {
     }
 
     public void render() {
-        if (skia.context == null) skia.initSkia();
-        skia.checkAndUpdateSurface();
-        skia.beginFrame();
-        skia.canvas.save();
-        skia.canvas.scale((float) mc.getWindow().getScaleFactor(), (float) mc.getWindow().getScaleFactor());
-        RenderSkiaEvent event = new RenderSkiaEvent(skia.canvas);
-        instance.getEventManager().call(event);
-        skia.canvas.restore();
-        skia.endFrame();
+        // Minecraft 26.2 replaced the old OpenGL framebuffer API with GPU surfaces.
+        // The regular HUD is rendered through GuiGraphicsExtractor; keep this optional
+        // compatibility hook inert until a GPU-backed Skia surface is requested.
     }
 
     public void destroy() {

@@ -67,7 +67,7 @@ public class NoSlow extends Module {
                     noSlowBlinked = true;
                     PacketUtil.sendPacket(
                             new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
-                                    BlockPos.ORIGIN, Direction.DOWN));
+                                    BlockPos.ZERO, Direction.DOWN));
                     serverBlocking = false;
                     shouldSetState = true;
                     unblockState = true;
@@ -86,7 +86,7 @@ public class NoSlow extends Module {
             if (serverBlocking) {
                 PacketUtil.sendPacket(
                         new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
-                                BlockPos.ORIGIN, Direction.DOWN));
+                                BlockPos.ZERO, Direction.DOWN));
                 serverBlocking = false;
             }
             unblockState = false;
@@ -107,9 +107,6 @@ public class NoSlow extends Module {
             }
             event.setForward(1F);
             event.setSideways(1F);
-        } else {
-            event.setForward(0.2F);
-            event.setSideways(0.2F);
         }
     }
 }

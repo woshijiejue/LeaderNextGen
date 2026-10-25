@@ -16,7 +16,7 @@ public final class ClickGUI extends Module {
     public void onEnable() {
         if (mc.player == null || mc.level == null) return;
 
-        mc.setScreen(instance.getClickGUIScreen());
+        mc.setScreenAndShow(instance.getClickGUIScreen());
         toggle();
     }
 }

@@ -12,7 +12,7 @@ public final class PacketUtil implements IMinecraft {
     public static void sendPacket(Packet<?> packet) {
         if (mc.getConnection() == null) return;
 
-        mc.getConnection().sendPacket(packet);
+        mc.getConnection().send(packet);
     }
 
     public static void sendPacketNoEvent(Packet<?> packet) {
@@ -25,7 +25,7 @@ public final class PacketUtil implements IMinecraft {
     @SuppressWarnings("unchecked")
     public static void receivePacket(Packet<?> packet) {
         if (mc.getConnection() == null) return;
-        ((Packet<ClientGamePacketListener>) packet).apply(mc.getConnection());
+        ((Packet) packet).handle(mc.getConnection());
     }
 
     public static void receivePacketNoEvent(Packet<?> packet) {
@@ -37,6 +37,6 @@ public final class PacketUtil implements IMinecraft {
     }
 
     public static final ArrayList<Packet<?>> getPackets() {
-        return this.packets;
+        return packets;
     }
 }

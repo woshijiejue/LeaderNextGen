@@ -18,7 +18,7 @@ public final class ClientMeta {
     /** Taken from the mod metadata so it can never drift from the built jar. */
     public static final String VERSION = resolveVersion();
 
-    public static final String MINECRAFT_VERSION = SharedConstants.getGameVersion().getName();
+    public static final String MINECRAFT_VERSION = SharedConstants.getCurrentVersion().name();
 
     public static final String LOADER_VERSION = resolveLoaderVersion();
 

@@ -20,12 +20,12 @@ public final class MovementUtil implements IMinecraft {
 
     public static boolean isMoving() {
         if (mc.player == null) return false;
-        return mc.player.input.movementForward != 0.0f || mc.player.input.movementSideways != 0.0f;
+        return mc.player.input.getMoveVector().x != 0.0f || mc.player.input.getMoveVector().y != 0.0f;
     }
 
     public static double getDirection() {
         if (mc.player == null) return 0;
-        return getDirection(mc.player.getYRot(), mc.player.input.movementForward, mc.player.input.movementSideways);
+        return getDirection(mc.player.getYRot(), mc.player.input.getMoveVector().y, mc.player.input.getMoveVector().x);
     }
 
     public static double getDirection(float rotationYaw, double moveForward, double moveStrafing) {
@@ -82,11 +82,11 @@ public final class MovementUtil implements IMinecraft {
     }
 
     public static Vec3 movementInputToVelocity(Vec3 movementInput, float speed, float yaw) {
-        double d = movementInput.lengthSquared();
+        double d = movementInput.lengthSqr();
         if (d < 1.0E-7) {
             return Vec3.ZERO;
         } else {
-            Vec3 vec3d = (d > 1.0 ? movementInput.normalize() : movementInput).multiply(speed);
+            Vec3 vec3d = (d > 1.0 ? movementInput.normalize() : movementInput).scale(speed);
             float f = Mth.sin(yaw * ((float) Math.PI / 180F));
             float g = Mth.cos(yaw * ((float) Math.PI / 180F));
             return new Vec3(vec3d.x * g - vec3d.z * f, vec3d.y, vec3d.z * g + vec3d.x * f);

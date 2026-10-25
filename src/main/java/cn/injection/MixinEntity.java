@@ -18,27 +18,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinEntity implements IMinecraft {
 
     @Shadow
-    public abstract Vec3 getRotationVector(float pitch, float yaw);
+    public abstract Vec3 calculateViewVector(float pitch, float yaw);
 
     @Shadow
-    public abstract float getYaw();
+    public abstract float getYRot();
 
     @Shadow
-    public abstract float getPitch();
+    public abstract float getXRot();
 
     @Shadow
-    public float prevYaw;
+    public float yRotO;
 
     @Shadow
-    public float prevPitch;
+    public float xRotO;
 
-    @Inject(method = "getRotationVec(F)Lnet/minecraft/util/math/Vec3;", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getViewVector(F)Lnet/minecraft/world/phys/Vec3;", at = @At("HEAD"), cancellable = true)
     private void getRotationVec(float tickDelta, CallbackInfoReturnable<Vec3> cir) {
         if (((Object) this) instanceof LocalPlayer) {
             float yaw = this.getYRot();
             float pitch = this.getXRot();
-            float lastYaw = this.prevYaw;
-            float lastPitch = this.prevPitch;
+            float lastYaw = this.yRotO;
+            float lastPitch = this.xRotO;
 
             LookEvent event = new LookEvent(new float[]{yaw, pitch}, new float[]{lastYaw, lastPitch});
             instance.getEventManager().call(event);
@@ -50,7 +50,7 @@ public abstract class MixinEntity implements IMinecraft {
         }
     }
 
-    @Redirect(method = "updateVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;movementInputToVelocity(Lnet/minecraft/util/math/Vec3;FF)Lnet/minecraft/util/math/Vec3;"))
+    @Redirect(method = "moveRelative", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getInputVector(Lnet/minecraft/world/phys/Vec3;FF)Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 updateVelocity(Vec3 movementInput, float speed, float yaw) {
         if (((Object) this) instanceof LocalPlayer) {
             StrafeEvent event = new StrafeEvent(yaw);
@@ -60,7 +60,7 @@ public abstract class MixinEntity implements IMinecraft {
                 return Vec3.ZERO;
             }
 
-            return MovementUtil.movementInputToVelocity(movementInput, speed, event.getYRot());
+            return MovementUtil.movementInputToVelocity(movementInput, speed, event.getYaw());
         }
 
         return MovementUtil.movementInputToVelocity(movementInput, speed, yaw);

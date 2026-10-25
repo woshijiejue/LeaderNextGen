@@ -35,7 +35,7 @@ public final class InventoryUtils {
 
     @SuppressWarnings("DataFlowIssue")
     public static boolean playerInventoryHasEmptySlot() {
-        for (int slotID = 0; slotID < mc.player.getInventory().size(); ++slotID) {
+        for (int slotID = 0; slotID < mc.player.getInventory().getContainerSize(); ++slotID) {
             if (slotID == HELMET_SLOT_INVENTORY || slotID == CHEST_PLATE_SLOT_INVENTORY || slotID == LEGGINGS_SLOT_INVENTORY || slotID == BOOTS_SLOT_INVENTORY || slotID == OFF_HAND_SLOT_INVENTORY)
                 continue;
 
@@ -65,27 +65,27 @@ public final class InventoryUtils {
 
         Item item = itemStack.getItem();
 
-        if (item instanceof ArmorItem) return true;
+        if (ItemUtils.isArmor(itemStack)) return true;
         if (new ItemStack(item).is(net.minecraft.tags.ItemTags.CROSSBOW_ENCHANTABLE)) return true;
         if (new ItemStack(item).is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE)) return true;
         if (new ItemStack(item).is(net.minecraft.tags.ItemTags.AXES)) return true;
         if (new ItemStack(item).is(net.minecraft.tags.ItemTags.PICKAXES)) return true;
         if (new ItemStack(item).is(net.minecraft.tags.ItemTags.SHOVELS)) return true;
-        if (item instanceof HoeItem) return true;
-        if (item.is(net.minecraft.tags.ItemTags.SWORDS)) return true;
+        if (item instanceof net.minecraft.world.item.HoeItem) return true;
+        if (itemStack.is(net.minecraft.tags.ItemTags.SWORDS)) return true;
 
-        if (item instanceof PotionItem) return true;
-        if (item instanceof PlayerHeadItem) return true;
+        if (item instanceof net.minecraft.world.item.PotionItem) return true;
+        if (item instanceof net.minecraft.world.item.PlayerHeadItem) return true;
 
         if (item instanceof BlockItem) {
-            Block block = Block.getBlockFromItem(item);
+            Block block = Block.byItem(item);
             if (block instanceof AirBlock) return false;
             if (block instanceof StairBlock) return false;
             if (block instanceof SlabBlock) return false;
             if (block instanceof FenceBlock) return false;
             if (block instanceof FenceGateBlock) return false;
             if (block instanceof DoorBlock) return false;
-            if (block instanceof TrapdoorBlock) return false;
+            if (block instanceof TrapDoorBlock) return false;
             if (block instanceof PressurePlateBlock) return false;
             if (block instanceof ButtonBlock) return false;
             if (block instanceof WallBlock) return false;
@@ -93,19 +93,19 @@ public final class InventoryUtils {
             if (block instanceof ConcretePowderBlock) return false;
             if (block instanceof TintedGlassBlock) return false;
             if (block instanceof StainedGlassBlock) return false;
-            if (block instanceof StainedGlassIronBarsBlock) return false;
+            if (block instanceof StainedGlassPaneBlock) return false;
             if (block instanceof BannerBlock) return false;
             if (block instanceof LeavesBlock) return false;
             if (block instanceof SaplingBlock) return false;
             if (block instanceof MushroomBlock) return false;
-            if (block instanceof MushroomBushBlock) return false;
+            if (block instanceof HugeMushroomBlock) return false;
             if (block instanceof FlowerBlock) return false;
             if (block instanceof ComposterBlock) return false;
             if (block instanceof NoteBlock) return false;
             if (block instanceof JukeboxBlock) return false;
             if (block instanceof SignBlock) return false;
             if (block == Blocks.IRON_BARS) return false;
-            if (block == Blocks.CHAIN) return false;
+            if (block == Blocks.IRON_CHAIN) return false;
             if (block == Blocks.GLASS_PANE) return false;
             if (block == Blocks.DIRT_PATH) return false;
             if (block == Blocks.FARMLAND) return false;
@@ -143,7 +143,7 @@ public final class InventoryUtils {
         if (itemStack.getItem() == Items.SHIELD) return true;
         if (itemStack.getItem() == Items.END_CRYSTAL)
             return true;
-        if (itemStack.getItem().getComponents().contains(DataComponents.FOOD)) {
+        if (itemStack.has(DataComponents.FOOD)) {
             return true;
         }
 
@@ -178,7 +178,7 @@ public final class InventoryUtils {
     }
 
     public static float getBestArmorScore(EquipmentType type) {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof ArmorItem && ItemUtils.getEquipmentType(item) == type).map(InventoryUtils::getProtection).max(Float::compareTo).orElse(0f);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && ItemUtils.isArmor(item) && ItemUtils.getEquipmentType(item) == type).map(InventoryUtils::getProtection).max(Float::compareTo).orElse(0f);
     }
 
     public static int getBlockCountInInventory() {
@@ -267,11 +267,11 @@ public final class InventoryUtils {
             double addTotal = 0;
 
             for (var entry : comp.modifiers()) {
-                if (entry.slot() == EquipmentSlotGroup.MAINHAND && entry.attribute().matchesKey(Attributes.ATTACK_DAMAGE.getKey().orElseThrow())) {
+                if (entry.slot() == EquipmentSlotGroup.MAINHAND && entry.attribute().is(Attributes.ATTACK_DAMAGE)) {
                     switch (entry.modifier().operation()) {
-                        case ADD_VALUE -> add += entry.modifier().value();
-                        case ADD_MULTIPLIED_BASE -> addBase += entry.modifier().value();
-                        case ADD_MULTIPLIED_TOTAL -> addTotal += entry.modifier().value();
+                        case ADD_VALUE -> add += entry.modifier().amount();
+                        case ADD_MULTIPLIED_BASE -> addBase += entry.modifier().amount();
+                        case ADD_MULTIPLIED_TOTAL -> addTotal += entry.modifier().amount();
                     }
                 }
             }
@@ -298,13 +298,13 @@ public final class InventoryUtils {
         var attrComp = stack.getComponents().get(DataComponents.ATTRIBUTE_MODIFIERS);
         if (attrComp != null) {
             for (var entry : attrComp.modifiers()) {
-                if (entry.slot() == EquipmentSlotGroup.MAINHAND && entry.attribute().matchesKey(Attributes.ATTACK_DAMAGE.getKey().orElseThrow())) {
+                if (entry.slot() == EquipmentSlotGroup.MAINHAND && entry.attribute().is(Attributes.ATTACK_DAMAGE)) {
 
                     var mod = entry.modifier();
                     switch (mod.operation()) {
-                        case ADD_VALUE -> damage += mod.value();
-                        case ADD_MULTIPLIED_BASE -> damage += mod.value();
-                        case ADD_MULTIPLIED_TOTAL -> damage += mod.value();
+                        case ADD_VALUE -> damage += mod.amount();
+                        case ADD_MULTIPLIED_BASE -> damage += mod.amount();
+                        case ADD_MULTIPLIED_TOTAL -> damage += mod.amount();
                     }
                 }
             }
@@ -345,13 +345,14 @@ public final class InventoryUtils {
             return 0;
         }
 
-        switch (stack.getItem()) {
-            case PickaxeItem ignored -> valence += stack.getMiningSpeedMultiplier(Blocks.STONE.defaultBlockState());
-            case AxeItem ignored -> valence += stack.getMiningSpeedMultiplier(Blocks.OAK_LOG.defaultBlockState());
-            case ShovelItem ignored -> valence += stack.getMiningSpeedMultiplier(Blocks.DIRT.defaultBlockState());
-            case null, default -> {
-                return 0;
-            }
+        if (stack.is(ItemTags.PICKAXES)) {
+            valence += stack.getDestroySpeed(Blocks.STONE.defaultBlockState());
+        } else if (stack.is(ItemTags.AXES)) {
+            valence += stack.getDestroySpeed(Blocks.OAK_LOG.defaultBlockState());
+        } else if (stack.is(ItemTags.SHOVELS)) {
+            valence += stack.getDestroySpeed(Blocks.DIRT.defaultBlockState());
+        } else {
+            return 0;
         }
 
         int efficiency = getEnchantLevel(stack, Enchantments.EFFICIENCY);
@@ -398,7 +399,7 @@ public final class InventoryUtils {
             valence += getEnchantLevel(stack, Enchantments.INFINITY);
             valence += getEnchantLevel(stack, Enchantments.FLAME);
             valence += getEnchantLevel(stack, Enchantments.POWER) / 10F;
-            return valence + ((float) stack.getDamage() / stack.getMaxDamage());
+            return valence + ((float) stack.getDamageValue() / stack.getMaxDamage());
         }
 
         return 0;
@@ -419,7 +420,7 @@ public final class InventoryUtils {
             valence += getEnchantLevel(stack, Enchantments.INFINITY);
             valence += getEnchantLevel(stack, Enchantments.FLAME);
             valence += getEnchantLevel(stack, Enchantments.POWER);
-            return valence + ((float) stack.getDamage() / stack.getMaxDamage());
+            return valence + ((float) stack.getDamageValue() / stack.getMaxDamage());
         }
 
         return 0;
@@ -436,19 +437,19 @@ public final class InventoryUtils {
 
         if (modifiers != null) {
             for (var entry : modifiers.modifiers()) {
-                if (entry.attribute().matchesKey(Attributes.ARMOR.getKey().orElseThrow())) {
+                if (entry.attribute().is(Attributes.ARMOR)) {
                     var mod = entry.modifier();
 
                     if (mod.operation() == AttributeModifier.Operation.ADD_VALUE) {
-                        valence += (float) mod.value();
+                        valence += (float) mod.amount();
                     }
                 }
 
-                if (entry.attribute().matchesKey(Attributes.ARMOR_TOUGHNESS.getKey().orElseThrow())) {
+                if (entry.attribute().is(Attributes.ARMOR_TOUGHNESS)) {
                     var mod = entry.modifier();
 
                     if (mod.operation() == AttributeModifier.Operation.ADD_VALUE) {
-                        valence += (float) mod.value();
+                        valence += (float) mod.amount();
                     }
                 }
             }
@@ -463,9 +464,12 @@ public final class InventoryUtils {
         ArrayList<ItemStack> list = new ArrayList<>(41);
 
         if (mc.player != null) {
-            list.addAll(mc.player.getInventory().main);
-            list.addAll(mc.player.getInventory().offHand);
-            list.addAll(mc.player.getInventory().armor);
+            list.addAll(mc.player.getInventory().getNonEquipmentItems());
+            list.add(mc.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND));
+            list.add(mc.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET));
+            list.add(mc.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.LEGS));
+            list.add(mc.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST));
+            list.add(mc.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD));
         }
 
         return list;
@@ -484,7 +488,7 @@ public final class InventoryUtils {
     public static boolean shouldNotWork() {
         return InventoryUtils.getAllItems().stream().anyMatch(item -> {
             if (!item.isEmpty()) {
-                var string = item.getName().getString();
+                var string = item.getHoverName().getString();
                 return string.contains("长按点击") || string.contains("点击使用") || string.contains("离开游戏") || string.contains("选择一个队伍") || string.contains("再来一局");
             }
 

@@ -219,7 +219,7 @@ public class KillAura extends Module {
     public void onMotion(MotionEvent event) {
         if (!event.isPost()) return;
         if (!canRun() || target == null) return;
-        if (Client.currentScreen != null) return;
+        if (mc.gui.screen() != null) return;
 
         // While Blink is holding packets the server has not seen this tick's rotation yet, so an
         // attack now would be judged against a stale look direction. Wait for the release.
@@ -265,11 +265,11 @@ public class KillAura extends Module {
 
         if (attackMode.is("Packet") || keepSprint.getValue()) {
             ((MultiPlayerGameModeAccessor) mc.gameMode).callSyncSelectedSlot();
-            PacketUtil.sendPacket(ServerboundInteractPacket.attack(entity, mc.player.isSneaking()));
-            mc.player.swingHand(InteractionHand.MAIN_HAND);
+            PacketUtil.sendPacket(new ServerboundInteractPacket(entity.getId(), InteractionHand.MAIN_HAND, null, mc.player.isCrouching()));
+            mc.player.swing(InteractionHand.MAIN_HAND);
         } else {
-            mc.gameMode.attackEntity(mc.player, entity);
-            mc.player.swingHand(InteractionHand.MAIN_HAND);
+            mc.gameMode.attack(mc.player, entity);
+            mc.player.swing(InteractionHand.MAIN_HAND);
         }
 
         if (keepSprint.getValue() && sprinting) {
@@ -310,7 +310,7 @@ public class KillAura extends Module {
 
         renderBlock = true;
 
-        if (autoBlock.is("Legit") && !blocking && Client.currentScreen == null) {
+        if (autoBlock.is("Legit") && !blocking && mc.gui.screen() == null) {
             mc.options.keyUse.setDown(true);
             useKeyPressedByUs = true;
             blocking = true;
@@ -369,9 +369,5 @@ public class KillAura extends Module {
     public boolean isUseKeyPressedByUs() {
         return this.useKeyPressedByUs;
     }
-
-        public double getInterval() {
-            return this.interval;
-        }
 
 }

@@ -13,7 +13,7 @@ public final class Util implements IMinecraft{
     public static void addChatMessage(String message) {
         if (mc.player == null) return;
 
-        mc.player.displayClientMessage(Component.literal(message), false);
+        mc.player.sendSystemMessage(Component.literal(message));
     }
 
     public static void log(String message) {
@@ -26,10 +26,10 @@ public final class Util implements IMinecraft{
 
     public static String getIGN() {
         if (mc.player != null) {
-            return mc.player.getGameProfile().getName();
+            return mc.player.getPlainTextName();
         }
 
-        return mc.getSession().getUsername();
+        return mc.getUser().getName();
     }
 
     private Util() {

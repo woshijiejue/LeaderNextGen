@@ -1,8 +1,6 @@
 package cn.leader.util.render;
 
 import cn.leader.util.IMinecraft;
-import com.mojang.blaze3d.platform.Window;
-import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
@@ -17,29 +15,11 @@ public final class RenderUtil implements IMinecraft {
     public static final Matrix4f lastModMat = new Matrix4f();
     public static final Matrix4f lastWorldSpaceMatrix = new Matrix4f();
 
-    public @NotNull Vec3 worldSpaceToScreenSpace(@NotNull Vec3 pos) {
-        Camera camera = mc.getEntityRenderDispatcher().camera;
-        Window window = mc.getWindow();
-
-        int width = window.getWidth();
-        int height = window.getHeight();
-        int[] viewport = {0, 0, width, height};
-
-        Vec3 cameraPos = camera.position();
-        Vector3f target = new Vector3f();
-        Vector4f transformed = new Vector4f(
-                (float) (pos.x - cameraPos.x),
-                (float) (pos.y - cameraPos.y),
-                (float) (pos.z - cameraPos.z),
-                1.0F).mul(lastWorldSpaceMatrix);
-
-        Matrix4f combined = new Matrix4f(lastProjMat).mul(lastModMat);
-        combined.project(transformed.x(), transformed.y(), transformed.z(), viewport, target);
-
-        return new Vec3(target.x, height - target.y, target.z);
+    public static @NotNull Vec3 worldSpaceToScreenSpace(@NotNull Vec3 pos) {
+        return mc.gameRenderer.projectPointToScreen(pos);
     }
 
-    public @NotNull Vec3[] getVectors(@NotNull Entity ent) {
+    public static @NotNull Vec3[] getVectors(@NotNull Entity ent) {
         float delta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         double x = ent.xo + (ent.getX() - ent.xo) * delta;
