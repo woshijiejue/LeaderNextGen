@@ -103,7 +103,7 @@ public class ModuleManager implements IMinecraft {
 
     @EventTarget
     private void onKey(KeyEvent event) {
-        if (event.getKey() == 0 || mc.screen != null) return;
+        if (event.getKey() == 0 || Client.currentScreen != null) return;
 
         for (Module module : moduleMap.values()) {
             if (module.getKey() == event.getKey()) {

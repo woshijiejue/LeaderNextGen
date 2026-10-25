@@ -48,6 +48,11 @@ public abstract class MixinMinecraftClient implements IMinecraft {
         Client.instance.getEventManager().call(new TickEvent());
     }
 
+    @Inject(method = "setScreenAndShow", at = @At("HEAD"))
+    private void leaderNextgen$screen(net.minecraft.client.gui.screens.Screen screen, CallbackInfo ci) {
+        Client.currentScreen = screen;
+    }
+
     @Inject(method = "setWorld", at = @At("HEAD"))
     private void setWorld(ClientLevel world, CallbackInfo ci) {
         Client.instance.getEventManager().call(new WorldEvent(world));

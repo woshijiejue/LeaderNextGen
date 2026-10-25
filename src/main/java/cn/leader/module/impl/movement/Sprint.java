@@ -17,7 +17,7 @@ public class Sprint extends Module {
     public void onDisable() {
         if (mc.player == null) return;
 
-        mc.options.sprintKey.setPressed(false);
+        mc.options.sprintKey.setDown(false);
         mc.player.setSprinting(false);
     }
 
@@ -26,7 +26,7 @@ public class Sprint extends Module {
         if (mc.player == null) return;
 
         if (mc.player.forwardSpeed > 0 && !mc.player.horizontalCollision) {
-            mc.options.sprintKey.setPressed(true);
+            mc.options.sprintKey.setDown(true);
         }
     }
 }

@@ -107,7 +107,7 @@ public class ItemUtils {
     public static boolean isGodItem(ItemStack stack) {
         if (stack.isEmpty()) return false;
 
-        if (stack.getItem() instanceof AxeItem && stack.getItem() == Items.GOLDEN_AXE) {
+        if (stack.is(net.minecraft.tags.ItemTags.AXES) && stack.getItem() == Items.GOLDEN_AXE) {
             if (getEnchantLevel(stack, Enchantments.SHARPNESS) > 100) {
                 return true;
             }
@@ -154,7 +154,7 @@ public class ItemUtils {
 
         if (stack.getItem() instanceof FireChargeItem) return true;
 
-        if (stack.getItem() instanceof ShovelItem) {
+        if (stack.is(net.minecraft.tags.ItemTags.SHOVELS)) {
             return InventoryUtils.getBestShovel() == stack;
         }
 
@@ -180,7 +180,7 @@ public class ItemUtils {
     }
 
     public static boolean isNotInBlockBlacklist(Block block) {
-        BlockState blockState = block.getDefaultState();
+        BlockState blockState = block.defaultBlockState();
         if (block == Blocks.SNOW
                 && (!blockState.hasProperty(net.minecraft.world.level.block.SnowLayerBlock.LAYERS) || blockState.getValue(net.minecraft.world.level.block.SnowLayerBlock.LAYERS) < 8)) {
             return false;

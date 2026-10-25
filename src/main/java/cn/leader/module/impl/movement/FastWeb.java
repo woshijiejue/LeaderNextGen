@@ -27,9 +27,9 @@ public class FastWeb extends Module {
         } else {
             MovementUtil.strafe(mode.is("GrimAC") ? 0.6f : motion.getValue());
 
-            if (mc.options.keyJump.isPressed()) {
+            if (mc.options.keyJump.isDown()) {
                 mc.player.setDeltaMovement(mc.player.getDeltaMovement().x, 1, mc.player.getDeltaMovement().z);
-            } else if (mc.options.keyShift.isPressed()) {
+            } else if (mc.options.keyShift.isDown()) {
                 mc.player.setDeltaMovement(mc.player.getDeltaMovement().x, -1, mc.player.getDeltaMovement().z);
             }
         }

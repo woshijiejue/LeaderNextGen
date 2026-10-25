@@ -28,7 +28,7 @@ public class WorldTweaks extends Module {
         if (mc.level == null) return;
 
         oldTime = mc.level.getTimeOfDay();
-        oldRaining = mc.level.getLevelProperties().isRaining();
+        oldRaining = mc.level.getLevelData().isRaining();
         oldRainGradient = mc.level.getRainGradient(1);
     }
 
@@ -36,8 +36,8 @@ public class WorldTweaks extends Module {
     public void onDisable() {
         if (mc.level == null) return;
 
-        mc.level.getLevelProperties().setTimeOfDay(oldTime);
-        mc.level.getLevelProperties().setRaining(oldRaining);
+        mc.level.getLevelData().setTimeOfDay(oldTime);
+        mc.level.getLevelData().setRaining(oldRaining);
         mc.level.setRainGradient(oldRainGradient);
     }
 
@@ -76,13 +76,13 @@ public class WorldTweaks extends Module {
 
         setSuffix(ctimeVal.getValue().toString());
 
-        mc.level.getLevelProperties().setTimeOfDay(ctimeVal.getValue().longValue());
+        mc.level.getLevelData().setTimeOfDay(ctimeVal.getValue().longValue());
 
         if (weather.is("Clear")) {
-            mc.level.getLevelProperties().setRaining(false);
+            mc.level.getLevelData().setRaining(false);
             mc.level.setRainGradient(0);
         } else if (weather.is("Rain") || weather.is("Snow")) {
-            mc.level.getLevelProperties().setRaining(true);
+            mc.level.getLevelData().setRaining(true);
             mc.level.setRainGradient(intensity.getValue());
         }
     }

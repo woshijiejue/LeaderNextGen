@@ -48,7 +48,7 @@ public class NoSlow extends Module {
     private void handlePrediction(MotionEvent event) {
         boolean holdingSword = !mc.player.getMainHandItem().isEmpty()
                 && mc.player.getMainHandItem().is(net.minecraft.tags.ItemTags.SWORDS);
-        boolean wantBlock = holdingSword && (KillAura.blocking || mc.options.keyUse.isPressed());
+        boolean wantBlock = holdingSword && (KillAura.blocking || mc.options.keyUse.isDown());
 
         if (interactingBlockThisTick) return;
 
@@ -101,7 +101,7 @@ public class NoSlow extends Module {
     public void onSlow(SlowEvent event) {
         if (mc.player == null) return;
         if (mc.player.getMainHandItem().isEmpty()) return;
-        if ((mc.player.getMainHandItem().is(net.minecraft.tags.ItemTags.SWORDS) && !ItemUtils.isConsumable(mc.player.getOffhandItem()) && (mc.player.isUsingItem() || mc.options.keyUse.isPressed()))) {
+        if ((mc.player.getMainHandItem().is(net.minecraft.tags.ItemTags.SWORDS) && !ItemUtils.isConsumable(mc.player.getOffhandItem()) && (mc.player.isUsingItem() || mc.options.keyUse.isDown()))) {
             if (swordSprint.getValue()){
                 mc.player.setSprinting(true);
             }

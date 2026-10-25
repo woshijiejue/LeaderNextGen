@@ -66,7 +66,7 @@ public final class CommandManager implements IMinecraft {
     @EventTarget
     public void onPacket(PacketEvent event) {
         if (event.getType() == PacketEvent.Type.Send && event.getPacket() instanceof ServerboundChatPacket packet) {
-            String message = packet.chatMessage();
+            String message = packet.message();
 
             if (message.startsWith(".")) {
                 event.setCancelled(true);

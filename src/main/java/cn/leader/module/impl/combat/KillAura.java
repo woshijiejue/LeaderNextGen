@@ -1,4 +1,5 @@
 package cn.leader.module.impl.combat;
+import cn.leader.Client;
 
 import cn.injection.accessor.MultiPlayerGameModeAccessor;
 import cn.leader.event.base.annotation.EventTarget;
@@ -218,7 +219,7 @@ public class KillAura extends Module {
     public void onMotion(MotionEvent event) {
         if (!event.isPost()) return;
         if (!canRun() || target == null) return;
-        if (mc.screen != null) return;
+        if (Client.currentScreen != null) return;
 
         // While Blink is holding packets the server has not seen this tick's rotation yet, so an
         // attack now would be judged against a stale look direction. Wait for the release.
@@ -309,8 +310,8 @@ public class KillAura extends Module {
 
         renderBlock = true;
 
-        if (autoBlock.is("Legit") && !blocking && mc.screen == null) {
-            mc.options.keyUse.setPressed(true);
+        if (autoBlock.is("Legit") && !blocking && Client.currentScreen == null) {
+            mc.options.keyUse.setDown(true);
             useKeyPressedByUs = true;
             blocking = true;
         }
@@ -320,7 +321,7 @@ public class KillAura extends Module {
         renderBlock = false;
 
         if (useKeyPressedByUs) {
-            mc.options.keyUse.setPressed(false);
+            mc.options.keyUse.setDown(false);
             useKeyPressedByUs = false;
         }
 

@@ -45,7 +45,7 @@ public final class AntiAFK extends Module {
         if (mc.player == null) return;
 
         if (sneakTicks > 0 && --sneakTicks == 0) {
-            mc.options.keyShift.setPressed(false);
+            mc.options.keyShift.setDown(false);
         }
 
         if (!timer.hasTimeElapsed(interval.getValue().longValue())) return;
@@ -62,7 +62,7 @@ public final class AntiAFK extends Module {
 
         if (sneak.getValue() && Math.random() < 0.35D) {
             sneakTicks = 4;
-            mc.options.keyShift.setPressed(true);
+            mc.options.keyShift.setDown(true);
         }
     }
 
@@ -80,7 +80,7 @@ public final class AntiAFK extends Module {
         sneakTicks = 0;
 
         if (mc.options != null) {
-            mc.options.keyShift.setPressed(false);
+            mc.options.keyShift.setDown(false);
         }
     }
 }

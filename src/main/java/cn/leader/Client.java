@@ -25,6 +25,7 @@ public class Client implements IMinecraft {
     public static String name = ClientMeta.NAME;
     public static String version = ClientMeta.VERSION;
     public static String minecraftVersion = ClientMeta.MINECRAFT_VERSION;
+    public static net.minecraft.client.gui.screens.Screen currentScreen;
     public static String loaderVersion = ClientMeta.LOADER_VERSION;
 
     private EventManager eventManager;

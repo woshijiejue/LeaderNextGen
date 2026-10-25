@@ -39,7 +39,7 @@ public final class InventoryUtils {
             if (slotID == HELMET_SLOT_INVENTORY || slotID == CHEST_PLATE_SLOT_INVENTORY || slotID == LEGGINGS_SLOT_INVENTORY || slotID == BOOTS_SLOT_INVENTORY || slotID == OFF_HAND_SLOT_INVENTORY)
                 continue;
 
-            ItemStack itemStack = mc.player.getInventory().getStack(slotID);
+            ItemStack itemStack = mc.player.getInventory().getItem(slotID);
 
             if (itemStack == null) return true;
             if (itemStack.isEmpty()) return true;
@@ -51,7 +51,7 @@ public final class InventoryUtils {
     public static boolean playerHotbarHasEmptySlot() {
         if (mc.player == null) return false;
         for (int slotID = 0; slotID < 9; slotID++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(slotID);
+            ItemStack itemStack = mc.player.getInventory().getItem(slotID);
 
             if (itemStack == null) return true;
             if (itemStack.isEmpty()) return true;
@@ -66,11 +66,11 @@ public final class InventoryUtils {
         Item item = itemStack.getItem();
 
         if (item instanceof ArmorItem) return true;
-        if (item instanceof CrossbowItem) return true;
-        if (item instanceof BowItem) return true;
-        if (item instanceof AxeItem) return true;
-        if (item instanceof PickaxeItem) return true;
-        if (item instanceof ShovelItem) return true;
+        if (new ItemStack(item).is(net.minecraft.tags.ItemTags.CROSSBOW_ENCHANTABLE)) return true;
+        if (new ItemStack(item).is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE)) return true;
+        if (new ItemStack(item).is(net.minecraft.tags.ItemTags.AXES)) return true;
+        if (new ItemStack(item).is(net.minecraft.tags.ItemTags.PICKAXES)) return true;
+        if (new ItemStack(item).is(net.minecraft.tags.ItemTags.SHOVELS)) return true;
         if (item instanceof HoeItem) return true;
         if (item.is(net.minecraft.tags.ItemTags.SWORDS)) return true;
 
@@ -158,23 +158,23 @@ public final class InventoryUtils {
     }
 
     public static float getBestAxeScore() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof AxeItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getAxeScore).max(Float::compareTo).orElse(0f);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.AXES) && ItemUtils.isValidItem(item)).map(InventoryUtils::getAxeScore).max(Float::compareTo).orElse(0f);
     }
 
     public static float getBestPickaxeScore() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof PickaxeItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getToolScore).max(Float::compareTo).orElse(0f);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.PICKAXES) && ItemUtils.isValidItem(item)).map(InventoryUtils::getToolScore).max(Float::compareTo).orElse(0f);
     }
 
     public static float getBestCrossbowScore() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof CrossbowItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getCrossbowScore).max(Float::compareTo).orElse(0f);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.CROSSBOW_ENCHANTABLE) && ItemUtils.isValidItem(item)).map(InventoryUtils::getCrossbowScore).max(Float::compareTo).orElse(0f);
     }
 
     public static float getBestPowerBowScore() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getPowerBowScore).max(Float::compareTo).orElse(0f);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE) && ItemUtils.isValidItem(item)).map(InventoryUtils::getPowerBowScore).max(Float::compareTo).orElse(0f);
     }
 
     public static float getBestPunchBowScore() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getPunchBowScore).max(Float::compareTo).orElse(0f);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE) && ItemUtils.isValidItem(item)).map(InventoryUtils::getPunchBowScore).max(Float::compareTo).orElse(0f);
     }
 
     public static float getBestArmorScore(EquipmentType type) {
@@ -194,27 +194,27 @@ public final class InventoryUtils {
     }
 
     public static ItemStack getBestAxe() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof AxeItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getAxeScore(s) * 100))).orElse(null);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.AXES) && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getAxeScore(s) * 100))).orElse(null);
     }
 
     public static ItemStack getBestPickaxe() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof PickaxeItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getToolScore(s) * 100))).orElse(null);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.PICKAXES) && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getToolScore(s) * 100))).orElse(null);
     }
 
     public static ItemStack getBestShovel() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof ShovelItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getToolScore(s) * 100))).orElse(null);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.SHOVELS) && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getToolScore(s) * 100))).orElse(null);
     }
 
     public static ItemStack getBestCrossbow() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof CrossbowItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getCrossbowScore(s) * 100))).orElse(null);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.CROSSBOW_ENCHANTABLE) && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getCrossbowScore(s) * 100))).orElse(null);
     }
 
     public static ItemStack getBestPunchBow() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getPunchBowScore(s) * 100))).orElse(null);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE) && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getPunchBowScore(s) * 100))).orElse(null);
     }
 
     public static ItemStack getBestPowerBow() {
-        return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getPowerBowScore(s) * 100))).orElse(null);
+        return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE) && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getPowerBowScore(s) * 100))).orElse(null);
     }
 
     public static ItemStack getBestGapple() {
@@ -346,9 +346,9 @@ public final class InventoryUtils {
         }
 
         switch (stack.getItem()) {
-            case PickaxeItem ignored -> valence += stack.getMiningSpeedMultiplier(Blocks.STONE.getDefaultState());
-            case AxeItem ignored -> valence += stack.getMiningSpeedMultiplier(Blocks.OAK_LOG.getDefaultState());
-            case ShovelItem ignored -> valence += stack.getMiningSpeedMultiplier(Blocks.DIRT.getDefaultState());
+            case PickaxeItem ignored -> valence += stack.getMiningSpeedMultiplier(Blocks.STONE.defaultBlockState());
+            case AxeItem ignored -> valence += stack.getMiningSpeedMultiplier(Blocks.OAK_LOG.defaultBlockState());
+            case ShovelItem ignored -> valence += stack.getMiningSpeedMultiplier(Blocks.DIRT.defaultBlockState());
             case null, default -> {
                 return 0;
             }
@@ -374,7 +374,7 @@ public final class InventoryUtils {
             return 0;
         }
 
-        if (stack.getItem() instanceof CrossbowItem) {
+        if (stack.is(net.minecraft.tags.ItemTags.CROSSBOW_ENCHANTABLE)) {
             valence += getEnchantLevel(stack, Enchantments.QUICK_CHARGE);
             valence += getEnchantLevel(stack, Enchantments.MULTISHOT);
             valence += getEnchantLevel(stack, Enchantments.PIERCING);
@@ -392,7 +392,7 @@ public final class InventoryUtils {
             return 0;
         }
 
-        if (stack.getItem() instanceof BowItem) {
+        if (stack.is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE)) {
             float valence = 10;
             valence += getEnchantLevel(stack, Enchantments.PUNCH);
             valence += getEnchantLevel(stack, Enchantments.INFINITY);
@@ -413,7 +413,7 @@ public final class InventoryUtils {
             return 0;
         }
 
-        if (stack.getItem() instanceof BowItem) {
+        if (stack.is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE)) {
             float valence = 10;
             valence += getEnchantLevel(stack, Enchantments.PUNCH) / 10F;
             valence += getEnchantLevel(stack, Enchantments.INFINITY);
@@ -475,7 +475,7 @@ public final class InventoryUtils {
         assert mc.player != null;
 
         if (slot >= 0 && slot < 9) {
-            return mc.player.getInventory().getStack(slot);
+            return mc.player.getInventory().getItem(slot);
         }
 
         return ItemStack.EMPTY;

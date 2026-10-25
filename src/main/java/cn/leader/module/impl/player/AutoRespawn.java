@@ -1,4 +1,5 @@
 package cn.leader.module.impl.player;
+import cn.leader.Client;
 
 import cn.leader.event.base.annotation.EventTarget;
 import cn.leader.event.impl.TickEvent;
@@ -22,7 +23,7 @@ public final class AutoRespawn extends Module {
     @EventTarget
     public void onTick(TickEvent event) {
         if (mc.player == null) return;
-        if (!(mc.screen instanceof DeathScreen)) return;
+        if (!(Client.currentScreen instanceof DeathScreen)) return;
 
         mc.player.requestRespawn();
 

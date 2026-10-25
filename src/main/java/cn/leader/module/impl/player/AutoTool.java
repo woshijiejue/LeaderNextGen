@@ -61,7 +61,7 @@ public final class AutoTool extends Module {
         int bestSlot = -1;
 
         for (int slot = 0; slot < 9; slot++) {
-            ItemStack stack = mc.player.getInventory().getStack(slot);
+            ItemStack stack = mc.player.getInventory().getItem(slot);
             if (stack.isEmpty()) continue;
 
             float speed = stack.getMiningSpeedMultiplier(state);
@@ -75,7 +75,7 @@ public final class AutoTool extends Module {
     }
 
     private void select(int slot) {
-        mc.player.getInventory().selected = slot;
+        mc.player.getInventory().setSelectedSlot(slot);
 
         if (mc.gameMode != null) {
             ((MultiPlayerGameModeAccessor) mc.gameMode).callSyncSelectedSlot();
