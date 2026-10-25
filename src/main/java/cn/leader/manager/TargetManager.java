@@ -3,7 +3,6 @@ package cn.leader.manager;
 import cn.leader.event.base.annotation.EventTarget;
 import cn.leader.event.impl.UpdateEvent;
 import cn.leader.util.IMinecraft;
-import lombok.Getter;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -20,10 +19,10 @@ public class TargetManager implements IMinecraft {
 
     @EventTarget
     public void onUpdate(UpdateEvent event) {
-        if (mc.world == null) return;
+        if (mc.level == null) return;
 
         targets.clear();
-        for (Entity entity : mc.world.getEntities()) {
+        for (Entity entity : mc.level.getEntities()) {
             if (entity instanceof LivingEntity livingEntity) {
                 targets.add(livingEntity);
             }

@@ -31,7 +31,7 @@ public final class TargetHUD extends Drag {
 
     @Override
     public void render(GuiGraphicsExtractor context) {
-        if (mc.player == null || mc.world == null || mc.font == null) {
+        if (mc.player == null || mc.level == null || mc.font == null) {
             this.width = 0;
             this.height = 0;
             return;

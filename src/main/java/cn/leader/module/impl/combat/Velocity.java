@@ -10,7 +10,6 @@ import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.ModeValue;
 import cn.leader.module.value.impl.NumberValue;
 import cn.leader.util.player.MovementUtil;
-import lombok.Getter;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
@@ -34,7 +33,6 @@ import net.minecraft.world.phys.Vec3;
  *
  * @author DSJ
  */
-@Getter
 public class Velocity extends Module {
 
     private final ModeValue mode = new ModeValue("Mode", "Grim", "Grim", "Legit", "Packet");
@@ -194,4 +192,29 @@ public class Velocity extends Module {
     public double getLastStrength() {
         return lastStrength;
     }
+
+    public Vec3 getKnockback() {
+        return this.knockback;
+    }
+
+    public int getTicksLeft() {
+        return this.ticksLeft;
+    }
+
+    public boolean isJumped() {
+        return this.jumped;
+    }
+
+        public float getBestForward() {
+            return this.bestForward;
+        }
+
+        public float getBestStrafe() {
+            return this.bestStrafe;
+        }
+
+        public double getBestDelta() {
+            return this.bestDelta;
+        }
+
 }

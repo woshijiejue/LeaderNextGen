@@ -2,11 +2,9 @@ package cn.leader.config;
 
 import cn.leader.Client;
 import cn.leader.util.IMinecraft;
-import lombok.Getter;
 
 import java.io.File;
 
-@Getter
 public abstract class Config implements IMinecraft {
     private final String name;
     private final File file;
@@ -24,4 +22,13 @@ public abstract class Config implements IMinecraft {
 
     public abstract void save();
     public abstract void load();
+
+    public String getName() {
+        return this.name;
+    }
+
+    public File getFile() {
+        return this.file;
+    }
+
 }

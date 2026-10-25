@@ -20,7 +20,7 @@ public class FastWeb extends Module {
 
     @EventTarget
     public void onCobweb(CobwebEvent event) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         if (mode.is("Vanilla")) {
             event.setCancelled(true);

@@ -10,7 +10,6 @@ import cn.leader.module.value.impl.ColorValue;
 import cn.leader.module.value.impl.ModeValue;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.ColorUtil;
-import lombok.Getter;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
@@ -29,7 +28,7 @@ public class HUD extends Module {
 
     @EventTarget
     public void onRender2D(Render2DEvent event) {
-        if (mc.player ==  null || mc.world == null) return;
+        if (mc.player ==  null || mc.level == null) return;
 
         for (Module module : instance.getModuleManager().getModuleMap().values()) {
             if (module instanceof Drag drag && drag.isEnabled()) {
@@ -41,12 +40,12 @@ public class HUD extends Module {
 
     @EventTarget
     public void onRenderSkia(RenderSkiaEvent event) {
-        if (mc.player ==  null || mc.world == null) return;
+        if (mc.player ==  null || mc.level == null) return;
     }
 
     @EventTarget
     public void onChatGUI(ChatGUIEvent event) {
-        if (mc.player ==  null || mc.world == null) return;
+        if (mc.player ==  null || mc.level == null) return;
 
         for (Module module : instance.getModuleManager().getModuleMap().values()) {
             if (module instanceof Drag drag && drag.isEnabled()) {

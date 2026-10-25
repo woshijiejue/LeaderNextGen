@@ -5,14 +5,10 @@ import cn.leader.module.value.Value;
 import cn.leader.util.IMinecraft;
 import cn.leader.util.animation.Easing;
 import cn.leader.util.animation.EasingAnimation;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
 public abstract class Module implements IMinecraft {
     private final EasingAnimation animation = new EasingAnimation(Easing.EASE_OUT_QUART, 300);
     private final List<Value> values = new ArrayList<>();
@@ -70,4 +66,45 @@ public abstract class Module implements IMinecraft {
 
     public void onEnable() {}
     public void onDisable() {}
+
+    public String getName() {
+        return this.name;
+    }
+
+    public Category getCategory() {
+        return this.category;
+    }
+
+    public String getSuffix() {
+        return this.suffix;
+    }
+
+    public void setSuffix(String value) {
+        this.suffix = value;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public void setDescription(String value) {
+        this.description = value;
+    }
+
+    public boolean isHidden() {
+        return this.hidden;
+    }
+
+    public void setHidden(boolean value) {
+        this.hidden = value;
+    }
+
+    public int getKey() {
+        return this.key;
+    }
+
+    public void setKey(int value) {
+        this.key = value;
+    }
+
 }

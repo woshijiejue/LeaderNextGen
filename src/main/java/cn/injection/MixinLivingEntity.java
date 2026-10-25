@@ -20,7 +20,7 @@ public abstract class MixinLivingEntity implements IMinecraft {
 
     @Inject(method = "travel", at = @At("HEAD"), cancellable = true)
     private void travel(Vec3 movementInput, CallbackInfo ci) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         if (((Object) this) instanceof LocalPlayer) {
             MoveMathEvent event = new MoveMathEvent();
@@ -34,7 +34,7 @@ public abstract class MixinLivingEntity implements IMinecraft {
 
     @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
     private float jump(LivingEntity entity) {
-        if (mc.player == null || mc.world == null) return entity.getYRot();
+        if (mc.player == null || mc.level == null) return entity.getYRot();
 
         if (entity == mc.player) {
             JumpEvent event = new JumpEvent(entity.getYRot());

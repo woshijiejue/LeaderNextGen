@@ -4,7 +4,6 @@ import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.MultiBoolValue;
-import lombok.Getter;
 
 @Getter
 public class ClientSetting extends Module {

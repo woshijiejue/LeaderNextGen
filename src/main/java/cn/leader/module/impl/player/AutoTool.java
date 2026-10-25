@@ -29,14 +29,14 @@ public final class AutoTool extends Module {
 
     @EventTarget
     public void onUpdate(UpdateEvent event) {
-        if (mc.player == null || mc.world == null || mc.gameMode == null) return;
+        if (mc.player == null || mc.level == null || mc.gameMode == null) return;
 
         if (!mc.gameMode.isBreakingBlock() || !(mc.hitResult instanceof BlockHitResult hit)) {
             restore();
             return;
         }
 
-        BlockState state = mc.world.getBlockState(hit.getBlockPos());
+        BlockState state = mc.level.getBlockState(hit.getBlockPos());
 
         int best = bestSlot(state);
         if (best == -1) return;

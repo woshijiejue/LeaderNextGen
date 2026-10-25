@@ -1,11 +1,9 @@
 package cn.leader.module.value.impl;
 
 import cn.leader.module.value.Value;
-import lombok.Getter;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
-@Getter
 public final class ModeValue extends Value {
     private final String[] modes;
     private String value;
@@ -30,4 +28,13 @@ public final class ModeValue extends Value {
                 .findFirst()
                 .ifPresent(m -> this.value = m);
     }
+
+    public String[] getModes() {
+        return this.modes;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+
 }

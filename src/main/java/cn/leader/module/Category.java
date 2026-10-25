@@ -1,7 +1,5 @@
 package cn.leader.module;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 @Getter
 @AllArgsConstructor

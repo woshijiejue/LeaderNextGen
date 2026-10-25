@@ -11,7 +11,6 @@ import cn.leader.ui.font.FontManager;
 import cn.leader.ui.skia.SkiaManager;
 import cn.leader.util.IMinecraft;
 import cn.leader.util.Util;
-import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import org.apache.logging.log4j.Logger;
 
@@ -19,7 +18,6 @@ import org.apache.logging.log4j.Logger;
  * Client Base.
  * @author DSJ
  */
-@Getter
 public class Client implements IMinecraft {
     public static Client instance;
     public static Logger logger;
@@ -70,4 +68,45 @@ public class Client implements IMinecraft {
         skiaManager.destroy();
         fontManager.destroy();
     }
+
+    public EventManager getEventManager() {
+        return this.eventManager;
+    }
+
+    public ModuleManager getModuleManager() {
+        return this.moduleManager;
+    }
+
+    public CommandManager getCommandManager() {
+        return this.commandManager;
+    }
+
+    public ConfigManager getConfigManager() {
+        return this.configManager;
+    }
+
+    public TargetManager getTargetManager() {
+        return this.targetManager;
+    }
+
+    public RotationManager getRotationManager() {
+        return this.rotationManager;
+    }
+
+    public ClickGUIScreen getClickGUIScreen() {
+        return this.clickGUIScreen;
+    }
+
+    public SkiaManager getSkiaManager() {
+        return this.skiaManager;
+    }
+
+    public FontManager getFontManager() {
+        return this.fontManager;
+    }
+
+    public boolean isAnnounced() {
+        return this.announced;
+    }
+
 }

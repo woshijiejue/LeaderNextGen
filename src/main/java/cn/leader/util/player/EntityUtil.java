@@ -6,7 +6,6 @@ import cn.leader.manager.RotationManager;
 import cn.leader.module.impl.client.ClientSetting;
 import cn.leader.module.impl.player.AntiBot;
 import cn.leader.util.IMinecraft;
-import lombok.experimental.UtilityClass;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
@@ -24,14 +23,13 @@ import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.Objects;
 
-@UtilityClass
-public class EntityUtil implements IMinecraft {
+public final class EntityUtil implements IMinecraft {
 
-    public boolean isSelected(Entity entity) {
+    public static boolean isSelected(Entity entity) {
         return isSelected(entity, true);
     }
 
-    public boolean isSelected(Entity entity,  boolean checkSelf) {
+    public static boolean isSelected(Entity entity,  boolean checkSelf) {
         if (!(entity instanceof LivingEntity livingEntity)) return false;
 
         ClientSetting clientSetting = instance.getModuleManager().getModule(ClientSetting.class);
@@ -63,14 +61,14 @@ public class EntityUtil implements IMinecraft {
 
         return isMob || isAnimal || isVillager;
     }
-    public boolean isAnimal(final Entity entity) {
+    public static boolean isAnimal(final Entity entity) {
         return entity instanceof AnimalEntity
                 || entity instanceof SquidEntity
                 || entity instanceof IronGolemEntity
                 || entity instanceof BatEntity;
     }
 
-    public boolean isMob(final Entity entity) {
+    public static boolean isMob(final Entity entity) {
         return entity instanceof Monster
                 || entity instanceof SlimeEntity
                 || entity instanceof GhastEntity
@@ -83,7 +81,7 @@ public class EntityUtil implements IMinecraft {
             if (!mc.player.isRiding()) {
                 for(InteractionHand hand : InteractionHand.values()) {
                     ItemStack itemStack = mc.player.getItemInHand(hand);
-                    if (!itemStack.isItemEnabled(mc.world.getEnabledFeatures())) {
+                    if (!itemStack.isItemEnabled(mc.level.getEnabledFeatures())) {
                         return;
                     }
 
@@ -91,7 +89,7 @@ public class EntityUtil implements IMinecraft {
                         if (Objects.requireNonNull(mc.hitResult.getType()) == HitResult.Type.ENTITY) {
                             EntityHitResult entityHitResult = (EntityHitResult) mc.hitResult;
                             Entity entity = entityHitResult.getEntity();
-                            if (!mc.world.getWorldBorder().contains(entity.getBlockPos())) {
+                            if (!mc.level.getWorldBorder().contains(entity.getBlockPos())) {
                                 return;
                             }
 
@@ -130,14 +128,14 @@ public class EntityUtil implements IMinecraft {
     public static InteractionResult interactItem(Player player, InteractionHand hand) {
         ((ClientPlayerInteractionManagerAccessor)mc.gameMode).callSyncSelectedSlot();
         MutableObject<InteractionResult> mutableObject = new MutableObject();
-        ((ClientPlayerInteractionManagerAccessor)mc.gameMode).callSendSequencedPacket(mc.world, (sequence) -> {
+        ((ClientPlayerInteractionManagerAccessor)mc.gameMode).callSendSequencedPacket(mc.level, (sequence) -> {
             ServerboundUseItemPacket playerInteractItemC2SPacket = new ServerboundUseItemPacket(hand, sequence, RotationManager.currentRotations[0], RotationManager.currentRotations[1]);
             ItemStack itemStack = player.getItemInHand(hand);
             if (player.getItemCooldownManager().isCoolingDown(itemStack)) {
                 mutableObject.setValue(InteractionResult.PASS);
                 return playerInteractItemC2SPacket;
             } else {
-                InteractionResult actionResult = itemStack.use(mc.world, player, hand);
+                InteractionResult actionResult = itemStack.use(mc.level, player, hand);
                 ItemStack itemStack2;
                 if (actionResult instanceof InteractionResult.Success) {
                     InteractionResult.Success success = (InteractionResult.Success)actionResult;
@@ -154,4 +152,8 @@ public class EntityUtil implements IMinecraft {
         });
         return (InteractionResult)mutableObject.getValue();
     }
+
+    private static EntityUtil() {
+    }
+
 }

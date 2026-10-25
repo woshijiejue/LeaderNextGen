@@ -248,11 +248,11 @@ public class ItemUtils {
     }
 
     public static int getEnchantLevel(ItemStack stack, ResourceKey<Enchantment> key) {
-        if (stack.isEmpty() || mc.world == null) {
+        if (stack.isEmpty() || mc.level == null) {
             return 0;
         }
 
-        return EnchantmentHelper.getLevel(mc.world.getRegistryManager().getOrThrow(key.getRegistryRef()).getOrThrow(key), stack);
+        return EnchantmentHelper.getLevel(mc.level.getRegistryManager().getOrThrow(key.getRegistryRef()).getOrThrow(key), stack);
     }
 
     public static EquipmentType getEquipmentType(ItemStack stack) {

@@ -31,7 +31,7 @@ public final class ESP extends Module {
 
     @EventTarget
     public void onRender2D(Render2DEvent e) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         for (Entity entity : instance.getTargetManager().getTargets()) {
             if (entity.equals(mc.player) && mc.options.getPerspective().isFirstPerson()) continue;
@@ -87,7 +87,7 @@ public final class ESP extends Module {
     }
 
     private void drawNametag(GuiGraphicsExtractor context, Entity entity, float x, float y, float right) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         String name = "";
         String health = "";

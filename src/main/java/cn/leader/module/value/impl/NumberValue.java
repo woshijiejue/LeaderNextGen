@@ -1,11 +1,9 @@
 package cn.leader.module.value.impl;
 
 import cn.leader.module.value.Value;
-import lombok.Getter;
 import net.minecraft.util.Mth;
 import java.util.function.Supplier;
 
-@Getter
 public final class NumberValue extends Value {
     private final float min;
     private final float max;
@@ -35,4 +33,17 @@ public final class NumberValue extends Value {
     public void setValue(float value) {
         this.value = Mth.clamp(value, this.min, this.max);
     }
+
+    public float getMin() {
+        return this.min;
+    }
+
+    public float getMax() {
+        return this.max;
+    }
+
+    public float getInc() {
+        return this.inc;
+    }
+
 }

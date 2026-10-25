@@ -9,7 +9,6 @@ import cn.leader.ui.clickgui.components.*;
 import cn.leader.ui.clickgui.components.impl.*;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.awt.*;
@@ -20,7 +19,6 @@ public class ModuleButton {
     private final Module module;
     private final List<ValueComponent> components = new ArrayList<>();
     private boolean expanded;
-    @Getter
     private float height = 15;
 
     public ModuleButton(Module module) {
@@ -81,4 +79,9 @@ public class ModuleButton {
             components.forEach(c -> c.mouseReleased(mouseX, mouseY, button));
         }
     }
+
+    public float getHeight() {
+        return this.height;
+    }
+
 }

@@ -1,11 +1,9 @@
 package cn.leader.command;
 
-import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
 public abstract class Command {
     private final String[] aliases;
     private final String usage;
@@ -20,4 +18,13 @@ public abstract class Command {
     public List<String> getCompletions(final String[] arguments) {
         return new ArrayList<>();
     }
+
+    public String[] getAliases() {
+        return this.aliases;
+    }
+
+    public String getUsage() {
+        return this.usage;
+    }
+
 }

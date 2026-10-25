@@ -13,7 +13,7 @@ public class MixinMouse implements IMinecraft {
 
     @Inject(method = "updateMouse", at = @At("RETURN"))
     private void updateMouse(CallbackInfo ci) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         instance.getEventManager().call(new MouseUpdateEvent());
     }

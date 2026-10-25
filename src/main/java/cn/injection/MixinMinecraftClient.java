@@ -35,7 +35,7 @@ public abstract class MixinMinecraftClient implements IMinecraft {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void tick(CallbackInfo ci) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         if (mc.player.onGround()) {
             Util.offGroundTicks = 0;

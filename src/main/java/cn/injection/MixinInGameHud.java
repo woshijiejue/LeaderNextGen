@@ -15,7 +15,7 @@ public abstract class MixinInGameHud implements IMinecraft {
 
     @Inject(method = "render", at = @At(value = "HEAD"))
     private void render(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         Render2DEvent event = new Render2DEvent(context, tickCounter.getTickDelta(true));
         instance.getEventManager().call(event);

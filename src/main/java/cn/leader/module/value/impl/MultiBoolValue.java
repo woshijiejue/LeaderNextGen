@@ -1,11 +1,9 @@
 package cn.leader.module.value.impl;
 
 import cn.leader.module.value.Value;
-import lombok.Getter;
 import java.util.List;
 import java.util.function.Supplier;
 
-@Getter
 public final class MultiBoolValue extends Value {
     private final List<BoolValue> values;
 
@@ -29,4 +27,9 @@ public final class MultiBoolValue extends Value {
                 .findFirst()
                 .ifPresent(bool -> bool.setValue(state));
     }
+
+    public List<BoolValue> getValues() {
+        return this.values;
+    }
+
 }

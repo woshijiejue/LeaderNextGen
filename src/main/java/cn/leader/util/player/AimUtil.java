@@ -1,7 +1,6 @@
 package cn.leader.util.player;
 
 import cn.leader.util.IMinecraft;
-import lombok.experimental.UtilityClass;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.AABB;
@@ -20,8 +19,7 @@ import java.util.Random;
  * therefore works in dots instead of degrees, which keeps every delta we send consistent
  * with the mouse input the player really produces.</p>
  */
-@UtilityClass
-public class AimUtil implements IMinecraft {
+public final class AimUtil implements IMinecraft {
 
     /** Shrink factor so an aim point is strictly inside the hitbox instead of on its edge. */
     private static final double SURFACE_INSET = 1.0E-4D;
@@ -32,7 +30,7 @@ public class AimUtil implements IMinecraft {
      * Degrees per mouse dot for the current sensitivity.
      * Sensitivity S becomes {@code (0.6S + 0.2)^3 * 8 * 0.15} degrees of yaw per dot.
      */
-    public double mouseDivisor() {
+    public static double mouseDivisor() {
         double sensitivity = mc.options.getMouseSensitivity().getValue() * 0.6D + 0.2D;
         return sensitivity * sensitivity * sensitivity * 8.0D * 0.15D;
     }
@@ -41,7 +39,7 @@ public class AimUtil implements IMinecraft {
      * Closest point of the hitbox to the eyes, pulled slightly inside the box so that a ray
      * aimed at it always intersects the real box (instead of grazing the boundary).
      */
-    public Vec3 aimPoint(LivingEntity entity) {
+    public static Vec3 aimPoint(LivingEntity entity) {
         AABB box = entity.getBoundingBox().shrink(SURFACE_INSET, SURFACE_INSET, SURFACE_INSET);
 
         if (mc.player == null) {
@@ -57,12 +55,12 @@ public class AimUtil implements IMinecraft {
     }
 
     /** Yaw/pitch pair that points at the given world position. */
-    public float[] rotationTo(Vec3 point) {
+    public static float[] rotationTo(Vec3 point) {
         return RotationUtil.getRotations(point);
     }
 
     /** Shortest eye to hitbox distance, used for range filtering without any raycast cost. */
-    public double distanceToBox(LivingEntity entity) {
+    public static double distanceToBox(LivingEntity entity) {
         if (mc.player == null) return Double.MAX_VALUE;
 
         AABB box = entity.getBoundingBox();
@@ -76,7 +74,7 @@ public class AimUtil implements IMinecraft {
     }
 
     /** Angle in degrees between the given look direction and the direction to the entity centre. */
-    public double angleTo(LivingEntity entity, float[] rotation) {
+    public static double angleTo(LivingEntity entity, float[] rotation) {
         if (mc.player == null || rotation == null) return 0.0D;
 
         Vec3 eye = mc.player.getEyePosition();
@@ -92,7 +90,7 @@ public class AimUtil implements IMinecraft {
      * Distance from the eyes to the first intersection of the given look direction with the
      * hitbox, or {@code -1} when the direction misses the box completely.
      */
-    public double reach(LivingEntity entity, float[] rotation) {
+    public static double reach(LivingEntity entity, float[] rotation) {
         if (mc.player == null || rotation == null) return -1.0D;
 
         Vec3 eye = mc.player.getEyePosition();
@@ -102,7 +100,7 @@ public class AimUtil implements IMinecraft {
     }
 
     /** Slab method ray/AABB intersection, returns the entry point or {@code null}. */
-    public Vec3 intersect(AABB box, Vec3 origin, Vec3 direction) {
+    public static Vec3 intersect(AABB box, Vec3 origin, Vec3 direction) {
         double[] o = {origin.x, origin.y, origin.z};
         double[] d = {direction.x, direction.y, direction.z};
         double[] min = {box.minX, box.minY, box.minZ};
@@ -135,14 +133,14 @@ public class AimUtil implements IMinecraft {
     }
 
     /** True when no collidable block sits between the eyes and the point. */
-    public boolean isVisible(Vec3 point) {
-        if (mc.player == null || mc.world == null) return false;
+    public static boolean isVisible(Vec3 point) {
+        if (mc.player == null || mc.level == null) return false;
 
         Vec3 eye = mc.player.getEyePosition();
         ClipContext context = new ClipContext(
                 eye, point, ClipContext.ShapeType.COLLIDER, ClipContext.FluidHandling.NONE, mc.player);
 
-        return mc.world.raycast(context).getType() == HitResult.Type.MISS;
+        return mc.level.raycast(context).getType() == HitResult.Type.MISS;
     }
 
     /**
@@ -152,7 +150,7 @@ public class AimUtil implements IMinecraft {
      * of the divisor the player's sensitivity produces, and that we never repeat a rotation we
      * already sent (a delta of zero dots means "no packet").</p>
      */
-    public float[] step(float[] current, float[] target, float maxDegrees) {
+    public static float[] step(float[] current, float[] target, float maxDegrees) {
         if (current == null || target == null) return current;
 
         double divisor = mouseDivisor();
@@ -180,4 +178,8 @@ public class AimUtil implements IMinecraft {
 
         return new float[]{yaw, Mth.clamp(pitch, -90.0F, 90.0F)};
     }
+
+    private static AimUtil() {
+    }
+
 }

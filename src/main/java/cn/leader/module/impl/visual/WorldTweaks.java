@@ -25,25 +25,25 @@ public class WorldTweaks extends Module {
 
     @Override
     public void onEnable() {
-        if (mc.world == null) return;
+        if (mc.level == null) return;
 
-        oldTime = mc.world.getTimeOfDay();
-        oldRaining = mc.world.getLevelProperties().isRaining();
-        oldRainGradient = mc.world.getRainGradient(1);
+        oldTime = mc.level.getTimeOfDay();
+        oldRaining = mc.level.getLevelProperties().isRaining();
+        oldRainGradient = mc.level.getRainGradient(1);
     }
 
     @Override
     public void onDisable() {
-        if (mc.world == null) return;
+        if (mc.level == null) return;
 
-        mc.world.getLevelProperties().setTimeOfDay(oldTime);
-        mc.world.getLevelProperties().setRaining(oldRaining);
-        mc.world.setRainGradient(oldRainGradient);
+        mc.level.getLevelProperties().setTimeOfDay(oldTime);
+        mc.level.getLevelProperties().setRaining(oldRaining);
+        mc.level.setRainGradient(oldRainGradient);
     }
 
     @EventTarget
     private void onPacket(PacketEvent event) {
-        if (mc.world == null) return;
+        if (mc.level == null) return;
 
         if (event.getPacket() instanceof ClientboundSetTimePacket packet) {
             oldTime = packet.timeOfDay();
@@ -72,18 +72,18 @@ public class WorldTweaks extends Module {
 
     @EventTarget
     public void onUpdate(UpdateEvent event) {
-        if (mc.world == null) return;
+        if (mc.level == null) return;
 
         setSuffix(ctimeVal.getValue().toString());
 
-        mc.world.getLevelProperties().setTimeOfDay(ctimeVal.getValue().longValue());
+        mc.level.getLevelProperties().setTimeOfDay(ctimeVal.getValue().longValue());
 
         if (weather.is("Clear")) {
-            mc.world.getLevelProperties().setRaining(false);
-            mc.world.setRainGradient(0);
+            mc.level.getLevelProperties().setRaining(false);
+            mc.level.setRainGradient(0);
         } else if (weather.is("Rain") || weather.is("Snow")) {
-            mc.world.getLevelProperties().setRaining(true);
-            mc.world.setRainGradient(intensity.getValue());
+            mc.level.getLevelProperties().setRaining(true);
+            mc.level.setRainGradient(intensity.getValue());
         }
     }
 }

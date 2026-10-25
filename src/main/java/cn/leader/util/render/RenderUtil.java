@@ -2,7 +2,6 @@ package cn.leader.util.render;
 
 import cn.leader.util.IMinecraft;
 import com.mojang.blaze3d.platform.Window;
-import lombok.experimental.UtilityClass;
 import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.Entity;
@@ -13,7 +12,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-@UtilityClass
 public final class RenderUtil implements IMinecraft {
     public static final Matrix4f lastProjMat = new Matrix4f();
     public static final Matrix4f lastModMat = new Matrix4f();
@@ -65,14 +63,14 @@ public final class RenderUtil implements IMinecraft {
         };
     }
 
-    public void drawRect(GuiGraphicsExtractor graphics, float x, float y, float width, float height, int color) {
+    public static void drawRect(GuiGraphicsExtractor graphics, float x, float y, float width, float height, int color) {
         graphics.fill(Math.round(x), Math.round(y), Math.round(x + width), Math.round(y + height), color);
     }
 
     /**
      * 26.2 only offers a vertical gradient, so the horizontal case is emulated with strips.
      */
-    public void drawGradientRect(GuiGraphicsExtractor graphics, float x, float y, float width, float height,
+    public static void drawGradientRect(GuiGraphicsExtractor graphics, float x, float y, float width, float height,
                                  int startColor, int endColor, boolean horizontal) {
         if (!horizontal) {
             graphics.fillGradient(Math.round(x), Math.round(y), Math.round(x + width), Math.round(y + height), startColor, endColor);
@@ -89,4 +87,8 @@ public final class RenderUtil implements IMinecraft {
             graphics.fill(left, Math.round(y), right, Math.round(y + height), color);
         }
     }
+
+    private static RenderUtil() {
+    }
+
 }

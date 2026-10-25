@@ -1,14 +1,12 @@
 package cn.leader.util.misc;
 
-import lombok.experimental.UtilityClass;
 import org.lwjgl.glfw.GLFW;
 import java.lang.reflect.Field;
 import java.util.Locale;
 
-@UtilityClass
 public final class KeyUtil {
 
-    public int getKeyCode(String keyName) {
+    public static int getKeyCode(String keyName) {
         try {
             String name = keyName.toUpperCase(Locale.ROOT);
             if (name.equals("NONE")) {
@@ -22,7 +20,7 @@ public final class KeyUtil {
         }
     }
 
-    public String getKeyName(int keyCode) {
+    public static String getKeyName(int keyCode) {
         if (keyCode <= 0) {
             return "None";
         }
@@ -43,5 +41,8 @@ public final class KeyUtil {
         }
 
         return name != null ? name.toUpperCase(Locale.ROOT) : "UNKNOWN";
+    }
+
+    private KeyUtil() {
     }
 }

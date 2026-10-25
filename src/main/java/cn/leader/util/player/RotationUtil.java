@@ -2,7 +2,6 @@ package cn.leader.util.player;
 
 import cn.leader.util.IMinecraft;
 import cn.injection.accessor.EntityAccessor;
-import lombok.experimental.UtilityClass;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.core.BlockPos;
@@ -13,17 +12,16 @@ import net.minecraft.world.phys.Vec3;
 import com.mojang.math.Axis;
 import net.minecraft.world.level.ClipContext;
 
-@UtilityClass
-public class RotationUtil implements IMinecraft {
+public final class RotationUtil implements IMinecraft {
 
-    public float[] nearestRotation(final AABB box) {
+    public static float[] nearestRotation(final AABB box) {
         if (mc.player == null) return null;
 
         final Vec3 targetPoint = getNearestPointBB(box);
         return getRotations(targetPoint);
     }
 
-    public Vec3 getNearestPointBB(AABB box) {
+    public static Vec3 getNearestPointBB(AABB box) {
         if (mc.player == null) return null;
 
         Vec3 eyePos = mc.player.getEyePosition();
@@ -65,8 +63,8 @@ public class RotationUtil implements IMinecraft {
         return (bestPoint != null) ? bestPoint : nearestPoint;
     }
 
-    public boolean isVisible(Vec3 targetVec) {
-        if (mc.player == null || mc.world == null) return false;
+    public static boolean isVisible(Vec3 targetVec) {
+        if (mc.player == null || mc.level == null) return false;
 
         Vec3 eyePos = mc.player.getEyePosition();
         if (eyePos.squaredDistanceTo(targetVec) > 4096.0) return false;
@@ -74,10 +72,10 @@ public class RotationUtil implements IMinecraft {
         Vec3 toTarget = targetVec.subtract(eyePos).normalize();
         if (lookVec.dotProduct(toTarget) < 0) return false;
         ClipContext context = new ClipContext(eyePos, targetVec, ClipContext.ShapeType.COLLIDER, ClipContext.FluidHandling.NONE, mc.player);
-        return mc.world.raycast(context).getType() == HitResult.Type.MISS;
+        return mc.level.raycast(context).getType() == HitResult.Type.MISS;
     }
 
-    public float getDistanceToEntity(LivingEntity target) {
+    public static float getDistanceToEntity(LivingEntity target) {
         if (mc.player == null || target == null) return 0.0f;
 
         Vec3 eyePos = mc.player.getEyePosition();
@@ -85,7 +83,7 @@ public class RotationUtil implements IMinecraft {
         return (float) eyePos.distanceTo(nearestPoint);
     }
 
-    public double getRotationDifference(LivingEntity entity) {
+    public static double getRotationDifference(LivingEntity entity) {
         if (mc.player == null || entity == null) return 0;
 
         Vec3 targetPos = entity.position();
@@ -98,16 +96,16 @@ public class RotationUtil implements IMinecraft {
         return Math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff);
     }
 
-    public float[] getRotations(Vec3 target) {
+    public static float[] getRotations(Vec3 target) {
         if (mc.player == null) return null;
         return getRotations(mc.player.getEyePosition(), target);
     }
 
-    public float[] getRotations(Vec3 origin, Vec3 target) {
+    public static float[] getRotations(Vec3 origin, Vec3 target) {
         return getRotations(target.x, target.y, target.z, origin.x, origin.y, origin.z);
     }
 
-    public float[] getRotations(double rotX, double rotY, double rotZ, double startX, double startY, double startZ) {
+    public static float[] getRotations(double rotX, double rotY, double rotZ, double startX, double startY, double startZ) {
         double diffX = rotX - startX;
         double diffY = rotY - startY;
         double diffZ = rotZ - startZ;
@@ -117,7 +115,7 @@ public class RotationUtil implements IMinecraft {
         return new float[]{yaw, pitch};
     }
 
-    public float[] getSmoothRotation(float[] lastRotation, float[] targetRotation, double speed) {
+    public static float[] getSmoothRotation(float[] lastRotation, float[] targetRotation, double speed) {
         float yaw = targetRotation[0];
         float pitch = targetRotation[1];
         float lastYaw = lastRotation[0];
@@ -165,18 +163,22 @@ public class RotationUtil implements IMinecraft {
         return new float[]{yaw, pitch};
     }
 
-    public float[] applySensitivityPatch(float[] rotations) {
+    public static float[] applySensitivityPatch(float[] rotations) {
         if (mc.player == null) return null;
         EntityAccessor accessor = (EntityAccessor) mc.player;
         float[] prevRotations = new float[]{accessor.getPrevYaw(), accessor.getPrevPitch()};
         return applySensitivityPatch(rotations, prevRotations);
     }
 
-    public float[] applySensitivityPatch(float[] rotation, float[] previousRotation) {
+    public static float[] applySensitivityPatch(float[] rotation, float[] previousRotation) {
         float mouseSensitivity = (float) (mc.options.getMouseSensitivity().getValue() * (1 + Math.random() / 10000000) * 0.6F + 0.2F);
         double multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0F * 0.15D;
         float yaw = previousRotation[0] + (float) (Math.round((rotation[0] - previousRotation[0]) / multiplier) * multiplier);
         float pitch = previousRotation[1] + (float) (Math.round((rotation[1] - previousRotation[1]) / multiplier) * multiplier);
         return new float[]{yaw, Mth.clamp(pitch, -90.0F, 90.0F)};
     }
+
+    private static RotationUtil() {
+    }
+
 }

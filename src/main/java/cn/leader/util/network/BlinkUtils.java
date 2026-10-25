@@ -6,7 +6,6 @@ import cn.leader.command.impl.ToggleCommand;
 import cn.leader.event.base.annotation.EventTarget;
 import cn.leader.event.impl.PacketEvent;
 import cn.leader.util.IMinecraft;
-import lombok.Getter;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.Packet;
@@ -97,7 +96,7 @@ public class BlinkUtils implements IMinecraft {
     @EventTarget
     public void onPacket(PacketEvent event) {
         if (event.isCancelled()) return;
-        if (mc.player == null || mc.world == null || mc.getConnection() == null || mc.player.isDeadOrDying()) return;
+        if (mc.player == null || mc.level == null || mc.getConnection() == null || mc.player.isDeadOrDying()) return;
 
         Packet<?> packet = event.getPacket();
 

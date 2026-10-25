@@ -1,6 +1,5 @@
 package cn.leader.util.player;
 
-import lombok.experimental.UtilityClass;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.component.DataComponents;
@@ -20,8 +19,7 @@ import java.util.List;
 import static cn.leader.util.IMinecraft.mc;
 import static cn.leader.util.player.ItemUtils.getEnchantLevel;
 
-@UtilityClass
-public class InventoryUtils {
+public final class InventoryUtils {
 
     public static final int HELMET_SLOT_INVENTORY = 39, HELMET_SLOT_INTERACTION_MANAGER = 5;
     public static final int CHEST_PLATE_SLOT_INVENTORY = 38, CHEST_PLATE_SLOT_INTERACTION_MANAGER = 6;
@@ -153,107 +151,107 @@ public class InventoryUtils {
 
 
 
-    public float getBestSwordDamage() {
+    public static float getBestSwordDamage() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof SwordItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getSwordDamage).max(Float::compareTo).orElse(0f);
     }
 
-    public float getBestAxeScore() {
+    public static float getBestAxeScore() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof AxeItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getAxeScore).max(Float::compareTo).orElse(0f);
     }
 
-    public float getBestPickaxeScore() {
+    public static float getBestPickaxeScore() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof PickaxeItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getToolScore).max(Float::compareTo).orElse(0f);
     }
 
-    public float getBestCrossbowScore() {
+    public static float getBestCrossbowScore() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof CrossbowItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getCrossbowScore).max(Float::compareTo).orElse(0f);
     }
 
-    public float getBestPowerBowScore() {
+    public static float getBestPowerBowScore() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getPowerBowScore).max(Float::compareTo).orElse(0f);
     }
 
-    public float getBestPunchBowScore() {
+    public static float getBestPunchBowScore() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && ItemUtils.isValidItem(item)).map(InventoryUtils::getPunchBowScore).max(Float::compareTo).orElse(0f);
     }
 
-    public float getBestArmorScore(EquipmentType type) {
+    public static float getBestArmorScore(EquipmentType type) {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof ArmorItem && ItemUtils.getEquipmentType(item) == type).map(InventoryUtils::getProtection).max(Float::compareTo).orElse(0f);
     }
 
-    public int getBlockCountInInventory() {
+    public static int getBlockCountInInventory() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BlockItem && ItemUtils.isValidBlock(item)).mapToInt(ItemStack::getCount).sum();
     }
 
-    public int getFoodCountInInventoryExcludingGapple() {
+    public static int getFoodCountInInventoryExcludingGapple() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && ItemUtils.isFood(item) && item.getItem() != Items.GOLDEN_APPLE && item.getItem() != Items.ENCHANTED_GOLDEN_APPLE && ItemUtils.isValidItem(item)).mapToInt(ItemStack::getCount).sum();
     }
 
-    public ItemStack getBestSword() {
+    public static ItemStack getBestSword() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof SwordItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(stack -> (int) (getSwordDamage(stack) * 100))).orElse(null);
     }
 
-    public ItemStack getBestAxe() {
+    public static ItemStack getBestAxe() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof AxeItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getAxeScore(s) * 100))).orElse(null);
     }
 
-    public ItemStack getBestPickaxe() {
+    public static ItemStack getBestPickaxe() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof PickaxeItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getToolScore(s) * 100))).orElse(null);
     }
 
-    public ItemStack getBestShovel() {
+    public static ItemStack getBestShovel() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof ShovelItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getToolScore(s) * 100))).orElse(null);
     }
 
-    public ItemStack getBestCrossbow() {
+    public static ItemStack getBestCrossbow() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof CrossbowItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getCrossbowScore(s) * 100))).orElse(null);
     }
 
-    public ItemStack getBestPunchBow() {
+    public static ItemStack getBestPunchBow() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getPunchBowScore(s) * 100))).orElse(null);
     }
 
-    public ItemStack getBestPowerBow() {
+    public static ItemStack getBestPowerBow() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BowItem && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(s -> (int) (getPowerBowScore(s) * 100))).orElse(null);
     }
 
-    public ItemStack getBestGapple() {
+    public static ItemStack getBestGapple() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && (item.getItem() == Items.GOLDEN_APPLE || item.getItem() == Items.ENCHANTED_GOLDEN_APPLE) && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(ItemStack::getCount)).orElse(null);
     }
 
-    public ItemStack getBestEnderPearl() {
+    public static ItemStack getBestEnderPearl() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() == Items.ENDER_PEARL && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(ItemStack::getCount)).orElse(null);
     }
 
-    public ItemStack getBestBlock() {
+    public static ItemStack getBestBlock() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BlockItem && ItemUtils.isValidBlock(item)).max(Comparator.comparingInt(ItemStack::getCount)).orElse(null);
     }
 
-    public ItemStack getWorstBlock() {
+    public static ItemStack getWorstBlock() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() instanceof BlockItem && ItemUtils.isValidBlock(item)).min(Comparator.comparingInt(ItemStack::getCount)).orElse(null);
     }
 
-    public ItemStack getBestThrowable() {
+    public static ItemStack getBestThrowable() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && (item.getItem() == Items.EGG || item.getItem() == Items.SNOWBALL) && ItemUtils.isValidItem(item)).max(Comparator.comparingInt(ItemStack::getCount)).orElse(null);
     }
 
-    public ItemStack getWorstThrowable() {
+    public static ItemStack getWorstThrowable() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && (item.getItem() == Items.EGG || item.getItem() == Items.SNOWBALL) && ItemUtils.isValidItem(item)).min(Comparator.comparingInt(ItemStack::getCount)).orElse(null);
     }
 
-    public ItemStack getWorstFoodExcludingGapple() {
+    public static ItemStack getWorstFoodExcludingGapple() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && ItemUtils.isFood(item) && item.getItem() != Items.GOLDEN_APPLE && item.getItem() != Items.ENCHANTED_GOLDEN_APPLE && ItemUtils.isValidItem(item)).min(Comparator.comparingInt(ItemStack::getCount)).orElse(null);
     }
 
-    public int getItemCount(Item checkItem) {
+    public static int getItemCount(Item checkItem) {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.getItem() == checkItem).mapToInt(ItemStack::getCount).sum();
     }
 
-    public boolean has(Item checkItem) {
+    public static boolean has(Item checkItem) {
         return getAllItems().stream().anyMatch(item -> item.getItem() == checkItem);
     }
 
-    public float getSwordDamage(ItemStack stack) {
+    public static float getSwordDamage(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof SwordItem)) {
             return 0;
         }
@@ -318,7 +316,7 @@ public class InventoryUtils {
         return damage;
     }
 
-    public float getAxeScore(ItemStack stack) {
+    public static float getAxeScore(ItemStack stack) {
         float valence = getToolScore(stack);
 
         if (ItemUtils.isGodItem(stack)) {
@@ -334,7 +332,7 @@ public class InventoryUtils {
         return valence;
     }
 
-    public float getToolScore(ItemStack stack) {
+    public static float getToolScore(ItemStack stack) {
         float valence = 0;
 
         if (stack == null) {
@@ -363,7 +361,7 @@ public class InventoryUtils {
         return valence;
     }
 
-    public float getCrossbowScore(ItemStack stack) {
+    public static float getCrossbowScore(ItemStack stack) {
         int valence = 0;
 
         if (stack == null) {
@@ -383,7 +381,7 @@ public class InventoryUtils {
         return valence;
     }
 
-    public float getPunchBowScore(ItemStack stack) {
+    public static float getPunchBowScore(ItemStack stack) {
         if (stack == null) {
             return 0;
         }
@@ -404,7 +402,7 @@ public class InventoryUtils {
         return 0;
     }
 
-    public float getPowerBowScore(ItemStack stack) {
+    public static float getPowerBowScore(ItemStack stack) {
         if (stack == null) {
             return 0;
         }
@@ -425,7 +423,7 @@ public class InventoryUtils {
         return 0;
     }
 
-    public float getProtection(ItemStack stack) {
+    public static float getProtection(ItemStack stack) {
         float valence = 0;
 
         if (stack == null || stack.isEmpty()) {
@@ -459,7 +457,7 @@ public class InventoryUtils {
         return valence;
     }
 
-    public List<ItemStack> getAllItems() {
+    public static List<ItemStack> getAllItems() {
         ArrayList<ItemStack> list = new ArrayList<>(41);
 
         if (mc.player != null) {
@@ -481,7 +479,7 @@ public class InventoryUtils {
         return ItemStack.EMPTY;
     }
 
-    public boolean shouldNotWork() {
+    public static boolean shouldNotWork() {
         return InventoryUtils.getAllItems().stream().anyMatch(item -> {
             if (!item.isEmpty()) {
                 var string = item.getName().getString();
@@ -534,4 +532,8 @@ public class InventoryUtils {
     public static int getPowerLevel(ItemStack stack) {
         return getEnchantLevel(stack, Enchantments.POWER);
     }
+
+    private static InventoryUtils() {
+    }
+
 }

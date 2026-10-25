@@ -1,10 +1,6 @@
 package cn.leader.util.animation;
 
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
 public class EasingAnimation {
 
     private Easing easing;
@@ -66,4 +62,69 @@ public class EasingAnimation {
         this.startValue = value;
         this.finished = false;
     }
+
+    public Easing getEasing() {
+        return this.easing;
+    }
+
+    public void setEasing(Easing value) {
+        this.easing = value;
+    }
+
+    public long getDuration() {
+        return this.duration;
+    }
+
+    public void setDuration(long value) {
+        this.duration = value;
+    }
+
+    public long getMillis() {
+        return this.millis;
+    }
+
+    public void setMillis(long value) {
+        this.millis = value;
+    }
+
+    public long getStartTime() {
+        return this.startTime;
+    }
+
+    public void setStartTime(long value) {
+        this.startTime = value;
+    }
+
+    public double getStartValue() {
+        return this.startValue;
+    }
+
+    public void setStartValue(double value) {
+        this.startValue = value;
+    }
+
+    public double getDestinationValue() {
+        return this.destinationValue;
+    }
+
+    public void setDestinationValue(double value) {
+        this.destinationValue = value;
+    }
+
+    public double getValue() {
+        return this.value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+    }
+
+    public boolean isFinished() {
+        return this.finished;
+    }
+
+    public void setFinished(boolean value) {
+        this.finished = value;
+    }
+
 }

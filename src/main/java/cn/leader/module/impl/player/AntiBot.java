@@ -24,7 +24,7 @@ public final class AntiBot extends Module {
 
     public boolean isBot(Entity entity) {
         if (!(entity instanceof Player player)) return false;
-        if (mc.player == null || mc.world == null) return false;
+        if (mc.player == null || mc.level == null) return false;
         if (player == mc.player) return false;
 
         if (notInTab.getValue()) {
@@ -38,7 +38,7 @@ public final class AntiBot extends Module {
             String name = player.getName().getString();
             if (name.isEmpty()) return true;
 
-            for (Player other : mc.world.getPlayers()) {
+            for (Player other : mc.level.getPlayers()) {
                 if (other == player) continue;
                 if (other.getName().getString().equalsIgnoreCase(name)) {
                     return true;

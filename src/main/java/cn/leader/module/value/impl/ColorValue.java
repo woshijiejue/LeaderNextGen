@@ -1,11 +1,9 @@
 package cn.leader.module.value.impl;
 
 import cn.leader.module.value.Value;
-import lombok.Getter;
 import java.awt.Color;
 import java.util.function.Supplier;
 
-@Getter
 public final class ColorValue extends Value {
     private float hue = 0.0F;
     private float saturation = 1.0F;
@@ -36,4 +34,17 @@ public final class ColorValue extends Value {
         this.saturation = s;
         this.brightness = b;
     }
+
+    public float getHue() {
+        return this.hue;
+    }
+
+    public float getSaturation() {
+        return this.saturation;
+    }
+
+    public float getBrightness() {
+        return this.brightness;
+    }
+
 }

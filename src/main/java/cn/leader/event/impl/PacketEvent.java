@@ -1,14 +1,8 @@
 package cn.leader.event.impl;
 
 import cn.leader.event.base.Event;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.network.protocol.Packet;
 
-@Setter
-@Getter
-@AllArgsConstructor
 public class PacketEvent extends Event {
     private Packet<?> packet;
     private final Type type;
@@ -17,4 +11,22 @@ public class PacketEvent extends Event {
         Send,
         Received
     }
+
+    public Packet<?> getPacket() {
+        return this.packet;
+    }
+
+    public void setPacket(Packet<?> value) {
+        this.packet = value;
+    }
+
+    public Type getType() {
+        return this.type;
+    }
+
+    public PacketEvent(Packet<?> packet, Type type) {
+        this.packet = packet;
+        this.type = type;
+    }
+
 }

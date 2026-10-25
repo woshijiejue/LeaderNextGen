@@ -5,14 +5,12 @@ import cn.leader.event.base.annotation.EventTarget;
 import cn.leader.event.impl.PacketEvent;
 import cn.leader.util.IMinecraft;
 import cn.leader.util.Util;
-import lombok.Getter;
 import net.minecraft.network.protocol.game.ServerboundChatPacket;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Getter
 public final class CommandManager implements IMinecraft {
     private final List<Command> commands = new ArrayList<>();
 
@@ -97,5 +95,9 @@ public final class CommandManager implements IMinecraft {
                 Util.log(String.format("'%s' is not a command.", label));
             }
         }
+    }
+
+    public List<Command> getCommands() {
+        return this.commands;
     }
 }

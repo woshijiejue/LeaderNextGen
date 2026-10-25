@@ -1,12 +1,8 @@
 package cn.leader.module.value.impl;
 
 import cn.leader.module.value.Value;
-import lombok.Getter;
-import lombok.Setter;
 import java.util.function.Supplier;
 
-@Getter
-@Setter
 public final class BoolValue extends Value {
     private boolean value;
 
@@ -26,4 +22,13 @@ public final class BoolValue extends Value {
     public void toggle() {
         this.value = !this.value;
     }
+
+    public boolean isValue() {
+        return this.value;
+    }
+
+    public void setValue(boolean value) {
+        this.value = value;
+    }
+
 }

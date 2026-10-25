@@ -2,7 +2,6 @@ package cn.leader.config;
 
 import cn.leader.config.impl.ModuleConfig;
 import cn.leader.util.IMinecraft;
-import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Arrays;

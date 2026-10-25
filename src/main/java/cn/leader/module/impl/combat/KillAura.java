@@ -15,7 +15,6 @@ import cn.leader.util.network.BlinkUtils;
 import cn.leader.util.network.PacketUtil;
 import cn.leader.util.player.AimUtil;
 import cn.leader.util.player.EntityUtil;
-import lombok.Getter;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
@@ -46,7 +45,6 @@ import java.util.Random;
  *
  * @author DSJ
  */
-@Getter
 public class KillAura extends Module {
 
     private final ModeValue sortMode = new ModeValue("Sort", "Adaptive", "Adaptive", "Distance", "Health", "Angle");
@@ -140,7 +138,7 @@ public class KillAura extends Module {
     }
 
     private boolean canRun() {
-        if (mc.player == null || mc.world == null || mc.getConnection() == null) return false;
+        if (mc.player == null || mc.level == null || mc.getConnection() == null) return false;
         if (instance == null || instance.getTargetManager() == null) return false;
 
         return mc.player.isAlive() && !mc.player.isSpectator();
@@ -347,4 +345,33 @@ public class KillAura extends Module {
         if (moveFix.is("Strict")) return MovementCorrection.Strict;
         return MovementCorrection.None;
     }
+
+    public LivingEntity getTarget() {
+        return this.target;
+    }
+
+    public float[] getAimRotation() {
+        return this.aimRotation;
+    }
+
+    public long getNextAttackAt() {
+        return this.nextAttackAt;
+    }
+
+    public long getLastSwitchAt() {
+        return this.lastSwitchAt;
+    }
+
+    public boolean isRenderBlock() {
+        return this.renderBlock;
+    }
+
+    public boolean isUseKeyPressedByUs() {
+        return this.useKeyPressedByUs;
+    }
+
+        public double getInterval() {
+            return this.interval;
+        }
+
 }

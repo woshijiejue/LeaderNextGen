@@ -1,8 +1,6 @@
 package cn.leader.event.base;
 
-import lombok.Getter;
 
-@Getter
 public class Event {
     private boolean cancelled;
 
@@ -14,7 +12,6 @@ public class Event {
         this.cancelled = cancelled;
     }
 
-    @Getter
     public static class StateEvent extends Event {
         private boolean pre = true;
 
@@ -26,4 +23,13 @@ public class Event {
             pre = false;
         }
     }
+
+    public boolean isCancelled() {
+        return this.cancelled;
+    }
+
+        public boolean isPre() {
+            return this.pre;
+        }
+
 }

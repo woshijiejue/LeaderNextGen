@@ -21,7 +21,6 @@ import cn.leader.module.impl.player.NoJumpDelay;
 import cn.leader.module.impl.visual.*;
 import cn.leader.module.value.Value;
 import cn.leader.util.IMinecraft;
-import lombok.Getter;
 
 import java.lang.reflect.Field;
 import java.util.*;

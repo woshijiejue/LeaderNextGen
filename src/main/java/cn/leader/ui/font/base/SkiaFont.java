@@ -1,6 +1,5 @@
 package cn.leader.ui.font.base;
 
-import lombok.Getter;
 import org.jetbrains.skija.*;
 import org.jetbrains.skija.shaper.Shaper;
 
@@ -8,7 +7,6 @@ import org.jetbrains.skija.shaper.Shaper;
  * Skia Font
  * @author DSJ
  */
-@Getter
 public class SkiaFont {
     private final FontCache cache = new FontCache(8964);
     private final Paint paint = new Paint().setAntiAlias(true);
@@ -66,4 +64,21 @@ public class SkiaFont {
         shaper.close();
         paint.close();
     }
+
+    public Typeface getTypeface() {
+        return this.typeface;
+    }
+
+    public Font getFont() {
+        return this.font;
+    }
+
+    public float getFontHeight() {
+        return this.fontHeight;
+    }
+
+        public float getOffsetX() {
+            return this.offsetX;
+        }
+
 }
