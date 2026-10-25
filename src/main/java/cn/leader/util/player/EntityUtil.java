@@ -1,6 +1,6 @@
 package cn.leader.util.player;
 
-import cn.injection.accessor.ClientPlayerInteractionManagerAccessor;
+import cn.injection.accessor.MultiPlayerGameModeAccessor;
 import cn.injection.accessor.MinecraftClientAccessor;
 import cn.leader.manager.RotationManager;
 import cn.leader.module.impl.client.ClientSetting;
@@ -11,7 +11,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.animal.*;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
@@ -126,9 +126,9 @@ public final class EntityUtil implements IMinecraft {
         }
     }
     public static InteractionResult interactItem(Player player, InteractionHand hand) {
-        ((ClientPlayerInteractionManagerAccessor)mc.gameMode).callSyncSelectedSlot();
+        ((MultiPlayerGameModeAccessor)mc.gameMode).callSyncSelectedSlot();
         MutableObject<InteractionResult> mutableObject = new MutableObject();
-        ((ClientPlayerInteractionManagerAccessor)mc.gameMode).callSendSequencedPacket(mc.level, (sequence) -> {
+        ((MultiPlayerGameModeAccessor)mc.gameMode).callSendSequencedPacket(mc.level, (sequence) -> {
             ServerboundUseItemPacket playerInteractItemC2SPacket = new ServerboundUseItemPacket(hand, sequence, RotationManager.currentRotations[0], RotationManager.currentRotations[1]);
             ItemStack itemStack = player.getItemInHand(hand);
             if (player.getItemCooldownManager().isCoolingDown(itemStack)) {
@@ -153,7 +153,7 @@ public final class EntityUtil implements IMinecraft {
         return (InteractionResult)mutableObject.getValue();
     }
 
-    private static EntityUtil() {
+    private EntityUtil() {
     }
 
 }

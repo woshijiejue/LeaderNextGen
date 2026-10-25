@@ -14,7 +14,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 
-@Getter
 public class HUD extends Module {
     private final ModeValue color = new ModeValue("Color Setting", "Rainbow", "Rainbow", "Dynamic", "Fade", "Astolfo", "Custom");
     private final ColorValue mainColor = new ColorValue("Main Color", new Color(183, 0, 255));
@@ -70,5 +69,13 @@ public class HUD extends Module {
             case "Astolfo" -> ColorUtil.getAstolfo(counter, alpha);
             default -> ColorUtil.getCustom(alpha);
         };
+    }
+
+    public ColorValue getMainColor() {
+        return this.mainColor;
+    }
+
+    public ColorValue getSecondColor() {
+        return this.secondColor;
     }
 }

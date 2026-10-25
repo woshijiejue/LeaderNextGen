@@ -7,7 +7,6 @@ import java.util.function.Function;
 import static java.lang.Math.pow;
 import static java.lang.Math.sin;
 
-@Getter
 public enum Easing {
     LINEAR(x -> x),
     EASE_IN_QUAD(x -> x * x),
@@ -45,5 +44,9 @@ public enum Easing {
     @Override
     public String toString() {
         return StringUtils.capitalize(super.toString().toLowerCase().replace("_", " "));
+    }
+
+    public Function<Double, Double> getFunction() {
+        return this.function;
     }
 }

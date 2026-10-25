@@ -72,7 +72,7 @@ public final class InventoryUtils {
         if (item instanceof PickaxeItem) return true;
         if (item instanceof ShovelItem) return true;
         if (item instanceof HoeItem) return true;
-        if (item instanceof SwordItem) return true;
+        if (item.is(net.minecraft.tags.ItemTags.SWORDS)) return true;
 
         if (item instanceof PotionItem) return true;
         if (item instanceof PlayerHeadItem) return true;
@@ -254,7 +254,7 @@ public final class InventoryUtils {
     }
 
     public static float getSwordDamage(ItemStack stack) {
-        if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof SwordItem)) {
+        if (stack == null || stack.isEmpty() || !(stack.is(net.minecraft.tags.ItemTags.SWORDS))) {
             return 0;
         }
 
@@ -535,7 +535,7 @@ public final class InventoryUtils {
         return getEnchantLevel(stack, Enchantments.POWER);
     }
 
-    private static InventoryUtils() {
+    private InventoryUtils() {
     }
 
 }

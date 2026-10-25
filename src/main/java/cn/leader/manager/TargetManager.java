@@ -9,7 +9,6 @@ import net.minecraft.world.entity.LivingEntity;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
 public class TargetManager implements IMinecraft {
     private final List<LivingEntity> targets = new ArrayList<>();
 
@@ -27,5 +26,9 @@ public class TargetManager implements IMinecraft {
                 targets.add(livingEntity);
             }
         }
+    }
+
+    public List<LivingEntity> getTargets() {
+        return this.targets;
     }
 }

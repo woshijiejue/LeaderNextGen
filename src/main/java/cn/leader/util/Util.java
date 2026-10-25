@@ -32,7 +32,7 @@ public final class Util implements IMinecraft{
         return mc.getSession().getUsername();
     }
 
-    private static Util() {
+    private Util() {
     }
 
 }

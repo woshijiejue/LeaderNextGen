@@ -88,7 +88,7 @@ public final class RenderUtil implements IMinecraft {
         }
     }
 
-    private static RenderUtil() {
+    private RenderUtil() {
     }
 
 }

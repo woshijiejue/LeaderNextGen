@@ -5,7 +5,6 @@ import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.MultiBoolValue;
 
-@Getter
 public class ClientSetting extends Module {
 
     private final MultiBoolValue target = new MultiBoolValue("Target",
@@ -28,4 +27,8 @@ public class ClientSetting extends Module {
         setEnabled(true);
     }
 
+
+    public MultiBoolValue getTarget() {
+        return this.target;
+    }
 }

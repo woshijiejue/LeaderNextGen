@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class ConfigManager implements IMinecraft {
-    @Getter
     private final List<Config> configs = new ArrayList<>();
 
     public ConfigManager() {
@@ -38,5 +37,9 @@ public final class ConfigManager implements IMinecraft {
 
     public void loadAll() {
         configs.forEach(Config::load);
+    }
+
+    public List<Config> getConfigs() {
+        return this.configs;
     }
 }

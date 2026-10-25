@@ -179,7 +179,7 @@ public final class AimUtil implements IMinecraft {
         return new float[]{yaw, Mth.clamp(pitch, -90.0F, 90.0F)};
     }
 
-    private static AimUtil() {
+    private AimUtil() {
     }
 
 }

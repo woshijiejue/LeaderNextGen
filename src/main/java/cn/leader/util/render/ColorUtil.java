@@ -83,7 +83,7 @@ public final class ColorUtil implements IMinecraft {
         return (alpha << 24) | (rgb & 0xFFFFFF);
     }
 
-    private static ColorUtil() {
+    private ColorUtil() {
     }
 
 }

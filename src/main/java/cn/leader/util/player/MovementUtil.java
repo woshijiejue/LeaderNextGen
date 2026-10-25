@@ -93,7 +93,7 @@ public final class MovementUtil implements IMinecraft {
         }
     }
 
-    private static MovementUtil() {
+    private MovementUtil() {
     }
 
 }

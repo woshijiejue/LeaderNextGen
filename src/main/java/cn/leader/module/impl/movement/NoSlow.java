@@ -14,12 +14,11 @@ import cn.leader.util.network.BlinkUtils;
 import cn.leader.util.network.PacketUtil;
 import cn.leader.util.player.EntityUtil;
 import cn.leader.util.player.ItemUtils;
-import net.minecraft.world.item.SwordItem;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.network.protocol.status.ServerboundPingRequestPacket;
+import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket;
 import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket;
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
@@ -29,7 +28,6 @@ import net.minecraft.core.Direction;
 
 import static cn.leader.util.network.BlinkUtils.*;
 
-@Getter
 public class NoSlow extends Module {
     public NoSlow(){super("NoSlow", Category.Movement);}
     private final ModeValue swordMode = new ModeValue("Sword Mode", "Prediction", "Vanilla", "Prediction");
@@ -49,7 +47,7 @@ public class NoSlow extends Module {
     }
     private void handlePrediction(MotionEvent event) {
         boolean holdingSword = !mc.player.getMainHandItem().isEmpty()
-                && mc.player.getMainHandItem().getItem() instanceof SwordItem;
+                && mc.player.getMainHandItem().is(net.minecraft.tags.ItemTags.SWORDS);
         boolean wantBlock = holdingSword && (KillAura.blocking || mc.options.keyUse.isPressed());
 
         if (interactingBlockThisTick) return;
@@ -103,7 +101,7 @@ public class NoSlow extends Module {
     public void onSlow(SlowEvent event) {
         if (mc.player == null) return;
         if (mc.player.getMainHandItem().isEmpty()) return;
-        if ((mc.player.getMainHandItem().getItem() instanceof SwordItem && !ItemUtils.isConsumable(mc.player.getOffhandItem()) && (mc.player.isUsingItem() || mc.options.keyUse.isPressed()))) {
+        if ((mc.player.getMainHandItem().is(net.minecraft.tags.ItemTags.SWORDS) && !ItemUtils.isConsumable(mc.player.getOffhandItem()) && (mc.player.isUsingItem() || mc.options.keyUse.isPressed()))) {
             if (swordSprint.getValue()){
                 mc.player.setSprinting(true);
             }

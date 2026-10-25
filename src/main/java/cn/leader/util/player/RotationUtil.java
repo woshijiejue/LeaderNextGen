@@ -178,7 +178,7 @@ public final class RotationUtil implements IMinecraft {
         return new float[]{yaw, Mth.clamp(pitch, -90.0F, 90.0F)};
     }
 
-    private static RotationUtil() {
+    private RotationUtil() {
     }
 
 }

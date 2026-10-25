@@ -81,4 +81,8 @@ public class SkiaFont {
             return this.offsetX;
         }
 
+
+    public Shaper getShaper() {
+        return this.shaper;
+    }
 }

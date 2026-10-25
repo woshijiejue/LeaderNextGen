@@ -1,6 +1,6 @@
 package cn.leader.module.impl.combat;
 
-import cn.injection.accessor.ClientPlayerInteractionManagerAccessor;
+import cn.injection.accessor.MultiPlayerGameModeAccessor;
 import cn.leader.event.base.annotation.EventTarget;
 import cn.leader.event.impl.MotionEvent;
 import cn.leader.event.impl.UpdateEvent;
@@ -16,7 +16,6 @@ import cn.leader.util.network.PacketUtil;
 import cn.leader.util.player.AimUtil;
 import cn.leader.util.player.EntityUtil;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.SwordItem;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.world.InteractionHand;
 
@@ -264,7 +263,7 @@ public class KillAura extends Module {
         boolean sprinting = mc.player.isSprinting();
 
         if (attackMode.is("Packet") || keepSprint.getValue()) {
-            ((ClientPlayerInteractionManagerAccessor) mc.gameMode).callSyncSelectedSlot();
+            ((MultiPlayerGameModeAccessor) mc.gameMode).callSyncSelectedSlot();
             PacketUtil.sendPacket(ServerboundInteractPacket.attack(entity, mc.player.isSneaking()));
             mc.player.swingHand(InteractionHand.MAIN_HAND);
         } else {
@@ -329,7 +328,7 @@ public class KillAura extends Module {
     }
 
     private boolean isHoldingSword() {
-        return mc.player != null && mc.player.getMainHandItem().getItem() instanceof SwordItem;
+        return mc.player != null && mc.player.getMainHandItem().is(net.minecraft.tags.ItemTags.SWORDS);
     }
 
     // ------------------------------------------------------------------ helpers

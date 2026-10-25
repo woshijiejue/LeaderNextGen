@@ -107,4 +107,16 @@ public abstract class Module implements IMinecraft {
         this.key = value;
     }
 
+
+    public List<Value> getValues() {
+        return this.values;
+    }
+
+    public EasingAnimation getAnimation() {
+        return this.animation;
+    }
+
+    public boolean isEnabled() {
+        return this.enabled;
+    }
 }

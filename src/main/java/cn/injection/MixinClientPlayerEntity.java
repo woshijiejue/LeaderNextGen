@@ -5,7 +5,7 @@ import cn.leader.event.impl.*;
 import cn.leader.util.IMinecraft;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.Input;
+import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinClientPlayerEntity extends AbstractClientPlayer implements IMinecraft {
 
     @Shadow
-    public Input input;
+    public ClientInput input;
     @Shadow
     protected int ticksLeftToDoubleTapSprint;
     @Shadow

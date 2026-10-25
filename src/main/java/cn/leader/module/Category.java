@@ -1,8 +1,6 @@
 package cn.leader.module;
 
 
-@Getter
-@AllArgsConstructor
 public enum Category {
     Combat("Combat"),
     Movement("Movement"),

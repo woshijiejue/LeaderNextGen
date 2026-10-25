@@ -11,7 +11,7 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
-import net.minecraft.network.protocol.status.ServerboundPingRequestPacket;
+import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket;
 import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket;
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
@@ -21,9 +21,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 
 public class BlinkUtils implements IMinecraft {
-    @Getter
     private static final LinkedBlockingDeque<Packet<ClientGamePacketListener>> serverPackets = new LinkedBlockingDeque<>();
-    @Getter
     private static final LinkedBlockingDeque<Packet<?>> clientPackets = new LinkedBlockingDeque<>();
     public static boolean blinking = false;
     public static boolean delaying = false;

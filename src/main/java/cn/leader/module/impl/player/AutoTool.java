@@ -1,6 +1,6 @@
 package cn.leader.module.impl.player;
 
-import cn.injection.accessor.ClientPlayerInteractionManagerAccessor;
+import cn.injection.accessor.MultiPlayerGameModeAccessor;
 import cn.leader.event.base.annotation.EventTarget;
 import cn.leader.event.impl.UpdateEvent;
 import cn.leader.module.Category;
@@ -78,7 +78,7 @@ public final class AutoTool extends Module {
         mc.player.getInventory().selected = slot;
 
         if (mc.gameMode != null) {
-            ((ClientPlayerInteractionManagerAccessor) mc.gameMode).callSyncSelectedSlot();
+            ((MultiPlayerGameModeAccessor) mc.gameMode).callSyncSelectedSlot();
         }
     }
 

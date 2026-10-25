@@ -8,16 +8,13 @@
   ],
   "client": [
     "MixinBiome",
-    "MixinChatInputSuggestor",
     "MixinChatScreen",
     "MixinClientConnection",
     "MixinClientPlayerEntity",
     "MixinClientWorld",
     "MixinCobwebBlock",
-    "MixinDynamic",
     "MixinEntity",
     "MixinGameRenderer",
-    "MixinHeldItemRenderer",
     "MixinInGameHud",
     "MixinKeyboard",
     "MixinKeyboardInput",
@@ -30,7 +27,7 @@
     "accessor.ClientWorldAccessor",
     "accessor.LivingEntityAccessor",
     "accessor.MinecraftClientAccessor",
-    "accessor.ClientPlayerInteractionManagerAccessor"
+    "accessor.MultiPlayerGameModeAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

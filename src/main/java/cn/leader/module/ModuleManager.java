@@ -25,7 +25,6 @@ import cn.leader.util.IMinecraft;
 import java.lang.reflect.Field;
 import java.util.*;
 
-@Getter
 public class ModuleManager implements IMinecraft {
     private final Map<String, Module> moduleMap = new LinkedHashMap<>();
 
@@ -111,5 +110,9 @@ public class ModuleManager implements IMinecraft {
                 module.toggle();
             }
         }
+    }
+
+    public Map<String, Module> getModuleMap() {
+        return this.moduleMap;
     }
 }
