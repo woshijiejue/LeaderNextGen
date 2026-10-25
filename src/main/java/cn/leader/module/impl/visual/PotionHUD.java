@@ -4,7 +4,7 @@ import cn.leader.module.value.impl.BoolValue;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.network.chat.Component;
 
@@ -32,14 +32,14 @@ public final class PotionHUD extends Drag {
     }
 
     @Override
-    public void render(GuiGraphics context) {
-        if (mc.player == null || mc.textRenderer == null) {
+    public void render(GuiGraphicsExtractor context) {
+        if (mc.player == null || mc.font == null) {
             this.width = 0;
             this.height = 0;
             return;
         }
 
-        List<MobEffectInstance> effects = new ArrayList<>(mc.player.getStatusEffects());
+        List<MobEffectInstance> effects = new ArrayList<>(mc.player.getActiveEffects());
         if (effects.isEmpty()) {
             this.width = 0;
             this.height = 0;

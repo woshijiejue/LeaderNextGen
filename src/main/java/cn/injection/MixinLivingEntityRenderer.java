@@ -32,7 +32,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
     @Redirect(method = "updateRenderState(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getLerpedPitch(F)F"))
     private float pitch(LivingEntity entity, float delta) {
-        RotationEvent event = new RotationEvent(new float[]{0, entity.getPitch()}, new float[]{0, entity.prevPitch});
+        RotationEvent event = new RotationEvent(new float[]{0, entity.getXRot()}, new float[]{0, entity.prevPitch});
         if (entity == mc.player) {
             instance.getEventManager().call(event);
         }

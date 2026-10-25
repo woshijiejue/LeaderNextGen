@@ -110,15 +110,15 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayer imple
         this.sendSprintingPacket();
 
         if (this.isCamera()) {
-            MotionEvent event = new MotionEvent(this.getX(), this.getY(), this.getZ(), this.getYaw(), this.getPitch(), this.isOnGround(), this.horizontalCollision);
+            MotionEvent event = new MotionEvent(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot(), this.onGround(), this.horizontalCollision);
             instance.getEventManager().call(event);
 
             if (!event.isCancelled()) {
                 double d = event.getX() - this.lastX;
                 double e = event.getY() - this.lastBaseY;
                 double f = event.getZ() - this.lastZ;
-                double g = event.getYaw() - this.lastYaw;
-                double h = event.getPitch() - this.lastPitch;
+                double g = event.getYRot() - this.lastYaw;
+                double h = event.getXRot() - this.lastPitch;
 
                 ++this.ticksSinceLastPositionPacketSent;
 
@@ -126,13 +126,13 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayer imple
                 boolean isLookChanged = g != 0.0 || h != 0.0;
 
                 if (isPosChanged && isLookChanged) {
-                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.Full(event.getX(), event.getY(), event.getZ(), event.getYaw(), event.getPitch(), event.isOnGround(), event.isHorizontalCollision()));
+                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.Full(event.getX(), event.getY(), event.getZ(), event.getYRot(), event.getXRot(), event.onGround(), event.isHorizontalCollision()));
                 } else if (isPosChanged) {
-                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.PositionAndOnGround(event.getX(), event.getY(), event.getZ(), event.isOnGround(), event.isHorizontalCollision()));
+                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.PositionAndOnGround(event.getX(), event.getY(), event.getZ(), event.onGround(), event.isHorizontalCollision()));
                 } else if (isLookChanged) {
-                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.LookAndOnGround(event.getYaw(), event.getPitch(), event.isOnGround(), event.isHorizontalCollision()));
-                } else if (this.lastOnGround != event.isOnGround() || this.lastHorizontalCollision != event.isHorizontalCollision()) {
-                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.OnGroundOnly(event.isOnGround(), event.isHorizontalCollision()));
+                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.LookAndOnGround(event.getYRot(), event.getXRot(), event.onGround(), event.isHorizontalCollision()));
+                } else if (this.lastOnGround != event.onGround() || this.lastHorizontalCollision != event.isHorizontalCollision()) {
+                    this.networkHandler.sendPacket(new ServerboundMovePlayerPacket.OnGroundOnly(event.onGround(), event.isHorizontalCollision()));
                 }
 
                 if (isPosChanged) {
@@ -143,11 +143,11 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayer imple
                 }
 
                 if (isLookChanged) {
-                    this.lastYaw = event.getYaw();
-                    this.lastPitch = event.getPitch();
+                    this.lastYaw = event.getYRot();
+                    this.lastPitch = event.getXRot();
                 }
 
-                this.lastOnGround = event.isOnGround();
+                this.lastOnGround = event.onGround();
                 this.lastHorizontalCollision = event.isHorizontalCollision();
                 this.autoJumpEnabled = this.client.options.getAutoJump().getValue();
             }

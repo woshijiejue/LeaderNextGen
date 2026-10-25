@@ -192,7 +192,7 @@ public abstract class MixinHeldItemRenderer implements IMinecraft {
                     matrices.multiply(Axis.POSITIVE_Y.rotationDegrees((float)l * 65.0F));
                     matrices.multiply(Axis.POSITIVE_Z.rotationDegrees((float)l * -85.0F));
                 } else {
-                    boolean isSwordBlock = item.getItem() instanceof SwordItem && mc.options.useKey.isPressed() && this.offHand.isEmpty();
+                    boolean isSwordBlock = item.getItem() instanceof SwordItem && mc.options.keyUse.isPressed() && this.offHand.isEmpty();
                     if (isSwordBlock || aura.isRenderBlock()) {
                         this.blockAnimation(swingProgress, equipProgress, matrices, arm, l, animation);
                     } else {

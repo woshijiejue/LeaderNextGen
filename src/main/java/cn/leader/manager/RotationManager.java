@@ -72,7 +72,7 @@ public class RotationManager implements IMinecraft {
         if (requestTicks > 0) {
             currentRotations = AimUtil.step(currentRotations, targetRotations, rotationSpeed);
         } else {
-            currentRotations = new float[]{mc.player.getYaw(), mc.player.getPitch()};
+            currentRotations = new float[]{mc.player.getYRot(), mc.player.getXRot()};
             correctMovement = MovementCorrection.None;
         }
 
@@ -96,7 +96,7 @@ public class RotationManager implements IMinecraft {
     public void onStrafe(StrafeEvent event) {
         if (mc.player == null || !isActive() || correctMovement == MovementCorrection.None) return;
 
-        event.setYaw(currentRotations[0]);
+        event.setYRot(currentRotations[0]);
     }
 
     @EventTarget
@@ -104,7 +104,7 @@ public class RotationManager implements IMinecraft {
     public void onJump(JumpEvent event) {
         if (mc.player == null || !isActive() || correctMovement == MovementCorrection.None) return;
 
-        event.setYaw(currentRotations[0]);
+        event.setYRot(currentRotations[0]);
     }
 
     @EventTarget
@@ -116,14 +116,14 @@ public class RotationManager implements IMinecraft {
             // Record what the packet just carried, i.e. what the server now believes.
             serverRotations = isActive()
                     ? new float[]{currentRotations[0], currentRotations[1]}
-                    : new float[]{event.getYaw(), event.getPitch()};
+                    : new float[]{event.getYRot(), event.getXRot()};
             return;
         }
 
         if (!isActive()) return;
 
-        event.setYaw(currentRotations[0]);
-        event.setPitch(currentRotations[1]);
+        event.setYRot(currentRotations[0]);
+        event.setXRot(currentRotations[1]);
     }
 
     @EventTarget

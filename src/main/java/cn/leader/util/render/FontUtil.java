@@ -2,30 +2,26 @@ package cn.leader.util.render;
 
 import cn.leader.util.IMinecraft;
 import lombok.experimental.UtilityClass;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 @UtilityClass
 public final class FontUtil implements IMinecraft {
 
-    public void drawString(GuiGraphics context, String text, float x, float y, int color, boolean shadow) {
-        if (mc.textRenderer == null) return;
+    public void drawString(GuiGraphicsExtractor graphics, String text, float x, float y, int color, boolean shadow) {
+        if (mc.font == null) return;
 
-        context.getMatrices().push();
-        context.getMatrices().translate(x, y, 0);
-        context.drawText(mc.textRenderer, text, 0, 0, color, shadow);
-        context.getMatrices().pop();
-
+        graphics.text(mc.font, text, Math.round(x), Math.round(y), color, shadow);
     }
 
-    public void drawStringWithShadow(GuiGraphics context, String text, float x, float y, int color) {
-        drawString(context, text, x, y, color, true);
+    public void drawStringWithShadow(GuiGraphicsExtractor graphics, String text, float x, float y, int color) {
+        drawString(graphics, text, x, y, color, true);
     }
 
     public float getStringWidth(final String text) {
-        return mc.textRenderer.getWidth(text);
+        return mc.font.width(text);
     }
 
     public float getHeight() {
-        return mc.textRenderer.fontHeight;
+        return mc.font.lineHeight;
     }
 }

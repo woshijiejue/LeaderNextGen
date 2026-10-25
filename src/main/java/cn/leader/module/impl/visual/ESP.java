@@ -9,7 +9,7 @@ import cn.leader.util.player.EntityUtil;
 import cn.leader.util.render.ColorUtil;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -42,7 +42,7 @@ public final class ESP extends Module {
         }
     }
 
-    private void drawBox(@NotNull Entity entity, GuiGraphics context) {
+    private void drawBox(@NotNull Entity entity, GuiGraphicsExtractor context) {
         Vec3[] vectors = RenderUtil.getVectors(entity);
 
         Vector4d position = null;
@@ -75,7 +75,7 @@ public final class ESP extends Module {
                     drawHealthBar(context, living, x, y, bottom);
                 }
 
-                if (living.getArmor() != 0 && armorBar.getValue()) {
+                if (living.getArmorValue() != 0 && armorBar.getValue()) {
                     drawArmorBar(context, living, right, y, bottom);
                 }
             }
@@ -86,7 +86,7 @@ public final class ESP extends Module {
         }
     }
 
-    private void drawNametag(GuiGraphics context, Entity entity, float x, float y, float right) {
+    private void drawNametag(GuiGraphicsExtractor context, Entity entity, float x, float y, float right) {
         if (mc.player == null || mc.world == null) return;
 
         String name = "";
@@ -108,7 +108,7 @@ public final class ESP extends Module {
         FontUtil.drawString(context, text, middle - (width / 2.0F), y - height - 3.0F, -1, true);
     }
 
-    private void drawBox(GuiGraphics context, float x, float y, float right, float bottom) {
+    private void drawBox(GuiGraphicsExtractor context, float x, float y, float right, float bottom) {
         HUD hud = getModule(HUD.class);
 
         int color1 = hud.getColor(1);
@@ -136,7 +136,7 @@ public final class ESP extends Module {
         RenderUtil.drawRect(context, right - t, y + 1.0f, t, (bottom - y) - 1.0f, black); // 内右
     }
 
-    private void drawHealthBar(GuiGraphics context, @NotNull LivingEntity entity, float x, float y, float bottom) {
+    private void drawHealthBar(GuiGraphicsExtractor context, @NotNull LivingEntity entity, float x, float y, float bottom) {
         float healthValue = entity.getHealth() / entity.getMaxHealth();
         float height = (bottom - y) + 1;
 
@@ -145,8 +145,8 @@ public final class ESP extends Module {
         RenderUtil.drawRect(context, x - 3.0f, y + (height - height * healthValue), 1, height * healthValue, getHealthColor(healthValue * 100).getRGB());
     }
 
-    private void drawArmorBar(GuiGraphics context, @NotNull LivingEntity entity, float right, float y, float bottom) {
-        float armorValue = entity.getArmor() / 20f;
+    private void drawArmorBar(GuiGraphicsExtractor context, @NotNull LivingEntity entity, float right, float y, float bottom) {
+        float armorValue = entity.getArmorValue() / 20f;
         float height = (bottom - y) + 1;
 
         RenderUtil.drawRect(context, right + 1.5f, y - 0.5f, 2, height + 1, new Color(0, 0, 0, 180).getRGB());

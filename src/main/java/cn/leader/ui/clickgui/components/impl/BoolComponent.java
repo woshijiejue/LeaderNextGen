@@ -5,7 +5,7 @@ import cn.leader.module.value.impl.BoolValue;
 import cn.leader.ui.clickgui.components.ValueComponent;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.awt.*;
 
@@ -16,7 +16,7 @@ public class BoolComponent extends ValueComponent {
     }
 
     @Override
-    public float render(GuiGraphics context, int mouseX, int mouseY, float x, float y, float width) {
+    public float render(GuiGraphicsExtractor context, int mouseX, int mouseY, float x, float y, float width) {
         RenderUtil.drawRect(context, x, y, width, 15, new Color(0, 0, 0, 120).getRGB());
         FontUtil.drawStringWithShadow(context, getValue().getName(), x + 6, y + 4, ((BoolValue)getValue()).getValue() ? Client.instance.getModuleManager().getModule(HUD.class).getColor() : 0xFFAAAAAA);
         return lastHeight = 15;

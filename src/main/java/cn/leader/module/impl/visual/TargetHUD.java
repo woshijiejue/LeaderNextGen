@@ -5,7 +5,7 @@ import cn.leader.module.value.impl.BoolValue;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.LivingEntity;
 
 import java.awt.*;
@@ -30,8 +30,8 @@ public final class TargetHUD extends Drag {
     }
 
     @Override
-    public void render(GuiGraphics context) {
-        if (mc.player == null || mc.world == null || mc.textRenderer == null) {
+    public void render(GuiGraphicsExtractor context) {
+        if (mc.player == null || mc.world == null || mc.font == null) {
             this.width = 0;
             this.height = 0;
             return;
@@ -99,7 +99,7 @@ public final class TargetHUD extends Drag {
         }
 
         if (showArmor.getValue()) {
-            String armor = "Armor " + target.getArmor();
+            String armor = "Armor " + target.getArmorValue();
             FontUtil.drawStringWithShadow(context, armor, contentX, contentY, 0xFFB0B0B0);
         }
     }

@@ -2,7 +2,7 @@ package cn.leader.ui.clickgui;
 
 import cn.leader.module.Category;
 import cn.leader.util.IMinecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -26,7 +26,7 @@ public class ClickGUIScreen extends Screen implements IMinecraft {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         for (Panel panel : panels) {
             panel.render(context, mouseX, mouseY);
         }

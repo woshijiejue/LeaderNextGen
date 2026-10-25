@@ -78,26 +78,26 @@ public class EntityUtil implements IMinecraft {
                 || entity instanceof EnderDragon;
     }
     public static void doItemUseWithoutBlock() {
-        if (!mc.interactionManager.isBreakingBlock()) {
+        if (!mc.gameMode.isBreakingBlock()) {
             ((MinecraftClientAccessor)mc).setItemUseCooldown(4);
             if (!mc.player.isRiding()) {
                 for(InteractionHand hand : InteractionHand.values()) {
-                    ItemStack itemStack = mc.player.getStackInHand(hand);
+                    ItemStack itemStack = mc.player.getItemInHand(hand);
                     if (!itemStack.isItemEnabled(mc.world.getEnabledFeatures())) {
                         return;
                     }
 
-                    if (mc.crosshairTarget != null) {
-                        if (Objects.requireNonNull(mc.crosshairTarget.getType()) == HitResult.Type.ENTITY) {
-                            EntityHitResult entityHitResult = (EntityHitResult) mc.crosshairTarget;
+                    if (mc.hitResult != null) {
+                        if (Objects.requireNonNull(mc.hitResult.getType()) == HitResult.Type.ENTITY) {
+                            EntityHitResult entityHitResult = (EntityHitResult) mc.hitResult;
                             Entity entity = entityHitResult.getEntity();
                             if (!mc.world.getWorldBorder().contains(entity.getBlockPos())) {
                                 return;
                             }
 
-                            InteractionResult actionResult = mc.interactionManager.interactEntityAtLocation(mc.player, entity, entityHitResult, hand);
+                            InteractionResult actionResult = mc.gameMode.interactEntityAtLocation(mc.player, entity, entityHitResult, hand);
                             if (!actionResult.isAccepted()) {
-                                actionResult = mc.interactionManager.interactEntity(mc.player, entity, hand);
+                                actionResult = mc.gameMode.interactEntity(mc.player, entity, hand);
                             }
 
                             if (actionResult instanceof InteractionResult.Success) {
@@ -128,11 +128,11 @@ public class EntityUtil implements IMinecraft {
         }
     }
     public static InteractionResult interactItem(Player player, InteractionHand hand) {
-        ((ClientPlayerInteractionManagerAccessor)mc.interactionManager).callSyncSelectedSlot();
+        ((ClientPlayerInteractionManagerAccessor)mc.gameMode).callSyncSelectedSlot();
         MutableObject<InteractionResult> mutableObject = new MutableObject();
-        ((ClientPlayerInteractionManagerAccessor)mc.interactionManager).callSendSequencedPacket(mc.world, (sequence) -> {
+        ((ClientPlayerInteractionManagerAccessor)mc.gameMode).callSendSequencedPacket(mc.world, (sequence) -> {
             ServerboundUseItemPacket playerInteractItemC2SPacket = new ServerboundUseItemPacket(hand, sequence, RotationManager.currentRotations[0], RotationManager.currentRotations[1]);
-            ItemStack itemStack = player.getStackInHand(hand);
+            ItemStack itemStack = player.getItemInHand(hand);
             if (player.getItemCooldownManager().isCoolingDown(itemStack)) {
                 mutableObject.setValue(InteractionResult.PASS);
                 return playerInteractItemC2SPacket;
@@ -141,9 +141,9 @@ public class EntityUtil implements IMinecraft {
                 ItemStack itemStack2;
                 if (actionResult instanceof InteractionResult.Success) {
                     InteractionResult.Success success = (InteractionResult.Success)actionResult;
-                    itemStack2 = (ItemStack)Objects.requireNonNullElseGet(success.getNewHandStack(), () -> player.getStackInHand(hand));
+                    itemStack2 = (ItemStack)Objects.requireNonNullElseGet(success.getNewHandStack(), () -> player.getItemInHand(hand));
                 } else {
-                    itemStack2 = player.getStackInHand(hand);
+                    itemStack2 = player.getItemInHand(hand);
                 }
                 if (itemStack2 != itemStack) {
                     player.setStackInHand(hand, itemStack2);

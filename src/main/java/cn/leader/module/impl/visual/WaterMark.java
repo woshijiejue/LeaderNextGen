@@ -4,7 +4,7 @@ import cn.leader.Client;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.FontUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class WaterMark extends Drag {
 
@@ -20,7 +20,7 @@ public class WaterMark extends Drag {
     }
 
     @Override
-    public void render(GuiGraphics context) {
+    public void render(GuiGraphicsExtractor context) {
         if (mc.player == null) return;
 
         HUD hud = getModule(HUD.class);

@@ -29,9 +29,9 @@ public final class AutoTool extends Module {
 
     @EventTarget
     public void onUpdate(UpdateEvent event) {
-        if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
+        if (mc.player == null || mc.world == null || mc.gameMode == null) return;
 
-        if (!mc.interactionManager.isBreakingBlock() || !(mc.crosshairTarget instanceof BlockHitResult hit)) {
+        if (!mc.gameMode.isBreakingBlock() || !(mc.hitResult instanceof BlockHitResult hit)) {
             restore();
             return;
         }
@@ -41,7 +41,7 @@ public final class AutoTool extends Module {
         int best = bestSlot(state);
         if (best == -1) return;
 
-        int current = mc.player.getInventory().selectedSlot;
+        int current = mc.player.getInventory().selected;
         if (best == current) return;
 
         if (previousSlot == -1) {
@@ -75,10 +75,10 @@ public final class AutoTool extends Module {
     }
 
     private void select(int slot) {
-        mc.player.getInventory().selectedSlot = slot;
+        mc.player.getInventory().selected = slot;
 
-        if (mc.interactionManager != null) {
-            ((ClientPlayerInteractionManagerAccessor) mc.interactionManager).callSyncSelectedSlot();
+        if (mc.gameMode != null) {
+            ((ClientPlayerInteractionManagerAccessor) mc.gameMode).callSyncSelectedSlot();
         }
     }
 

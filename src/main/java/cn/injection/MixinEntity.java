@@ -35,8 +35,8 @@ public abstract class MixinEntity implements IMinecraft {
     @Inject(method = "getRotationVec(F)Lnet/minecraft/util/math/Vec3;", at = @At("HEAD"), cancellable = true)
     private void getRotationVec(float tickDelta, CallbackInfoReturnable<Vec3> cir) {
         if (((Object) this) instanceof LocalPlayer) {
-            float yaw = this.getYaw();
-            float pitch = this.getPitch();
+            float yaw = this.getYRot();
+            float pitch = this.getXRot();
             float lastYaw = this.prevYaw;
             float lastPitch = this.prevPitch;
 
@@ -46,7 +46,7 @@ public abstract class MixinEntity implements IMinecraft {
             float getYaw = Mth.lerp(tickDelta, event.getLastRotation()[0], event.getRotation()[0]);
             float getPitch = Mth.lerp(tickDelta, event.getLastRotation()[1], event.getRotation()[1]);
 
-            cir.setReturnValue(this.getRotationVector(getPitch, getYaw));
+            cir.setReturnValue(this.calculateViewVector(getPitch, getYaw));
         }
     }
 
@@ -60,7 +60,7 @@ public abstract class MixinEntity implements IMinecraft {
                 return Vec3.ZERO;
             }
 
-            return MovementUtil.movementInputToVelocity(movementInput, speed, event.getYaw());
+            return MovementUtil.movementInputToVelocity(movementInput, speed, event.getYRot());
         }
 
         return MovementUtil.movementInputToVelocity(movementInput, speed, yaw);

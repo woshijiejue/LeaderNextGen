@@ -17,9 +17,9 @@ public class PacketUtil implements IMinecraft {
     private final ArrayList<Packet<?>> packets = new ArrayList<>();
 
     public void sendPacket(Packet<?> packet) {
-        if (mc.getNetworkHandler() == null) return;
+        if (mc.getConnection() == null) return;
 
-        mc.getNetworkHandler().sendPacket(packet);
+        mc.getConnection().sendPacket(packet);
     }
 
     public void sendPacketNoEvent(Packet<?> packet) {
@@ -28,30 +28,30 @@ public class PacketUtil implements IMinecraft {
     }
 
     public void sendSequencedPacket(SequencedPacketCreator packetCreator) {
-        if (mc.getNetworkHandler() == null || mc.world == null) return;
+        if (mc.getConnection() == null || mc.world == null) return;
 
         try (PendingUpdateManager pendingUpdateManager = ((ClientWorldAccessor) mc.world).getPendingUpdateManagerField().incrementSequence()) {
             int sequence = pendingUpdateManager.getSequence();
             Packet<?> packet = packetCreator.predict(sequence);
-            mc.getNetworkHandler().sendPacket(packet);
+            mc.getConnection().sendPacket(packet);
         }
     }
 
     public void sendSequencedPacketNoEvent(SequencedPacketCreator packetCreator) {
-        if (mc.getNetworkHandler() == null || mc.world == null) return;
+        if (mc.getConnection() == null || mc.world == null) return;
 
         try (PendingUpdateManager pendingUpdateManager = ((ClientWorldAccessor) mc.world).getPendingUpdateManagerField().incrementSequence()) {
             int sequence = pendingUpdateManager.getSequence();
             Packet<?> packet = packetCreator.predict(sequence);
             packets.add(packet);
-            mc.getNetworkHandler().sendPacket(packet);
+            mc.getConnection().sendPacket(packet);
         }
     }
 
     @SuppressWarnings("unchecked")
     public void receivePacket(Packet<?> packet) {
-        if (mc.getNetworkHandler() == null) return;
-        ((Packet<ClientGamePacketListener>) packet).apply(mc.getNetworkHandler());
+        if (mc.getConnection() == null) return;
+        ((Packet<ClientGamePacketListener>) packet).apply(mc.getConnection());
     }
 
     public void receivePacketNoEvent(Packet<?> packet) {

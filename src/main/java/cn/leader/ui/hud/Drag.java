@@ -5,7 +5,7 @@ import cn.leader.module.Module;
 import cn.leader.util.animation.Easing;
 import cn.leader.util.animation.EasingAnimation;
 import cn.leader.util.misc.MouseUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.platform.Window;
 
 public abstract class Drag extends Module {
@@ -30,8 +30,8 @@ public abstract class Drag extends Module {
 
     public void updatePos() {
         Window window = mc.getWindow();
-        float scaledWidth = (float) window.getScaledWidth();
-        float scaledHeight = (float) window.getScaledHeight();
+        float scaledWidth = (float) window.getWidth();
+        float scaledHeight = (float) window.getHeight();
 
         float targetX = this.percentX * scaledWidth;
         float targetY = this.percentY * scaledHeight;
@@ -70,8 +70,8 @@ public abstract class Drag extends Module {
 
         if (this.dragging) {
             Window window = mc.getWindow();
-            float scaledWidth = (float) window.getScaledWidth();
-            float scaledHeight = (float) window.getScaledHeight();
+            float scaledWidth = (float) window.getWidth();
+            float scaledHeight = (float) window.getHeight();
             float deltaPercentX = ((float)mouseX - this.lastMouseX) / scaledWidth;
             float deltaPercentY = ((float)mouseY - this.lastMouseY) / scaledHeight;
 
@@ -96,5 +96,5 @@ public abstract class Drag extends Module {
         return MouseUtil.isHovered(mouseX, mouseY, x, this.renderY, this.width, this.height);
     }
 
-    public abstract void render(GuiGraphics context);
+    public abstract void render(GuiGraphicsExtractor context);
 }

@@ -10,7 +10,7 @@ import cn.leader.ui.clickgui.components.impl.*;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
 import lombok.Getter;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class ModuleButton {
         }
     }
 
-    public float render(GuiGraphics context, int mouseX, int mouseY, float x, float y, float width) {
+    public float render(GuiGraphicsExtractor context, int mouseX, int mouseY, float x, float y, float width) {
         float offsetY = 15;
         boolean hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 15;
         RenderUtil.drawRect(context, x, y, width, 15,  new Color(0, 0, 0, hovered ? 100 : 80).getRGB());

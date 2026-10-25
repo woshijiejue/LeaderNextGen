@@ -37,7 +37,7 @@ public abstract class MixinMinecraftClient implements IMinecraft {
     private void tick(CallbackInfo ci) {
         if (mc.player == null || mc.world == null) return;
 
-        if (mc.player.isOnGround()) {
+        if (mc.player.onGround()) {
             Util.offGroundTicks = 0;
             Util.onGroundTicks++;
         } else {

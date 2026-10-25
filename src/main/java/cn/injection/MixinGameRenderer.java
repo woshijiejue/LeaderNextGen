@@ -26,8 +26,8 @@ public abstract class MixinGameRenderer implements IMinecraft {
 
         Camera camera = mc.gameRenderer.getCamera();
         RenderSystem.getModelViewStack().pushMatrix().mul(matrixStack.peek().getPositionMatrix());
-        matrixStack.multiply(Axis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-        matrixStack.multiply(Axis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0f));
+        matrixStack.multiply(Axis.POSITIVE_X.rotationDegrees(camera.getXRot()));
+        matrixStack.multiply(Axis.POSITIVE_Y.rotationDegrees(camera.getYRot() + 180.0f));
         RenderUtil.lastProjMat.set(RenderSystem.getProjectionMatrix());
         RenderUtil.lastModMat.set(RenderSystem.getModelViewMatrix());
         RenderUtil.lastWorldSpaceMatrix.set(matrixStack.peek().getPositionMatrix());

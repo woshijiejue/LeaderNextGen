@@ -140,7 +140,7 @@ public class KillAura extends Module {
     }
 
     private boolean canRun() {
-        if (mc.player == null || mc.world == null || mc.getNetworkHandler() == null) return false;
+        if (mc.player == null || mc.world == null || mc.getConnection() == null) return false;
         if (instance == null || instance.getTargetManager() == null) return false;
 
         return mc.player.isAlive() && !mc.player.isSpectator();
@@ -155,7 +155,7 @@ public class KillAura extends Module {
 
         for (LivingEntity entity : instance.getTargetManager().getTargets()) {
             if (entity == mc.player) continue;
-            if (entity.isDead() || !entity.isAlive() || entity.getHealth() <= 0.0F) continue;
+            if (entity.isDeadOrDying() || !entity.isAlive() || entity.getHealth() <= 0.0F) continue;
             if (!EntityUtil.isSelected(entity)) continue;
             if (AimUtil.distanceToBox(entity) > scanRange) continue;
 
@@ -212,7 +212,7 @@ public class KillAura extends Module {
         float[] rotation = instance.getRotationManager().getServerRotation();
         if (rotation != null) return rotation;
 
-        return new float[]{mc.player.getYaw(), mc.player.getPitch()};
+        return new float[]{mc.player.getYRot(), mc.player.getXRot()};
     }
 
     // ------------------------------------------------------------------ attacking
@@ -221,7 +221,7 @@ public class KillAura extends Module {
     public void onMotion(MotionEvent event) {
         if (!event.isPost()) return;
         if (!canRun() || target == null) return;
-        if (mc.currentScreen != null) return;
+        if (mc.screen != null) return;
 
         // While Blink is holding packets the server has not seen this tick's rotation yet, so an
         // attack now would be judged against a stale look direction. Wait for the release.
@@ -232,7 +232,7 @@ public class KillAura extends Module {
 
         // This is the rotation the movement packet just carried. Validating against the event
         // instead of the manager's field keeps the check independent of handler order.
-        float[] sent = {event.getYaw(), event.getPitch()};
+        float[] sent = {event.getYRot(), event.getXRot()};
 
         // A miss on this check means the look direction the server holds misses the hitbox,
         // so an attack right now would be rejected as an invalid hit. Wait for the next tick.
@@ -261,16 +261,16 @@ public class KillAura extends Module {
     }
 
     private void attack(LivingEntity entity) {
-        if (mc.interactionManager == null) return;
+        if (mc.gameMode == null) return;
 
         boolean sprinting = mc.player.isSprinting();
 
         if (attackMode.is("Packet") || keepSprint.getValue()) {
-            ((ClientPlayerInteractionManagerAccessor) mc.interactionManager).callSyncSelectedSlot();
+            ((ClientPlayerInteractionManagerAccessor) mc.gameMode).callSyncSelectedSlot();
             PacketUtil.sendPacket(ServerboundInteractPacket.attack(entity, mc.player.isSneaking()));
             mc.player.swingHand(InteractionHand.MAIN_HAND);
         } else {
-            mc.interactionManager.attackEntity(mc.player, entity);
+            mc.gameMode.attackEntity(mc.player, entity);
             mc.player.swingHand(InteractionHand.MAIN_HAND);
         }
 
@@ -312,8 +312,8 @@ public class KillAura extends Module {
 
         renderBlock = true;
 
-        if (autoBlock.is("Legit") && !blocking && mc.currentScreen == null) {
-            mc.options.useKey.setPressed(true);
+        if (autoBlock.is("Legit") && !blocking && mc.screen == null) {
+            mc.options.keyUse.setPressed(true);
             useKeyPressedByUs = true;
             blocking = true;
         }
@@ -323,7 +323,7 @@ public class KillAura extends Module {
         renderBlock = false;
 
         if (useKeyPressedByUs) {
-            mc.options.useKey.setPressed(false);
+            mc.options.keyUse.setPressed(false);
             useKeyPressedByUs = false;
         }
 
@@ -331,7 +331,7 @@ public class KillAura extends Module {
     }
 
     private boolean isHoldingSword() {
-        return mc.player != null && mc.player.getMainHandStack().getItem() instanceof SwordItem;
+        return mc.player != null && mc.player.getMainHandItem().getItem() instanceof SwordItem;
     }
 
     // ------------------------------------------------------------------ helpers

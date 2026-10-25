@@ -26,7 +26,7 @@ public class RotationUtil implements IMinecraft {
     public Vec3 getNearestPointBB(AABB box) {
         if (mc.player == null) return null;
 
-        Vec3 eyePos = mc.player.getEyePos();
+        Vec3 eyePos = mc.player.getEyePosition();
 
         double x = Mth.clamp(eyePos.x, box.minX, box.maxX);
         double y = Mth.clamp(eyePos.y, box.minY, box.maxY);
@@ -68,7 +68,7 @@ public class RotationUtil implements IMinecraft {
     public boolean isVisible(Vec3 targetVec) {
         if (mc.player == null || mc.world == null) return false;
 
-        Vec3 eyePos = mc.player.getEyePos();
+        Vec3 eyePos = mc.player.getEyePosition();
         if (eyePos.squaredDistanceTo(targetVec) > 4096.0) return false;
         Vec3 lookVec = mc.player.getRotationVec(1);
         Vec3 toTarget = targetVec.subtract(eyePos).normalize();
@@ -80,7 +80,7 @@ public class RotationUtil implements IMinecraft {
     public float getDistanceToEntity(LivingEntity target) {
         if (mc.player == null || target == null) return 0.0f;
 
-        Vec3 eyePos = mc.player.getEyePos();
+        Vec3 eyePos = mc.player.getEyePosition();
         Vec3 nearestPoint = getNearestPointBB(target.getBoundingBox());
         return (float) eyePos.distanceTo(nearestPoint);
     }
@@ -88,19 +88,19 @@ public class RotationUtil implements IMinecraft {
     public double getRotationDifference(LivingEntity entity) {
         if (mc.player == null || entity == null) return 0;
 
-        Vec3 targetPos = entity.getPos();
+        Vec3 targetPos = entity.position();
         float[] neededRotations = RotationUtil.getRotations(targetPos);
         if (neededRotations == null) return 180.0;
 
-        float yawDiff = Math.abs(Mth.wrapDegrees(mc.player.getYaw() - neededRotations[0]));
-        float pitchDiff = Math.abs(Mth.wrapDegrees(mc.player.getPitch() - neededRotations[1]));
+        float yawDiff = Math.abs(Mth.wrapDegrees(mc.player.getYRot() - neededRotations[0]));
+        float pitchDiff = Math.abs(Mth.wrapDegrees(mc.player.getXRot() - neededRotations[1]));
 
         return Math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff);
     }
 
     public float[] getRotations(Vec3 target) {
         if (mc.player == null) return null;
-        return getRotations(mc.player.getEyePos(), target);
+        return getRotations(mc.player.getEyePosition(), target);
     }
 
     public float[] getRotations(Vec3 origin, Vec3 target) {

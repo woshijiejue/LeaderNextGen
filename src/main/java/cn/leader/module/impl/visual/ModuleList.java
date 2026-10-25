@@ -8,7 +8,7 @@ import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.ColorUtil;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.ChatFormatting;
 
 import java.awt.*;
@@ -34,8 +34,8 @@ public final class ModuleList extends Drag {
     }
 
     @Override
-    public void render(GuiGraphics context) {
-        if (mc.textRenderer == null) return;
+    public void render(GuiGraphicsExtractor context) {
+        if (mc.font == null) return;
 
         final HUD hud = getModule(HUD.class);
         final List<Module> modules = Client.instance.getModuleManager().getModuleMap().values().stream()

@@ -28,8 +28,8 @@ public final class AntiBot extends Module {
         if (player == mc.player) return false;
 
         if (notInTab.getValue()) {
-            if (mc.getNetworkHandler() == null) return false;
-            if (mc.getNetworkHandler().getPlayerListEntry(player.getUuid()) == null) {
+            if (mc.getConnection() == null) return false;
+            if (mc.getConnection().getPlayerListEntry(player.getUUID()) == null) {
                 return true;
             }
         }

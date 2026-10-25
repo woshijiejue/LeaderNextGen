@@ -34,26 +34,26 @@ public abstract class MixinLivingEntity implements IMinecraft {
 
     @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
     private float jump(LivingEntity entity) {
-        if (mc.player == null || mc.world == null) return entity.getYaw();
+        if (mc.player == null || mc.world == null) return entity.getYRot();
 
         if (entity == mc.player) {
-            JumpEvent event = new JumpEvent(entity.getYaw());
+            JumpEvent event = new JumpEvent(entity.getYRot());
             instance.getEventManager().call(event);
-            return event.getYaw();
+            return event.getYRot();
         }
 
-        return entity.getYaw();
+        return entity.getYRot();
     }
 
     @Redirect(method = "turnHead", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
     private float turnHead(LivingEntity entity) {
         if (entity == mc.player) {
-            RotationEvent event = new RotationEvent(new float[]{entity.getYaw(), 0}, new float[]{0, 0});
+            RotationEvent event = new RotationEvent(new float[]{entity.getYRot(), 0}, new float[]{0, 0});
             instance.getEventManager().call(event);
             return event.getRotation()[0];
         }
 
-        return entity.getYaw();
+        return entity.getYRot();
     }
 
     @Inject(method = "getHandSwingDuration", at = @At("HEAD"), cancellable = true)

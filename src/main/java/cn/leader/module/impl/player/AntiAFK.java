@@ -45,7 +45,7 @@ public final class AntiAFK extends Module {
         if (mc.player == null) return;
 
         if (sneakTicks > 0 && --sneakTicks == 0) {
-            mc.options.sneakKey.setPressed(false);
+            mc.options.keyShift.setPressed(false);
         }
 
         if (!timer.hasTimeElapsed(interval.getValue().longValue())) return;
@@ -53,16 +53,16 @@ public final class AntiAFK extends Module {
 
         if (rotate.getValue()) {
             float delta = (float) ((Math.random() * 2.0D - 1.0D) * yawRange.getValue());
-            mc.player.setYaw(mc.player.getYaw() + delta);
+            mc.player.setYRot(mc.player.getYRot() + delta);
         }
 
-        if (jump.getValue() && mc.player.isOnGround()) {
+        if (jump.getValue() && mc.player.onGround()) {
             jumpNextTick = true;
         }
 
         if (sneak.getValue() && Math.random() < 0.35D) {
             sneakTicks = 4;
-            mc.options.sneakKey.setPressed(true);
+            mc.options.keyShift.setPressed(true);
         }
     }
 
@@ -80,7 +80,7 @@ public final class AntiAFK extends Module {
         sneakTicks = 0;
 
         if (mc.options != null) {
-            mc.options.sneakKey.setPressed(false);
+            mc.options.keyShift.setPressed(false);
         }
     }
 }

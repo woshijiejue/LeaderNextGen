@@ -6,7 +6,7 @@ import cn.leader.module.impl.visual.HUD;
 import cn.leader.util.IMinecraft;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ public class Panel implements IMinecraft {
                 .forEach(m -> buttons.add(new ModuleButton(m)));
     }
 
-    public void render(GuiGraphics context, int mouseX, int mouseY) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         if (dragging) {
             x = mouseX - dragX;
             y = mouseY - dragY;

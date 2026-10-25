@@ -92,11 +92,11 @@ public class Velocity extends Module {
         // Servers (and vanilla itself) love sending velocity packets that do nothing: pure
         // downward pushes, damage jitter, riding corrections. Only horizontal pushes matter here.
         if (horizontal < 0.02D) return;
-        if (mc.player.isClimbing() || mc.player.isTouchingWater()) return;
+        if (mc.player.isClimbing() || mc.player.isInWater()) return;
 
         if (mode.is("Packet")) {
             double scale = 1.0D - Mth.clamp(reduction.getValue() / 100.0D, 0.0D, 1.0D);
-            mc.player.setVelocity(velocity.x * scale, velocity.y, velocity.z * scale);
+            mc.player.setDeltaMovement(velocity.x * scale, velocity.y, velocity.z * scale);
             event.setCancelled(true);
             return;
         }
@@ -121,7 +121,7 @@ public class Velocity extends Module {
             return;
         }
 
-        if (jumpReset.getValue() && !jumped && mc.player.isOnGround()) {
+        if (jumpReset.getValue() && !jumped && mc.player.onGround()) {
             event.setJumping(true);
             jumped = true;
         }
@@ -163,7 +163,7 @@ public class Velocity extends Module {
         if (away.lengthSquared() < 1.0E-6D) return null;
 
         double wantedYaw = Math.toDegrees(Math.atan2(-away.x, away.z));
-        float referenceYaw = mc.player.getYaw();
+        float referenceYaw = mc.player.getYRot();
 
         float bestForward = 0.0F;
         float bestStrafe = 0.0F;

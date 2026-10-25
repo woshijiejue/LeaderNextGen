@@ -5,7 +5,7 @@ import cn.leader.module.value.impl.MultiBoolValue;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.PlayerInfo;
 
 import java.awt.*;
@@ -36,8 +36,8 @@ public final class InfoHUD extends Drag {
     }
 
     @Override
-    public void render(GuiGraphics context) {
-        if (mc.player == null || mc.textRenderer == null) {
+    public void render(GuiGraphicsExtractor context) {
+        if (mc.player == null || mc.font == null) {
             this.width = 0;
             this.height = 0;
             return;
@@ -58,7 +58,7 @@ public final class InfoHUD extends Drag {
         }
 
         if (lines.isEnabled("Speed")) {
-            double speed = Math.hypot(mc.player.getVelocity().x, mc.player.getVelocity().z) * 20.0D;
+            double speed = Math.hypot(mc.player.getDeltaMovement().x, mc.player.getDeltaMovement().z) * 20.0D;
             content.add(String.format("Speed %.2f", speed));
         }
 
@@ -95,14 +95,14 @@ public final class InfoHUD extends Drag {
     }
 
     private int latency() {
-        if (mc.getNetworkHandler() == null || mc.player == null) return 0;
+        if (mc.getConnection() == null || mc.player == null) return 0;
 
-        PlayerInfo entry = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
+        PlayerInfo entry = mc.getConnection().getPlayerListEntry(mc.player.getUUID());
         return entry == null ? 0 : entry.getLatency();
     }
 
     private String facing() {
-        return switch (mc.player.getHorizontalFacing()) {
+        return switch (mc.player.getDirection()) {
             case NORTH -> "N";
             case SOUTH -> "S";
             case EAST -> "E";

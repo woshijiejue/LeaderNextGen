@@ -4,7 +4,7 @@ import cn.leader.module.value.impl.ColorValue;
 import cn.leader.ui.clickgui.components.ValueComponent;
 import cn.leader.util.render.FontUtil;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import java.awt.Color;
 
@@ -16,7 +16,7 @@ public class ColorComponent extends ValueComponent {
     }
 
     @Override
-    public float render(GuiGraphics context, int mouseX, int mouseY, float x, float y, float width) {
+    public float render(GuiGraphicsExtractor context, int mouseX, int mouseY, float x, float y, float width) {
         ColorValue color = (ColorValue) getValue();
         float height = 15;
 

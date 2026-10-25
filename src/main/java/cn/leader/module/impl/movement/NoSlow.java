@@ -43,15 +43,15 @@ public class NoSlow extends Module {
     public static boolean slowByWaitingServer = false;
     @EventTarget
     public void onMotion(MotionEvent event) {
-        if (mc.player == null || mc.getNetworkHandler() == null) return;
+        if (mc.player == null || mc.getConnection() == null) return;
         if (swordMode.is("Prediction")) {
            handlePrediction(event);
         }
     }
     private void handlePrediction(MotionEvent event) {
-        boolean holdingSword = !mc.player.getMainHandStack().isEmpty()
-                && mc.player.getMainHandStack().getItem() instanceof SwordItem;
-        boolean wantBlock = holdingSword && (KillAura.blocking || mc.options.useKey.isPressed());
+        boolean holdingSword = !mc.player.getMainHandItem().isEmpty()
+                && mc.player.getMainHandItem().getItem() instanceof SwordItem;
+        boolean wantBlock = holdingSword && (KillAura.blocking || mc.options.keyUse.isPressed());
 
         if (interactingBlockThisTick) return;
 
@@ -103,8 +103,8 @@ public class NoSlow extends Module {
     @EventTarget
     public void onSlow(SlowEvent event) {
         if (mc.player == null) return;
-        if (mc.player.getMainHandStack().isEmpty()) return;
-        if ((mc.player.getMainHandStack().getItem() instanceof SwordItem && !ItemUtils.isConsumable(mc.player.getOffHandStack()) && (mc.player.isUsingItem() || mc.options.useKey.isPressed()))) {
+        if (mc.player.getMainHandItem().isEmpty()) return;
+        if ((mc.player.getMainHandItem().getItem() instanceof SwordItem && !ItemUtils.isConsumable(mc.player.getOffhandItem()) && (mc.player.isUsingItem() || mc.options.keyUse.isPressed()))) {
             if (swordSprint.getValue()){
                 mc.player.setSprinting(true);
             }

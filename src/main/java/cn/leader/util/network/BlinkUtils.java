@@ -67,15 +67,15 @@ public class BlinkUtils implements IMinecraft {
         double y = packet.getY(clonePlayer.getY());
         double z = packet.getZ(clonePlayer.getZ());
 
-        float yaw = packet.getYaw(clonePlayer.getYaw());
-        float pitch = packet.getPitch(clonePlayer.getPitch());
+        float yaw = packet.getYaw(clonePlayer.getYRot());
+        float pitch = packet.getPitch(clonePlayer.getXRot());
 
         clonePlayer.updatePositionAndAngles(x, y, z, yaw, pitch);
 
         if (packet.changesLook()) {
-            clonePlayer.setYaw(yaw);
+            clonePlayer.setYRot(yaw);
             clonePlayer.setHeadYaw(yaw);
-            clonePlayer.setPitch(pitch);
+            clonePlayer.setXRot(pitch);
         }
     }
 
@@ -97,7 +97,7 @@ public class BlinkUtils implements IMinecraft {
     @EventTarget
     public void onPacket(PacketEvent event) {
         if (event.isCancelled()) return;
-        if (mc.player == null || mc.world == null || mc.getNetworkHandler() == null || mc.player.isDead()) return;
+        if (mc.player == null || mc.world == null || mc.getConnection() == null || mc.player.isDeadOrDying()) return;
 
         Packet<?> packet = event.getPacket();
 
@@ -128,7 +128,7 @@ public class BlinkUtils implements IMinecraft {
         synchronized (serverPackets) {
             while (!serverPackets.isEmpty()) {
                 Packet<ClientGamePacketListener> packet = serverPackets.poll();
-                packet.apply(mc.getNetworkHandler());
+                packet.apply(mc.getConnection());
             }
         }
     }

@@ -48,7 +48,7 @@ public class AimUtil implements IMinecraft {
             return box.getCenter();
         }
 
-        Vec3 eye = mc.player.getEyePos();
+        Vec3 eye = mc.player.getEyePosition();
         return new Vec3(
                 Mth.clamp(eye.x, box.minX, box.maxX),
                 Mth.clamp(eye.y, box.minY, box.maxY),
@@ -66,7 +66,7 @@ public class AimUtil implements IMinecraft {
         if (mc.player == null) return Double.MAX_VALUE;
 
         AABB box = entity.getBoundingBox();
-        Vec3 eye = mc.player.getEyePos();
+        Vec3 eye = mc.player.getEyePosition();
         Vec3 nearest = new Vec3(
                 Mth.clamp(eye.x, box.minX, box.maxX),
                 Mth.clamp(eye.y, box.minY, box.maxY),
@@ -79,11 +79,11 @@ public class AimUtil implements IMinecraft {
     public double angleTo(LivingEntity entity, float[] rotation) {
         if (mc.player == null || rotation == null) return 0.0D;
 
-        Vec3 eye = mc.player.getEyePos();
+        Vec3 eye = mc.player.getEyePosition();
         Vec3 delta = entity.getBoundingBox().getCenter().subtract(eye);
         if (delta.lengthSquared() < 1.0E-6D) return 0.0D;
 
-        Vec3 look = mc.player.getRotationVector(rotation[1], rotation[0]);
+        Vec3 look = mc.player.calculateViewVector(rotation[1], rotation[0]);
         double dot = look.dotProduct(delta.normalize());
         return Math.toDegrees(Math.acos(Mth.clamp(dot, -1.0D, 1.0D)));
     }
@@ -95,8 +95,8 @@ public class AimUtil implements IMinecraft {
     public double reach(LivingEntity entity, float[] rotation) {
         if (mc.player == null || rotation == null) return -1.0D;
 
-        Vec3 eye = mc.player.getEyePos();
-        Vec3 look = mc.player.getRotationVector(rotation[1], rotation[0]);
+        Vec3 eye = mc.player.getEyePosition();
+        Vec3 look = mc.player.calculateViewVector(rotation[1], rotation[0]);
         Vec3 hit = intersect(entity.getBoundingBox(), eye, look);
         return hit == null ? -1.0D : eye.distanceTo(hit);
     }
@@ -138,7 +138,7 @@ public class AimUtil implements IMinecraft {
     public boolean isVisible(Vec3 point) {
         if (mc.player == null || mc.world == null) return false;
 
-        Vec3 eye = mc.player.getEyePos();
+        Vec3 eye = mc.player.getEyePosition();
         ClipContext context = new ClipContext(
                 eye, point, ClipContext.ShapeType.COLLIDER, ClipContext.FluidHandling.NONE, mc.player);
 

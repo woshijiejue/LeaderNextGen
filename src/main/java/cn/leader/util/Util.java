@@ -15,7 +15,7 @@ public class Util implements IMinecraft{
     public void addChatMessage(String message) {
         if (mc.player == null) return;
 
-        mc.player.sendMessage(Component.literal(message), false);
+        mc.player.displayClientMessage(Component.literal(message), false);
     }
 
     public void log(String message) {

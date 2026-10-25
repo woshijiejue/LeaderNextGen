@@ -22,7 +22,7 @@ public final class AutoRespawn extends Module {
     @EventTarget
     public void onTick(TickEvent event) {
         if (mc.player == null) return;
-        if (!(mc.currentScreen instanceof DeathScreen)) return;
+        if (!(mc.screen instanceof DeathScreen)) return;
 
         mc.player.requestRespawn();
 

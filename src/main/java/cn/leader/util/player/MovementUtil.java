@@ -17,7 +17,7 @@ public class MovementUtil implements IMinecraft {
         if (mc.player == null || !isMoving()) return;
 
         double yaw = getDirection();
-        mc.player.setVelocity(-Mth.sin((float) yaw) * speed, mc.player.getVelocity().y, Mth.cos((float) yaw) * speed);
+        mc.player.setDeltaMovement(-Mth.sin((float) yaw) * speed, mc.player.getDeltaMovement().y, Mth.cos((float) yaw) * speed);
     }
 
     public boolean isMoving() {
@@ -27,7 +27,7 @@ public class MovementUtil implements IMinecraft {
 
     public double getDirection() {
         if (mc.player == null) return 0;
-        return getDirection(mc.player.getYaw(), mc.player.input.movementForward, mc.player.input.movementSideways);
+        return getDirection(mc.player.getYRot(), mc.player.input.movementForward, mc.player.input.movementSideways);
     }
 
     public double getDirection(float rotationYaw, double moveForward, double moveStrafing) {
@@ -46,8 +46,8 @@ public class MovementUtil implements IMinecraft {
     public double getSpeed() {
         if (mc.player == null) return 0;
 
-        double x = mc.player.getVelocity().x;
-        double z = mc.player.getVelocity().z;
+        double x = mc.player.getDeltaMovement().x;
+        double z = mc.player.getDeltaMovement().z;
 
         return Math.sqrt(x * x + z * z);
     }
@@ -57,7 +57,7 @@ public class MovementUtil implements IMinecraft {
 
         float forward = event.getForward();
         float strafe = event.getStrafe();
-        double angle = Mth.wrapDegrees(Math.toDegrees(getDirection(mc.player.getYaw(), forward, strafe)));
+        double angle = Mth.wrapDegrees(Math.toDegrees(getDirection(mc.player.getYRot(), forward, strafe)));
 
         if (forward == 0 && strafe == 0) return;
 
