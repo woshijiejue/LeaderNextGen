@@ -7,7 +7,6 @@ import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.ModeValue;
 import cn.leader.module.value.impl.NumberValue;
-import com.mojang.datafixers.kinds.IdF;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
@@ -44,6 +43,7 @@ public class Velocity extends Module {
     private int pendingTicks;
     private int pause;
     private boolean jumpPending;
+    private boolean replaying;
     public static boolean packetOnGround;
     public Velocity() {
         super("Velocity", Category.Combat);
@@ -56,6 +56,10 @@ public class Velocity extends Module {
         this.pendingTicks = 0;
         this.pause = 0;
         this.jumpPending = false;
+        this.buffer = false;
+        this.bufferTick = -1;
+        this.replaying = false;
+        serverPackets.clear();
     }
 
     @Override
@@ -63,11 +67,16 @@ public class Velocity extends Module {
         this.pending = null;
         this.pendingTicks = 0;
         this.jumpPending = false;
+        this.buffer = false;
+        this.bufferTick = -1;
+        this.replaying = false;
+        serverPackets.clear();
     }
 
     @EventTarget
     public void onPacket(PacketEvent event) {
         if (mc.player == null) return;
+        if (this.replaying) return;
         if (event.getType() == PacketEvent.Type.Send){
             if (event.getPacket() instanceof ServerboundMovePlayerPacket packet)
             {
@@ -143,23 +152,36 @@ public class Velocity extends Module {
     @EventTarget
     public void onMotion(MotionEvent event) {
         if (mc.player == null) return;
-        if (event.isPost()) {
-            if (buffer) {
-                if (bufferTick >= delayTicks.getValue() || mc.player.isSprinting() || mc.player.getLastSentInput().sprint() || clientOnGround()) {
-                    ClientPacketListener connection = mc.getConnection();
-                    if (connection == null) {
-                        serverPackets.clear();
-                        return;
-                    }
-                    while (!serverPackets.isEmpty()) {
-                        Packet<ClientGamePacketListener> packet = serverPackets.poll();
-                        packet.handle(connection);
-                    }
-                    buffer = false;
-                    bufferTick = -1;
-                    jumpPending = false;
-                }
+        if (!event.isPost() || !buffer) return;
+
+        boolean released = bufferTick >= delayTicks.getValue().intValue()
+                || mc.player.isSprinting()
+                || (mc.player.getLastSentInput() != null && mc.player.getLastSentInput().sprint())
+                || clientOnGround();
+
+        if (!released) return;
+
+        ClientPacketListener connection = mc.getConnection();
+        if (connection == null) {
+            serverPackets.clear();
+            buffer = false;
+            bufferTick = -1;
+            return;
+        }
+
+        buffer = false;
+        bufferTick = -1;
+        jumpPending = false;
+        replaying = true;
+
+        try {
+            while (!serverPackets.isEmpty()) {
+                Packet<ClientGamePacketListener> packet = serverPackets.poll();
+                if (packet == null) break;
+                packet.handle(connection);
             }
+        } finally {
+            replaying = false;
         }
     }
 
