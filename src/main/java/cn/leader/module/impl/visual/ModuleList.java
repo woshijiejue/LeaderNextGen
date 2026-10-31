@@ -59,8 +59,7 @@ public final class ModuleList extends Drag {
         final List<Module> modules = Client.instance.getModuleManager().getModuleMap().values().stream()
                 .filter(m -> !m.isHidden() && !(m instanceof HUD) && (m.isEnabled() || m.getAnimation().getValue() > 0.02))
                 .filter(m -> !important.getValue() || (m.getCategory() != Category.Client && m.getCategory() != Category.Visual))
-                // Order by name width only: a changing suffix must never reshuffle the rows.
-                .sorted(Comparator.comparingDouble((Module m) -> nameFont.getStringWidth(nameOf(m))).reversed().thenComparing(Module::getName))
+                                .sorted(Comparator.comparingDouble((Module m) -> widthOf(m, nameFont, suffixFont)).reversed().thenComparing(Module::getName))
                 .toList();
 
         float rowHeight = nameFont.getFontHeight() + 5.0F;
