@@ -44,7 +44,7 @@ import java.util.Random;
  */
 public final class Scaffold extends Module {
 
-    private final ModeValue mode = new ModeValue("Mode", "Grim", "Grim", "Hypixel", "Vanilla");
+    private final ModeValue mode = new ModeValue("Mode", "Grim", "Grim", "Hypixel", "Normal");
     private final ModeValue blockSelection = new ModeValue("Block Selection", "Maximum", "Maximum", "Nearest", "Threshold");
     private final NumberValue switchThreshold = new NumberValue("Switch Threshold", 5, 0, 64, 1,
             () -> blockSelection.is("Threshold"));
@@ -64,13 +64,13 @@ public final class Scaffold extends Module {
     private final NumberValue prePitch = new NumberValue("Pre Pitch", 80, 60, 90, 1, () -> mode.is("Hypixel"));
     private final NumberValue yawLimit = new NumberValue("Yaw Limit", 35, 10, 180, 1, () -> mode.is("Hypixel"));
     private final NumberValue yawLimitAir = new NumberValue("Yaw Limit Air", 127, 30, 180, 1, () -> mode.is("Hypixel"));
-    private final ModeValue raycast = new ModeValue("Raycast", "Server", () -> mode.is("Hypixel"), "Server", "Simple", "Off");
+    private final ModeValue raycast = new ModeValue("Raycast", "Off", () -> mode.is("Hypixel"), "Off", "Simple", "Server");
     private final NumberValue delayMin = new NumberValue("Delay Min", 0, 0, 200, 1, () -> mode.is("Hypixel"));
     private final NumberValue delayMax = new NumberValue("Delay Max", 50, 0, 200, 1, () -> mode.is("Hypixel"));
     private final BoolValue slow = new BoolValue("Slow", false, () -> mode.is("Hypixel"));
 
     // ---------------------------------------------------------------- shared
-    private final BoolValue telly = new BoolValue("Telly", true, () -> !mode.is("Vanilla"));
+    private final BoolValue telly = new BoolValue("Telly", true, () -> !mode.is("Normal"));
     private final NumberValue jumpDelayMin = new NumberValue("Jump Delay Min", 1, 0, 3, 1,
             () -> mode.is("Hypixel") && telly.getValue());
     private final NumberValue jumpDelayMax = new NumberValue("Jump Delay Max", 2, 0, 3, 1,
@@ -139,18 +139,34 @@ public final class Scaffold extends Module {
         int slot = bestBlockSlot();
         if (slot < 0) {
             placement = null;
+            if (debug.getValue()) setSuffix("no blocks");
             return;
         }
 
         switchTo(slot);
         placement = findPlacement();
-        if (placement == null) return;
+        if (placement == null) {
+            if (debug.getValue()) setSuffix("no target");
+            return;
+        }
 
         if (mode.is("Hypixel")) {
             aimHypixel();
         } else if (mode.is("Grim")) {
             aimGrim();
+        } else {
+            aimNormal();
         }
+    }
+
+    /** Fuliki's "Normal": look straight at the point and place, no flip, no drag. */
+    private void aimNormal() {
+        float[] aim = rotationTo(placement.hit);
+
+        instance.getRotationManager().request(new float[]{aim[0], aim[1]},
+                rotationSpeed.getValue(), MovementCorrection.Silent);
+
+        if (debug.getValue()) setSuffix(String.format("normal %.0f", aim[0]));
     }
 
     private void aimGrim() {
@@ -208,9 +224,9 @@ public final class Scaffold extends Module {
         if (mc.player == null || mc.level == null || mc.gameMode == null) return;
         if (placement == null) return;
 
-        if (mode.is("Hypixel")) {
+        if (mode.is("Hypixel") || mode.is("Normal")) {
             placeHypixel();
-        } else if (mode.is("Grim")) {
+        } else {
             placeGrim();
         }
     }
@@ -227,10 +243,12 @@ public final class Scaffold extends Module {
         if (server == null) return;
 
         BlockHitResult hit = raycast(server[0], server[1]);
-        if (hit == null) return;
-        if (!hit.getBlockPos().equals(placement.support) || hit.getDirection() != placement.face) return;
+        if (hit == null || !hit.getBlockPos().equals(placement.support)) {
+            if (debug.getValue()) setSuffix("wait rotation");
+            return;
+        }
 
-        click(hit);
+        if (click(hit) && debug.getValue()) setSuffix("placed");
     }
 
     private void placeHypixel() {
@@ -281,7 +299,7 @@ public final class Scaffold extends Module {
 
     @EventTarget
     public void onMoveInput(MoveInputEvent event) {
-        if (mode.is("Vanilla") || !telly.getValue() || placement == null || mc.player == null) return;
+        if (mode.is("Normal") || !telly.getValue() || placement == null || mc.player == null) return;
         if (!mc.player.onGround() || !isMoving()) return;
 
         if (mode.is("Hypixel")) {
@@ -323,11 +341,6 @@ public final class Scaffold extends Module {
 
                     double distance = eye.distanceToSqr(point);
                     if (distance > reachSqr || distance >= bestDistance) continue;
-
-                    BlockHitResult visible = mc.level.clip(new ClipContext(eye, point,
-                            ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player));
-                    if (visible.getType() != HitResult.Type.BLOCK) continue;
-                    if (!visible.getBlockPos().equals(support)) continue;
 
                     bestDistance = distance;
                     best = new Placement(support, face, point);
