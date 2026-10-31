@@ -49,6 +49,7 @@ public final class Scaffold extends Module {
     private final NumberValue switchThreshold = new NumberValue("Switch Threshold", 5, 0, 64, 1,
             () -> blockSelection.is("Threshold"));
     private final ModeValue swing = new ModeValue("Swing", "Client", "Client", "Server", "Off");
+    private final ModeValue moveFix = new ModeValue("Move Fix", "Silent", "Silent", "Strict", "None");
     private final BoolValue pauseOnAura = new BoolValue("Pause On Aura", true);
     private final BoolValue debug = new BoolValue("Debug", false);
 
@@ -147,14 +148,12 @@ public final class Scaffold extends Module {
         int slot = bestBlockSlot();
         if (slot < 0) {
             placement = null;
-            if (debug.getValue()) setSuffix("no blocks");
             return;
         }
 
         switchTo(slot);
         placement = findPlacement();
         if (placement == null) {
-            if (debug.getValue()) setSuffix("no target");
             return;
         }
 
@@ -172,9 +171,8 @@ public final class Scaffold extends Module {
         float[] aim = rotationTo(placement.hit);
 
         instance.getRotationManager().request(new float[]{aim[0], aim[1]},
-                rotationSpeed.getValue(), MovementCorrection.Silent);
+                rotationSpeed.getValue(), correction());
 
-        if (debug.getValue()) setSuffix("normal");
     }
 
     private void aimGrim() {
@@ -183,9 +181,8 @@ public final class Scaffold extends Module {
         yaw = limitForwardYaw(yaw);
 
         instance.getRotationManager().request(new float[]{yaw, aim[1]},
-                rotationSpeed.getValue(), MovementCorrection.Silent);
+                rotationSpeed.getValue(), correction());
 
-        if (debug.getValue()) setSuffix("grim");
     }
 
     /**
@@ -212,16 +209,15 @@ public final class Scaffold extends Module {
             canRotate = true;
 
             instance.getRotationManager().request(new float[]{lastYaw, prePitch.getValue()},
-                    180.0F, MovementCorrection.Silent);
+                    180.0F, correction());
         } else {
             if (grounded) canRotate = false;
 
             lastYaw = aim[0];
             instance.getRotationManager().request(new float[]{aim[0], aim[1]},
-                    limit, MovementCorrection.Silent);
+                    limit, correction());
         }
 
-        if (debug.getValue()) setSuffix("hypixel");
     }
 
     // ------------------------------------------------------------------ placing
@@ -252,11 +248,10 @@ public final class Scaffold extends Module {
 
         BlockHitResult hit = raycast(server[0], server[1]);
         if (hit == null || !hit.getBlockPos().equals(placement.support)) {
-            if (debug.getValue()) setSuffix("wait");
             return;
         }
 
-        if (click(hit) && debug.getValue()) setSuffix("placed");
+        click(hit);
     }
 
     private void placeHypixel() {
@@ -438,6 +433,15 @@ public final class Scaffold extends Module {
                 ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player));
 
         return hit.getType() == HitResult.Type.BLOCK ? hit : null;
+    }
+
+    /** Silent keeps the camera still and rewrites the movement input; Strict also turns the body. */
+    private MovementCorrection correction() {
+        return switch (moveFix.getValue()) {
+            case "Strict" -> MovementCorrection.Strict;
+            case "None" -> MovementCorrection.None;
+            default -> MovementCorrection.Silent;
+        };
     }
 
     private boolean isMoving() {

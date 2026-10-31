@@ -64,7 +64,7 @@ public class RotationManager implements IMinecraft {
 
     @EventTarget
     @EventPriority(999)
-    public void onLivingUpdate(LivingUpdateEvent event) {
+    public void onUpdate(UpdateEvent event) {
         if (mc.player == null) return;
 
         float[] previous = currentRotations;
