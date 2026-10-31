@@ -24,6 +24,14 @@ public class Skia implements IMinecraft {
     private final int[] savedState = new int[20];
     private final boolean[] savedCaps = new boolean[4];
 
+    public int getWidth() {
+        return lastWidth;
+    }
+
+    public int getHeight() {
+        return lastHeight;
+    }
+
     public boolean isAvailable() {
         return currentTexture() != null;
     }

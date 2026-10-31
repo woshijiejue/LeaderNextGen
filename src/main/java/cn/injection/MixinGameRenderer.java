@@ -1,6 +1,7 @@
 package cn.injection;
 
 import cn.leader.event.impl.Render3DEvent;
+import cn.leader.event.impl.RenderSkiaEvent;
 import cn.leader.module.impl.visual.NoHurtCam;
 import cn.leader.util.IMinecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -24,7 +25,14 @@ public abstract class MixinGameRenderer implements IMinecraft {
     private void renderSkia(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
         if (mc.player == null || mc.level == null) return;
 
-        instance.getSkiaManager().render();
+        instance.getSkiaManager().render(RenderSkiaEvent.Layer.HUD);
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/render/GuiRenderer;render()V", shift = At.Shift.AFTER))
+    private void renderSkiaScreen(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
+        if (mc.player == null || mc.level == null) return;
+
+        instance.getSkiaManager().render(RenderSkiaEvent.Layer.SCREEN);
     }
 
     @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true)

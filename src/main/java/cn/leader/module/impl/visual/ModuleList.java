@@ -4,28 +4,31 @@ import cn.leader.Client;
 import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
+import cn.leader.module.value.impl.ModeValue;
+import cn.leader.module.value.impl.NumberValue;
+import cn.leader.ui.font.base.SkiaFont;
 import cn.leader.ui.hud.Drag;
-import cn.leader.util.render.ColorUtil;
-import cn.leader.util.render.FontUtil;
-import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.ChatFormatting;
+import cn.leader.util.render.Fonts;
+import cn.leader.util.render.PanelRenderer;
+import cn.leader.util.render.SkiaRender;
+import org.jetbrains.skija.Canvas;
 
-import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 public final class ModuleList extends Drag {
     private final BoolValue important = new BoolValue("Important", false);
     private final BoolValue suffix = new BoolValue("Suffix", true);
+    private final BoolValue lowercase = new BoolValue("Lowercase", false);
     private final BoolValue background = new BoolValue("Background", true);
+    private final ModeValue bar = new ModeValue("Bar", "Side", "None", "Side", "Glow");
+    private final NumberValue fontSize = new NumberValue("Font Size", 9, 7, 12, 0.5F);
 
     public ModuleList() {
         super("ModuleList");
         setDescription("Module list");
-        percentX = 0.95F;
-        percentY = 0.05F;
+        percentX = 0.99F;
+        percentY = 0.01F;
         setEnabled(true);
     }
 
@@ -34,52 +37,116 @@ public final class ModuleList extends Drag {
         return percentX > 0.5F;
     }
 
-    @Override
-    public void render(GuiGraphicsExtractor context) {
-        if (mc.font == null) return;
+    private String nameOf(Module module) {
+        String name = module.getName();
+        return lowercase.getValue() ? name.toLowerCase(java.util.Locale.ROOT) : name;
+    }
 
-        final HUD hud = getModule(HUD.class);
+    private String suffixOf(Module module) {
+        if (!suffix.getValue() || module.getSuffix().isEmpty()) return "";
+        String text = module.getSuffix();
+        return lowercase.getValue() ? text.toLowerCase(java.util.Locale.ROOT) : text;
+    }
+
+    @Override
+    public void render(Canvas canvas) {
+        SkiaFont nameFont = Fonts.medium(fontSize.getValue());
+        SkiaFont suffixFont = Fonts.regular(fontSize.getValue());
+        boolean shadow = Fonts.shadow();
+        HUD hud = instance.getModuleManager().getModule(HUD.class);
+        float rowSpacing = hud == null ? 1.5F : hud.rowSpacing.getValue();
+
         final List<Module> modules = Client.instance.getModuleManager().getModuleMap().values().stream()
-                .filter(m -> !m.isHidden() && (m.isEnabled() || m.getAnimation().getValue() > 0))
+                .filter(m -> !m.isHidden() && !(m instanceof HUD) && (m.isEnabled() || m.getAnimation().getValue() > 0.02))
                 .filter(m -> !important.getValue() || (m.getCategory() != Category.Client && m.getCategory() != Category.Visual))
-                .sorted(Comparator.comparingInt((Module m) -> (int) FontUtil.getStringWidth(m.getName() + (suffix.getValue() && !m.getSuffix().isEmpty() ? " " + m.getSuffix() : ""))).reversed().thenComparing(Module::getName))
+                .sorted(Comparator.comparingDouble((Module m) -> widthOf(m, nameFont, suffixFont)).reversed().thenComparing(Module::getName))
                 .toList();
 
-        if (modules.isEmpty()) return;
+        float rowHeight = nameFont.getFontHeight() + 5.0F;
+        float gap = rowSpacing;
+        float radius = Math.min(PanelRenderer.radius(), rowHeight / 2.0F);
+        boolean right = isRightAnchored();
 
         float maxWidth = 0;
-        for (final Module module : modules) {
-            final String displayName = module.getName() + (suffix.getValue() && !module.getSuffix().isEmpty() ? " " + module.getSuffix() : "");
-            maxWidth = Math.max(maxWidth, FontUtil.getStringWidth(displayName));
+        for (Module module : modules) {
+            maxWidth = Math.max(maxWidth, widthOf(module, nameFont, suffixFont) + 10.0F);
         }
-        this.width = maxWidth + 4;
+        this.width = maxWidth;
 
-        float offsetY = renderY;
-        int index = 0;
+        // Zero spacing uses one compact background surface.  It deliberately
+        // skips the per-row post effect so adjacent rows do not build up into a
+        // heavy, full-column shadow.
+        boolean compactLayout = gap <= 0.01F;
 
-        for (final Module module : modules) {
-            if (!Objects.equals(module.getName(), "HUD")) {
+        if (compactLayout && background.getValue() && maxWidth > 0.0F) {
+            float compactHeight = 0.0F;
+            for (Module module : modules) {
                 module.getAnimation().run(module.isEnabled() ? 1 : 0);
-                final float alpha = (float) module.getAnimation().getValue();
-                if (alpha <= 0.02f) continue;
+                float progress = (float) module.getAnimation().getValue();
+                if (progress > 0.02F) compactHeight += rowHeight * progress;
+            }
 
-                final boolean hasSuffix = suffix.getValue() && !module.getSuffix().isEmpty();
-                final String moduleName = module.getName();
-                final String suffixName = hasSuffix ? " " + module.getSuffix() : "";
-
-                final float textWidth = FontUtil.getStringWidth(moduleName + suffixName);
-                final float offset = (1 - alpha) * (this.width + 10);
-                final float x = isRightAnchored() ? (renderX - textWidth + offset) : (renderX - offset);
-
-                if (background.getValue()) {
-                    RenderUtil.drawRect(context, x - 2, offsetY, textWidth + 4, FontUtil.getHeight(), ColorUtil.applyAlpha(new Color(0, 0, 0, 120), alpha).getRGB());
-                }
-
-                FontUtil.drawStringWithShadow(context, moduleName + ChatFormatting.GRAY + suffixName, x, offsetY, ColorUtil.applyAlpha(hud.getColor(index++), alpha));
-                offsetY += FontUtil.getHeight() * alpha;
+            if (compactHeight > 0.0F) {
+                float compactX = right ? renderX - maxWidth : renderX;
+                PanelRenderer.panel(canvas, compactX, renderY, maxWidth,
+                        Math.max(rowHeight, compactHeight), radius, 1.0F,
+                        PanelRenderer.accent(0), false);
             }
         }
 
-        this.height = Math.max(FontUtil.getHeight(), offsetY - renderY);
+        float offsetY = renderY;
+        float contentBottom = renderY;
+        int index = 0;
+
+        for (Module module : modules) {
+            module.getAnimation().run(module.isEnabled() ? 1 : 0);
+            float progress = (float) module.getAnimation().getValue();
+            if (progress <= 0.02F) continue;
+
+            String name = nameOf(module);
+            String extra = suffixOf(module);
+            float textWidth = widthOf(module, nameFont, suffixFont);
+            float boxWidth = textWidth + 10.0F;
+            float slide = (1 - progress) * (boxWidth + 12);
+            float x = right ? renderX - boxWidth + slide : renderX - slide;
+            float y = offsetY;
+            contentBottom = Math.max(contentBottom, y + rowHeight);
+            int color = PanelRenderer.accent(index * 2);
+
+            if (background.getValue() && !compactLayout) {
+                PanelRenderer.panel(canvas, x, y, boxWidth, rowHeight, radius, progress, color);
+            } else if (!compactLayout) {
+                SkiaRender.roundRect(canvas, x, y, boxWidth, rowHeight, radius,
+                        SkiaRender.alpha(0xFF101014, 0.22F * progress));
+            }
+
+            if (!bar.is("None")) {
+                float barX = right ? x + boxWidth - 2.5F : x + 0.5F;
+                SkiaRender.roundRect(canvas, barX, y + 3.0F, 2.0F, rowHeight - 6.0F, 1.0F, SkiaRender.alpha(color, progress));
+                if (bar.is("Glow")) {
+                    SkiaRender.blurredRoundRect(canvas, barX - 1, y + 3.0F, 4.0F, rowHeight - 6.0F, 2.0F, 5.0F, SkiaRender.alpha(color, progress * 0.7F));
+                }
+            }
+
+            float textX = x + (bar.is("None") ? 6.0F : (right ? 6.0F : 8.0F));
+            float centerY = y + rowHeight / 2.0F;
+            nameFont.drawStringCenteredY(canvas, name, textX, centerY, SkiaRender.alpha(color, progress), shadow);
+            if (!extra.isEmpty()) {
+                suffixFont.drawStringCenteredY(canvas, extra, textX + nameFont.getStringWidth(name) + 3.0F, centerY,
+                        SkiaRender.alpha(0xFFA8A8B3, progress), shadow);
+            }
+
+            offsetY += (rowHeight + gap) * progress;
+            index++;
+        }
+
+        this.height = Math.max(0.0F, contentBottom - renderY);
+    }
+
+    private float widthOf(Module module, SkiaFont nameFont, SkiaFont suffixFont) {
+        String extra = suffixOf(module);
+        float width = nameFont.getStringWidth(nameOf(module));
+        if (!extra.isEmpty()) width += 3.0F + suffixFont.getStringWidth(extra);
+        return width;
     }
 }

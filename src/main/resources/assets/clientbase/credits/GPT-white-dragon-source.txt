@@ -1,0 +1,10 @@
+GPT White Dragon portrait artwork
+
+Source: ZipZipPipe
+Profile: https://space.bilibili.com/4168597
+Source post: https://www.bilibili.com/opus/1233069202138464289
+Turnaround reference: https://www.bilibili.com/opus/1238613841710940181
+
+The front-facing view is cropped from the creator's turnaround artwork and used
+only as a decorative portrait in the ClickGUI. Please retain this attribution
+when redistributing the project.

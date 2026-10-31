@@ -11,6 +11,7 @@ import cn.leader.ui.font.FontManager;
 import cn.leader.ui.skia.SkiaManager;
 import cn.leader.util.IMinecraft;
 import cn.leader.util.Util;
+import cn.leader.util.render.DragonTheme;
 import net.minecraft.ChatFormatting;
 import org.apache.logging.log4j.Logger;
 
@@ -67,6 +68,7 @@ public class Client implements IMinecraft {
         configManager.saveAll();
         skiaManager.destroy();
         fontManager.destroy();
+        DragonTheme.close();
     }
 
     public EventManager getEventManager() {

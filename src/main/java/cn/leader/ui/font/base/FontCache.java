@@ -1,6 +1,7 @@
 package cn.leader.ui.font.base;
 
 import net.minecraft.ChatFormatting;
+import org.jetbrains.skija.Font;
 import org.jetbrains.skija.TextBlob;
 
 import java.util.ArrayList;
@@ -9,12 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 public class FontCache {
-    private final Map<CacheKey, TextRecord> cache;
+    public static final int BASE_COLOR = -1;
+
+    private final Map<String, TextRecord> cache;
 
     public FontCache(int maxCapacity) {
-        this.cache = new LinkedHashMap<>(maxCapacity, 0.75f, true) {
+        this.cache = new LinkedHashMap<>(256, 0.75f, true) {
             @Override
-            protected boolean removeEldestEntry(Map.Entry<CacheKey, TextRecord> eldest) {
+            protected boolean removeEldestEntry(Map.Entry<String, TextRecord> eldest) {
                 if (size() > maxCapacity) {
                     eldest.getValue().close();
                     return true;
@@ -24,8 +27,8 @@ public class FontCache {
         };
     }
 
-    public TextRecord get(String text, int color, SkiaFont font) {
-        return cache.computeIfAbsent(new CacheKey(text, color), b -> new TextRecord(text, color, font));
+    public TextRecord get(String text, SkiaFont font) {
+        return cache.computeIfAbsent(text, key -> new TextRecord(key, font));
     }
 
     public void clear() {
@@ -37,39 +40,49 @@ public class FontCache {
         public final Segment[] segments;
         public final float width;
 
-        public TextRecord(String text, int baseColor, SkiaFont font) {
+        public TextRecord(String text, SkiaFont font) {
             List<Segment> segmentList = new ArrayList<>();
-            int color = baseColor;
+            int color = BASE_COLOR;
             float width = 0;
 
             StringBuilder buffer = new StringBuilder();
+            boolean bufferFallback = false;
 
-            for (int i = 0; i < text.length(); i++) {
-                char c = text.charAt(i);
-                if (c == '§' && i + 1 < text.length()) {
-                    if (!buffer.isEmpty()) {
-                        width += flushBuffer(buffer, segmentList, color, font);
-                    }
+            for (int i = 0; i < text.length(); ) {
+                int codePoint = text.codePointAt(i);
+                int length = Character.charCount(codePoint);
 
-                    ChatFormatting format = ChatFormatting.getByCode(text.charAt(++i));
+                if (codePoint == '\u00a7' && i + 1 < text.length()) {
+                    width += flush(buffer, segmentList, color, bufferFallback, font);
+                    ChatFormatting format = ChatFormatting.getByCode(text.charAt(i + 1));
                     if (format != null) {
                         if (format == ChatFormatting.RESET) {
-                            color = baseColor;
+                            color = BASE_COLOR;
                         } else {
                             Integer formatColor = colorOf(format);
                             if (formatColor != null) {
-                                color = (((baseColor >> 24) & 0xFF) << 24) | formatColor;
+                                color = formatColor;
                             }
                         }
                     }
-                } else {
-                    buffer.append(c);
+                    i += 2;
+                    continue;
                 }
+
+                boolean needsFallback = font.getFallback() != null
+                        && !Character.isWhitespace(codePoint)
+                        && font.getFont().getUTF32Glyph(codePoint) == 0;
+
+                if (!buffer.isEmpty() && needsFallback != bufferFallback) {
+                    width += flush(buffer, segmentList, color, bufferFallback, font);
+                }
+
+                bufferFallback = needsFallback;
+                buffer.appendCodePoint(codePoint);
+                i += length;
             }
 
-            if (!buffer.isEmpty()) {
-                width += flushBuffer(buffer, segmentList, color, font);
-            }
+            width += flush(buffer, segmentList, color, bufferFallback, font);
 
             this.segments = segmentList.toArray(new Segment[0]);
             this.width = width;
@@ -97,12 +110,16 @@ public class FontCache {
             };
         }
 
-        private float flushBuffer(StringBuilder buffer, List<Segment> list, int color, SkiaFont font) {
+        private static float flush(StringBuilder buffer, List<Segment> list, int color, boolean fallback, SkiaFont font) {
+            if (buffer.isEmpty()) return 0;
             String str = buffer.toString();
             buffer.setLength(0);
-            TextBlob blob = font.getShaper().shape(str, font.getFont());
-            float width = font.getFont().measureTextWidth(str);
-            list.add(new Segment(blob, color, width));
+            Font target = fallback ? font.getFallback() : font.getFont();
+            TextBlob blob = font.getShaper().shape(str, target);
+            float width = target.measureTextWidth(str);
+            Float firstBaseline = blob.getFirstBaseline();
+            float blobBaseline = firstBaseline == null ? 0.0F : firstBaseline;
+            list.add(new Segment(blob, color, width, fallback, blobBaseline));
             return width;
         }
 
@@ -115,6 +132,5 @@ public class FontCache {
         }
     }
 
-    private record CacheKey(String text, int color) {}
-    public record Segment(TextBlob blob, int color, float width) {}
+    public record Segment(TextBlob blob, int color, float width, boolean fallback, float blobBaseline) {}
 }

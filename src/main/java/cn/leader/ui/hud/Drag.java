@@ -5,7 +5,7 @@ import cn.leader.module.Module;
 import cn.leader.util.animation.Easing;
 import cn.leader.util.animation.EasingAnimation;
 import cn.leader.util.misc.MouseUtil;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import org.jetbrains.skija.Canvas;
 import com.mojang.blaze3d.platform.Window;
 
 public abstract class Drag extends Module {
@@ -46,6 +46,14 @@ public abstract class Drag extends Module {
 
         this.renderX = (float) this.xAnimation.getValue();
         this.renderY = (float) this.yAnimation.getValue();
+    }
+
+    public float getRenderX() {
+        return this.renderX;
+    }
+
+    public float getRenderY() {
+        return this.renderY;
     }
 
     public boolean isRightAnchored() {
@@ -96,5 +104,5 @@ public abstract class Drag extends Module {
         return MouseUtil.isHovered(mouseX, mouseY, x, this.renderY, this.width, this.height);
     }
 
-    public abstract void render(GuiGraphicsExtractor context);
+    public abstract void render(Canvas canvas);
 }

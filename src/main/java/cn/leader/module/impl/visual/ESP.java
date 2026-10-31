@@ -1,28 +1,31 @@
 package cn.leader.module.impl.visual;
 
 import cn.leader.event.base.annotation.EventTarget;
-import cn.leader.event.impl.Render2DEvent;
+import cn.leader.event.impl.RenderSkiaEvent;
 import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
+import cn.leader.module.value.impl.ModeValue;
+import cn.leader.module.value.impl.NumberValue;
+import cn.leader.ui.font.base.SkiaFont;
 import cn.leader.util.player.EntityUtil;
-import cn.leader.util.render.ColorUtil;
-import cn.leader.util.render.FontUtil;
+import cn.leader.util.render.Fonts;
+import cn.leader.util.render.PanelRenderer;
 import cn.leader.util.render.RenderUtil;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import cn.leader.util.render.SkiaRender;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Vector4d;
-
-import java.awt.*;
+import org.jetbrains.skija.Canvas;
 
 public final class ESP extends Module {
-    public final BoolValue boxEsp = new BoolValue("AABB", true);
+    public final ModeValue boxMode = new ModeValue("Box", "Corners", "None", "Full", "Corners");
     public final BoolValue healthBar = new BoolValue("Health Bar", true);
     public final BoolValue armorBar = new BoolValue("Armor Bar", true);
     public final BoolValue nametags = new BoolValue("Name Tags", true);
+    public final BoolValue boxFill = new BoolValue("Box Fill", false);
+    public final NumberValue fillAlpha = new NumberValue("Fill Opacity", 0.12F, 0.02F, 0.3F, 0.01F, boxFill::getValue);
 
     public ESP() {
         super("ESP", Category.Visual);
@@ -30,131 +33,141 @@ public final class ESP extends Module {
     }
 
     @EventTarget
-    public void onRender2D(Render2DEvent e) {
-        if (mc.player == null || mc.level == null) return;
+    public void onRenderSkia(RenderSkiaEvent event) {
+        if (event.getLayer() != RenderSkiaEvent.Layer.HUD) return;
+        if (mc.player == null || mc.level == null || mc.gui.hud.isHidden()) return;
 
         for (Entity entity : instance.getTargetManager().getTargets()) {
             if (entity.equals(mc.player) && mc.options.getCameraType().isFirstPerson()) continue;
 
             if (EntityUtil.isSelected(entity)) {
-                drawBox(entity, e.getContext());
+                draw(event.getCanvas(), entity);
             }
         }
     }
 
-    private void drawBox(@NotNull Entity entity, GuiGraphicsExtractor context) {
-        Vec3[] vectors = RenderUtil.getVectors(entity);
+    private void draw(Canvas canvas, @NotNull Entity entity) {
+        float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE, maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+        boolean any = false;
 
-        Vector4d position = null;
-        for (Vec3 vector : vectors) {
-            vector = RenderUtil.worldSpaceToScreenSpace(new Vec3(vector.x, vector.y, vector.z));
-            if (vector.z > 0 && vector.z < 1) {
-                if (position == null) {
-                    position = new Vector4d(vector.x, vector.y, vector.z, 0);
-                }
-
-                position.x = Math.min(vector.x, position.x);
-                position.y = Math.min(vector.y, position.y);
-                position.z = Math.max(vector.x, position.z);
-                position.w = Math.max(vector.y, position.w);
-            }
+        for (Vec3 corner : RenderUtil.getVectors(entity)) {
+            Vec3 screen = RenderUtil.worldSpaceToScreenSpace(corner);
+            if (screen.z <= 0 || screen.z >= 1) return;
+            minX = Math.min(minX, (float) screen.x);
+            minY = Math.min(minY, (float) screen.y);
+            maxX = Math.max(maxX, (float) screen.x);
+            maxY = Math.max(maxY, (float) screen.y);
+            any = true;
         }
 
-        if (position != null) {
-            float x = (float) position.x;
-            float y = (float) position.y;
-            float right = (float) position.z;
-            float bottom = (float) position.w;
+        if (!any || maxX - minX < 1 || maxY - minY < 1) return;
 
-            if (boxEsp.getValue()) {
-                drawBox(context, x, y, right, bottom);
+        int first = PanelRenderer.accent(0);
+        int second = PanelRenderer.accent(6);
+        float w = maxX - minX;
+        float h = maxY - minY;
+
+        if (boxFill.getValue() && !boxMode.is("None")) {
+            canvas.save();
+            SkiaRender.clipRoundRect(canvas, minX, minY, w, h, 3.0F);
+            SkiaRender.verticalGradient(canvas, minX, minY, w, h, 3.0F,
+                    SkiaRender.alpha(first, fillAlpha.getValue()),
+                    SkiaRender.alpha(second, fillAlpha.getValue() * 0.25F));
+            canvas.restore();
+        }
+
+        if (boxMode.is("Full")) {
+            SkiaRender.roundRectOutline(canvas, minX - 0.5F, minY - 0.5F, w + 1.0F, h + 1.0F, 2, 2.5F, 0xA0000000);
+            SkiaRender.gradientOutline(canvas, minX, minY, w, h, 2, 1.0F, first, second);
+        } else if (boxMode.is("Corners")) {
+            float len = Math.min(Math.min(w, h) / 3.5F, 12.0F);
+            corners(canvas, minX, minY, maxX, maxY, len, 3.0F, 0xB0000000);
+            corners(canvas, minX, minY, maxX, maxY, len, 1.75F, 0xFFFFFFFF);
+            corners(canvas, minX, minY, maxX, maxY, len, 1.0F, first);
+        }
+
+        if (entity instanceof LivingEntity living) {
+            if (healthBar.getValue() && living.getHealth() > 0) {
+                float ratio = Math.max(0, Math.min(1, living.getHealth() / Math.max(1.0F, living.getMaxHealth())));
+                int color = java.awt.Color.HSBtoRGB(ratio * 0.33F, 0.78F, 0.98F) | 0xFF000000;
+                float barX = minX - 5.0F;
+                SkiaRender.roundRect(canvas, barX, minY, 3.0F, h, 1.5F, 0xA0000000);
+                if (ratio > 0) {
+                    SkiaRender.roundRect(canvas, barX + 0.75F, minY + h * (1 - ratio), 1.5F,
+                            h * ratio, 0.75F, color);
+                }
             }
 
-            if (entity instanceof LivingEntity living) {
-                if (living.getHealth() != 0 && healthBar.getValue()) {
-                    drawHealthBar(context, living, x, y, bottom);
-                }
-
-                if (living.getArmorValue() != 0 && armorBar.getValue()) {
-                    drawArmorBar(context, living, right, y, bottom);
+            if (armorBar.getValue() && living.getArmorValue() > 0) {
+                float ratio = Math.max(0, Math.min(1, living.getArmorValue() / 20.0F));
+                float barX = maxX + 2.0F;
+                SkiaRender.roundRect(canvas, barX, minY, 3.0F, h, 1.5F, 0xA0000000);
+                if (ratio > 0) {
+                    SkiaRender.roundRect(canvas, barX + 0.75F, minY + h * (1 - ratio), 1.5F,
+                            h * ratio, 0.75F, 0xFF72C8FF);
                 }
             }
 
             if (nametags.getValue()) {
-                drawNametag(context, entity, x, y, right);
+                nametag(canvas, living, minX + w / 2, minY);
             }
         }
     }
 
-    private void drawNametag(GuiGraphicsExtractor context, Entity entity, float x, float y, float right) {
-        if (mc.player == null || mc.level == null) return;
+    private void corners(Canvas canvas, float x1, float y1, float x2, float y2, float len, float width, int color) {
+        SkiaRender.line(canvas, x1, y1, x1 + len, y1, width, color);
+        SkiaRender.line(canvas, x1, y1, x1, y1 + len, width, color);
+        SkiaRender.line(canvas, x2, y1, x2 - len, y1, width, color);
+        SkiaRender.line(canvas, x2, y1, x2, y1 + len, width, color);
+        SkiaRender.line(canvas, x1, y2, x1 + len, y2, width, color);
+        SkiaRender.line(canvas, x1, y2, x1, y2 - len, width, color);
+        SkiaRender.line(canvas, x2, y2, x2 - len, y2, width, color);
+        SkiaRender.line(canvas, x2, y2, x2, y2 - len, width, color);
+    }
 
-        String name = "";
-        String health = "";
-        String distance = "";
+    private void nametag(Canvas canvas, LivingEntity living, float centerX, float top) {
+        SkiaFont nameFont = Fonts.medium(8);
+        SkiaFont numberFont = Fonts.number(7.5F);
 
-        if (entity instanceof LivingEntity living) {
-            name = living.getName().getString();
-            health = String.format(" §7[§a%.1f§7]", living.getHealth());
-            distance = String.format(" §f%dm", (int) mc.player.distanceTo(living));
+        String name = living.getName().getString();
+        String health = String.format(java.util.Locale.ROOT, "%.1f", Math.max(0.0F, living.getHealth()));
+        String distance = String.format(java.util.Locale.ROOT, "%.1fm", mc.player.distanceTo(living));
+
+        name = trim(nameFont, name, 118.0F);
+        float nameWidth = nameFont.getStringWidth(name);
+        float healthWidth = numberFont.getStringWidth(health);
+        float distanceWidth = numberFont.getStringWidth(distance);
+        // 6px outer padding on each side plus 5px separators between columns.
+        float width = nameWidth + healthWidth + distanceWidth + 22;
+        float height = 17;
+        float x = centerX - width / 2;
+        float y = top - height - 4;
+        float centerY = y + height / 2;
+
+        PanelRenderer.panel(canvas, x, y, width, height, height / 2, 1.0F, 0);
+
+        float textX = x + 6;
+        numberFont.drawStringCenteredY(canvas, distance, textX, centerY, 0xFFA8A8B3, false);
+        textX += distanceWidth + 5;
+        SkiaRender.line(canvas, textX - 2, centerY - 4, textX - 2, centerY + 4, 0.5F, 0x40FFFFFF);
+        nameFont.drawStringCenteredY(canvas, name, textX, centerY, 0xFFFFFFFF, false);
+        textX += nameWidth + 5;
+
+        float ratio = Math.max(0, Math.min(1, living.getHealth() / Math.max(1.0F, living.getMaxHealth())));
+        int color = java.awt.Color.HSBtoRGB(ratio * 0.33F, 0.65F, 1.0F) | 0xFF000000;
+        numberFont.drawStringCenteredY(canvas, health, textX, centerY, color, false);
+        SkiaRender.roundRect(canvas, x + 5, y + height - 2.5F, width - 10, 1.5F, 0.75F, 0x35FFFFFF);
+        if (ratio > 0) {
+            SkiaRender.roundRect(canvas, x + 5, y + height - 2.5F, (width - 10) * ratio, 1.5F, 0.75F, color);
         }
-
-        String text = name + health + distance;
-        float width = FontUtil.getStringWidth(name + health + distance);
-        float height = FontUtil.getHeight();
-        float middle = x + (right - x) / 2;
-
-        RenderUtil.drawRect(context, middle - (width / 2.0F) - 2.0F, y - height - 4.0F, width + 4.0F, height + 2.0F, new Color(0, 0, 0, 120).getRGB());
-        FontUtil.drawString(context, text, middle - (width / 2.0F), y - height - 3.0F, -1, true);
     }
 
-    private void drawBox(GuiGraphicsExtractor context, float x, float y, float right, float bottom) {
-        HUD hud = getModule(HUD.class);
-
-        int color1 = hud.getColor(1);
-        int color2 = hud.getColor(2);
-        int color3 = hud.getColor(3);
-        int color4 = hud.getColor(4);
-        int black = 0xFF000000;
-        float t = 0.5f;
-
-        RenderUtil.drawGradientRect(context, x, y, (right - x), 1.0f, color1, color2, true); // 顶
-        RenderUtil.drawGradientRect(context, x, y, 1.0f, (bottom - y), color1, color4, false); // 左
-        RenderUtil.drawGradientRect(context, x, bottom, (right - x), 1.0f, color4, color3, true); // 底
-        RenderUtil.drawGradientRect(context, right, y, 1.0f, (bottom - y) + 1.0f, color2, color3, false); // 右
-
-        // Outer Outline
-        RenderUtil.drawRect(context, x - t, y - t, (right - x) + 1.0f + 2 * t, t, black); // 外顶
-        RenderUtil.drawRect(context, x - t, bottom + 1.0f, (right - x) + 1.0f + 2 * t, t, black); // 外底
-        RenderUtil.drawRect(context, x - t, y, t, (bottom - y) + 1.0f, black); // 外左
-        RenderUtil.drawRect(context, right + 1.0f, y, t, (bottom - y) + 1.0f, black); // 外右
-
-        // Inner Outline
-        RenderUtil.drawRect(context, x + 1.0f, y + 1.0f, (right - x) - 1.0f, t, black); // 内顶
-        RenderUtil.drawRect(context, x + 1.0f, bottom - t, (right - x) - 1.0f, t, black); // 内底
-        RenderUtil.drawRect(context, x + 1.0f, y + 1.0f, t, (bottom - y) - 1.0f, black); // 内左
-        RenderUtil.drawRect(context, right - t, y + 1.0f, t, (bottom - y) - 1.0f, black); // 内右
-    }
-
-    private void drawHealthBar(GuiGraphicsExtractor context, @NotNull LivingEntity entity, float x, float y, float bottom) {
-        float healthValue = entity.getHealth() / entity.getMaxHealth();
-        float height = (bottom - y) + 1;
-
-        RenderUtil.drawRect(context, x - 3.5f, y - 0.5f, 2, height + 1, new Color(0, 0, 0, 180).getRGB());
-        RenderUtil.drawRect(context, x - 3.0f, y, 1, height, ColorUtil.applyAlpha(getHealthColor(healthValue * 100).getRGB(), 0.3F));
-        RenderUtil.drawRect(context, x - 3.0f, y + (height - height * healthValue), 1, height * healthValue, getHealthColor(healthValue * 100).getRGB());
-    }
-
-    private void drawArmorBar(GuiGraphicsExtractor context, @NotNull LivingEntity entity, float right, float y, float bottom) {
-        float armorValue = entity.getArmorValue() / 20f;
-        float height = (bottom - y) + 1;
-
-        RenderUtil.drawRect(context, right + 1.5f, y - 0.5f, 2, height + 1, new Color(0, 0, 0, 180).getRGB());
-        RenderUtil.drawRect(context, right + 2, y, 1, height, ColorUtil.applyAlpha(new Color(135, 206, 250).getRGB(), 0.3F));
-        RenderUtil.drawRect(context, right + 2, y + (height - height * armorValue), 1, height * armorValue, new Color(135, 206, 250).getRGB());
-    }
-
-    private Color getHealthColor(float healthPercent) {
-        return healthPercent > 75 ? new Color(66, 246, 123) : healthPercent > 50 ? new Color(228, 255, 105) : healthPercent > 35 ? new Color(236, 100, 64) : new Color(255, 65, 68);
+    private static String trim(SkiaFont font, String text, float maxWidth) {
+        if (font.getStringWidth(text) <= maxWidth) return text;
+        String trimmed = text;
+        while (!trimmed.isEmpty() && font.getStringWidth(trimmed + "…") > maxWidth) {
+            trimmed = trimmed.substring(0, trimmed.offsetByCodePoints(trimmed.length(), -1));
+        }
+        return trimmed + "…";
     }
 }
