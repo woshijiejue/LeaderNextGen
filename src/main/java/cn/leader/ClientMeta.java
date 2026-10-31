@@ -21,10 +21,16 @@ public final class ClientMeta {
     }
 
     private static String resolveVersion() {
-        return FabricLoader.getInstance()
-                .getModContainer("leadernextgen")
-                .map(container -> container.getMetadata().getVersion().getFriendlyString())
-                .orElse("dev");
+        FabricLoader loader = FabricLoader.getInstance();
+
+        for (String id : new String[]{"leadernextgen", "clientbase"}) {
+            var container = loader.getModContainer(id);
+            if (container.isPresent()) {
+                return container.get().getMetadata().getVersion().getFriendlyString();
+            }
+        }
+
+        return "dev";
     }
 
     private static String resolveLoaderVersion() {
