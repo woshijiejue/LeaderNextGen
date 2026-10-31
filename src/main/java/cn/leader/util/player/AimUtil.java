@@ -8,32 +8,15 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.ClipContext;
 
-import java.util.Random;
 
 /**
- * Aim mathematics shared by the combat modules.
- *
- * <p>The whole point of this class is to describe aim the way the game actually encodes it:
- * the look direction is not a free floating pair of floats, it is a whole number of
- * "mouse dots" away from the previous direction. {@link #step(float[], float[], float)}
- * therefore works in dots instead of degrees, which keeps every delta we send consistent
- * with the mouse input the player really produces.</p>
+ * Aim helpers shared by the combat modules: where to point at a hitbox, how far it is, and whether
+ * the point is reachable. Rotation stepping itself lives in {@code RotationManager}.
  */
 public final class AimUtil implements IMinecraft {
 
     /** Shrink factor so an aim point is strictly inside the hitbox instead of on its edge. */
     private static final double SURFACE_INSET = 1.0E-4D;
-
-    private static final Random RANDOM = new Random();
-
-    /**
-     * Degrees per mouse dot for the current sensitivity.
-     * Sensitivity S becomes {@code (0.6S + 0.2)^3 * 8 * 0.15} degrees of yaw per dot.
-     */
-    public static double mouseDivisor() {
-        double sensitivity = mc.options.sensitivity().get() * 0.6D + 0.2D;
-        return sensitivity * sensitivity * sensitivity * 8.0D * 0.15D;
-    }
 
     /**
      * Closest point of the hitbox to the eyes, pulled slightly inside the box so that a ray
@@ -141,42 +124,6 @@ public final class AimUtil implements IMinecraft {
                 eye, point, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player);
 
         return mc.level.clip(context).getType() == HitResult.Type.MISS;
-    }
-
-    /**
-     * Advance {@code current} towards {@code target} by at most {@code maxDegrees}, in whole dots.
-     *
-     * <p>Rounding to the dot grid before moving guarantees that the delta we send is a multiple
-     * of the divisor the player's sensitivity produces, and that we never repeat a rotation we
-     * already sent (a delta of zero dots means "no packet").</p>
-     */
-    public static float[] step(float[] current, float[] target, float maxDegrees) {
-        if (current == null || target == null) return current;
-
-        double divisor = mouseDivisor();
-        if (divisor < 1.0E-6D) {
-            return new float[]{target[0], Mth.clamp(target[1], -90.0F, 90.0F)};
-        }
-
-        int limit = Math.max(1, (int) Math.floor(Math.max(1.0F, maxDegrees) / divisor));
-
-        int yawDots = (int) Math.round(Mth.wrapDegrees(target[0] - current[0]) / divisor);
-        int pitchDots = (int) Math.round((target[1] - current[1]) / divisor);
-
-        yawDots = Mth.clamp(yawDots, -limit, limit);
-        pitchDots = Mth.clamp(pitchDots, -limit, limit);
-
-        // Slightly undershoot large corrections now and then: a human hand does not land
-        // exactly on the target every single tick. Undershooting by whole dots keeps the
-        // delta on the sensitivity grid, so it still looks like an ordinary mouse sweep.
-        if (yawDots != 0 && Math.abs(yawDots) > 2 && RANDOM.nextDouble() < 0.28D) {
-            yawDots -= Integer.signum(yawDots) * (RANDOM.nextBoolean() ? 1 : 2);
-        }
-
-        float yaw = (float) (current[0] + yawDots * divisor);
-        float pitch = (float) (current[1] + pitchDots * divisor);
-
-        return new float[]{yaw, Mth.clamp(pitch, -90.0F, 90.0F)};
     }
 
     private AimUtil() {

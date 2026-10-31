@@ -5,6 +5,7 @@ import cn.leader.event.base.annotation.EventTarget;
 import cn.leader.event.impl.MoveInputEvent;
 import cn.leader.event.impl.UpdateEvent;
 import cn.leader.event.impl.WorldEvent;
+import cn.leader.manager.RotationManager;
 import cn.leader.manager.movement.MovementCorrection;
 import cn.leader.module.Category;
 import cn.leader.module.Module;
@@ -34,25 +35,19 @@ import java.util.Random;
 /**
  * Automatic bridging.
  *
- * <p>Ported from Epsilon's Scaffold (Jon_awa &amp; XiaoMai). What matters is not the block search but
- * the ordering: the click is fired from the top of the player tick, i.e. <em>before</em> this tick's
- * movement packet exists. The server therefore validates the placement against the rotation it
- * already knows, which is why every aim point is computed from the server rotation and then
- * re-verified with a ray cast before the packet goes out.</p>
+ * <p>Placement logic follows Epsilon's Scaffold: search for an existing block that can be clicked to
+ * fill the hole below us, aim at a verified point on its face, then place. The click is fired from
+ * the top of the player tick, before this tick's movement packet exists.</p>
  *
- * <p>Four rotation flavours: {@code Normal} snaps straight at the point, {@code Smooth} approaches it
- * at a limited speed, {@code Hypixel} pre-turns the view almost backwards while grounded and then
- * drags it back in the air at a capped rate, and {@code Heypixel} does the same with randomised
- * speeds and no pre-turn offset.</p>
- *
- * @author Jon_awa, XiaoMai (original), ported to 26.2
+ * <p>Rotation is intentionally primitive: {@code Snap} turns instantly, {@code Smooth} turns at
+ * {@code Rotation Speed} degrees per tick. Nothing emulates mouse input.</p>
  */
 public final class Scaffold extends Module {
 
     private final ModeValue mode = new ModeValue("Mode", "Normal", "Normal", "Telly");
-
-    private final ModeValue rotationMode = new ModeValue("Rotation Mode", "Normal",
-            "Normal", "Smooth", "Hypixel", "Heypixel");
+    private final ModeValue rotation = new ModeValue("Rotation", "Snap", "Snap", "Smooth");
+    private final NumberValue rotationSpeed = new NumberValue("Rotation Speed", 180, 20, 180, 10,
+            () -> this.rotation.is("Smooth"));
     private final ModeValue rotationPoint = new ModeValue("Rotation Point", "Normal",
             "Normal", "Corner", "Nearest", "Reduced");
     private final ModeValue searchMode = new ModeValue("Search Mode", "Normal", "Normal", "Distance");
@@ -63,11 +58,8 @@ public final class Scaffold extends Module {
     private final NumberValue switchThreshold = new NumberValue("Switch Threshold", 5, 0, 64, 1,
             () -> this.switchMode.is("Threshold"));
 
-    private final NumberValue rotationSpeed = new NumberValue("Rotation Speed", 10, 1, 10, 1,
-            () -> this.rotationMode.is("Smooth"));
     private final NumberValue placeDelayMin = new NumberValue("Min Place Delay", 0, 0, 200, 1);
     private final NumberValue placeDelayMax = new NumberValue("Max Place Delay", 50, 0, 200, 1);
-    private final BoolValue slow = new BoolValue("Slow", false, () -> this.rotationMode.is("Hypixel"));
 
     // Reduced rotation point tuning
     private final NumberValue searchStep = new NumberValue("Search Step", 0.02F, 0.01F, 0.1F, 0.01F,
@@ -82,15 +74,15 @@ public final class Scaffold extends Module {
 
     // Telly timing
     private final ModeValue placeableMode = new ModeValue("Placeable Mode", "Check Height",
-            () -> this.mode.is("Telly") && !hypixelRotation(), "Check Height", "Check Tick", "Off");
+            () -> this.mode.is("Telly"), "Check Height", "Check Tick", "Off");
     private final NumberValue height = new NumberValue("Height", 0.5F, 0, 1.25F, 0.05F,
-            () -> this.mode.is("Telly") && this.placeableMode.is("Check Height") && !hypixelRotation() && !keepY.getValue());
+            () -> this.mode.is("Telly") && this.placeableMode.is("Check Height") && !this.keepY.getValue());
     private final NumberValue upTellyHeight = new NumberValue("UpTelly Height", 0.2F, 0, 1.25F, 0.05F,
-            () -> this.mode.is("Telly") && this.placeableMode.is("Check Height") && !hypixelRotation() && !keepY.getValue());
+            () -> this.mode.is("Telly") && this.placeableMode.is("Check Height") && !this.keepY.getValue());
     private final NumberValue tick = new NumberValue("Tick", 3, 0, 5, 1,
-            () -> this.mode.is("Telly") && this.placeableMode.is("Check Tick") && !hypixelRotation());
+            () -> this.mode.is("Telly") && this.placeableMode.is("Check Tick"));
     private final NumberValue upTellyTick = new NumberValue("UpTelly Tick", 1, 0, 5, 1,
-            () -> this.mode.is("Telly") && this.placeableMode.is("Check Tick") && !hypixelRotation() && !keepY.getValue());
+            () -> this.mode.is("Telly") && this.placeableMode.is("Check Tick") && !this.keepY.getValue());
     private final NumberValue jumpDelayMin = new NumberValue("Min Jump Delay", 1, 0, 3, 1, () -> this.mode.is("Telly"));
     private final NumberValue jumpDelayMax = new NumberValue("Max Jump Delay", 2, 0, 3, 1, () -> this.mode.is("Telly"));
 
@@ -102,15 +94,9 @@ public final class Scaffold extends Module {
     private final Random random = new Random();
 
     private PlaceInfo lastPlaceInfo;
-    private float[] lastRotation;
     private boolean canPlace;
-    private boolean canRotate;
-    private boolean enabledOnAir;
-    private boolean yawNormal;
-    private int rotationTick;
     private int placeY;
     private int baseY;
-    private int stage;
     private int offGroundTicks;
     private int onGroundTicks;
     private String lastMode = "";
@@ -123,12 +109,7 @@ public final class Scaffold extends Module {
     @Override
     public void onEnable() {
         this.lastPlaceInfo = null;
-        this.lastRotation = null;
         this.canPlace = false;
-        this.canRotate = false;
-        this.enabledOnAir = false;
-        this.rotationTick = 0;
-        this.stage = 0;
         this.offGroundTicks = 0;
         this.onGroundTicks = 0;
         this.placeTimer.reset();
@@ -137,20 +118,16 @@ public final class Scaffold extends Module {
 
         if (mc.player != null) {
             this.baseY = this.placeY = Mth.floor(mc.player.getY() - 1.0D);
-            this.enabledOnAir = !mc.player.onGround();
         }
     }
 
     @Override
     public void onDisable() {
         this.lastPlaceInfo = null;
-        this.lastRotation = null;
         this.canPlace = false;
-        this.canRotate = false;
-        this.enabledOnAir = false;
 
         if (instance != null && instance.getRotationManager() != null) {
-            instance.getRotationManager().clearRequest();
+            instance.getRotationManager().clearRequest(this);
         }
 
         if (this.autoSneak.getValue() && mc.options != null) {
@@ -175,7 +152,6 @@ public final class Scaffold extends Module {
             setSuffix(this.lastMode);
         }
 
-        // Ground counters; the original read these from its client data holder.
         if (mc.player.onGround()) {
             this.onGroundTicks++;
             this.offGroundTicks = 0;
@@ -184,40 +160,15 @@ public final class Scaffold extends Module {
             if (shouldBuild()) this.offGroundTicks++;
         }
 
-        if (this.enabledOnAir && this.onGroundTicks > 0) {
-            this.enabledOnAir = false;
-        }
-
         if (this.autoSneak.getValue()) {
             updateSneak();
         }
 
         switchBlock();
 
-        if (mc.player.onGround() && this.onGroundTicks <= 1) {
-            float normalised = normalize(mc.player.getYRot() - hardOffset());
-            this.yawNormal = normalised % 90.0F < 45.0F;
-        }
-
-        if (this.mode.is("Telly") && hypixelRotation()) {
-            if (this.rotationTick > 0) this.rotationTick--;
-
-            if (mc.player.onGround()) {
-                if (this.stage > 0) this.stage--;
-                else if (this.stage < 0) this.stage++;
-
-                if (this.stage == 0 && !this.keepY.getValue() && !jumpKeyDown()) {
-                    this.stage = 1;
-                }
-
-                this.canRotate = false;
-                this.rotationTick = 0;
-            }
-        }
-
         this.placeY = computePlaceY();
 
-        if (this.mode.is("Telly") && !hypixelRotation()) {
+        if (this.mode.is("Telly")) {
             switch (this.placeableMode.getValue()) {
                 case "Check Height" -> {
                     double threshold = this.placeY + 1.0D
@@ -256,13 +207,7 @@ public final class Scaffold extends Module {
 
         this.lastPlaceInfo = info;
 
-        // Non-Hypixel modes aim from the rotation the server already holds, so the ray it casts lands
-        // on the same face we picked. Hypixel modes chain from our own previous request.
-        float[] reference = hypixelRotation()
-                ? (this.lastRotation != null ? this.lastRotation : instance.getRotationManager().getServerRotation())
-                : instance.getRotationManager().getServerRotation();
-
-        PlaceInfo.Hit hit = info.getRotationAndHit(rotatePoint(), reference, searchSettings());
+        PlaceInfo.Hit hit = info.getRotationAndHit(rotatePoint(), referenceRotation(), searchSettings());
         if (hit == null) {
             this.canPlace = false;
             return;
@@ -273,107 +218,20 @@ public final class Scaffold extends Module {
         place(info, hit, requested);
     }
 
-    // ------------------------------------------------------------------ aiming
+    /** Where the search measures angles from: our current aim, otherwise the camera. */
+    private float[] referenceRotation() {
+        if (instance.getRotationManager() != null && instance.getRotationManager().isActive()) {
+            return RotationManager.currentRotations;
+        }
 
-    /**
-     * Applies the selected rotation flavour and returns the rotation actually requested, which the
-     * {@code Simple} raycast check compares against.
-     */
+        return new float[]{mc.player.getYRot(), mc.player.getXRot()};
+    }
+
     private float[] aim(PlaceInfo.Hit hit) {
         float[] target = clampForward(hit.rotation().clone());
+        float speed = this.rotation.is("Smooth") ? this.rotationSpeed.getValue() : 180.0F;
 
-        switch (this.rotationMode.getValue()) {
-            case "Smooth" -> instance.getRotationManager().request(target,
-                    this.rotationSpeed.getValue() / 10.0F * 180.0F, correction());
-
-            case "Hypixel" -> {
-                if (this.lastRotation == null) {
-                    this.lastRotation = instance.getRotationManager().getServerRotation();
-                }
-
-                float[] rotation = target;
-
-                if (this.canRotate && (mc.player.getDeltaMovement().y > 0.0D
-                        || mc.player.getY() > this.placeY + 1.0D)) {
-                    float speed;
-                    if (this.enabledOnAir) {
-                        speed = this.offGroundTicks <= 1 ? 100.0F : 30.0F;
-                    } else if (this.slow.getValue()) {
-                        speed = this.offGroundTicks <= 1 ? 90.0F : 37.0F;
-                    } else {
-                        speed = this.offGroundTicks <= 1 ? 127.0F : 35.0F;
-                    }
-
-                    float delta = Mth.wrapDegrees(rotation[0] - this.lastRotation[0]);
-                    if (Math.abs(delta) > speed) {
-                        rotation = new float[]{
-                                Mth.wrapDegrees(this.lastRotation[0] + Math.copySign(speed, delta)),
-                                rotation[1]
-                        };
-                        this.rotationTick = 0;
-                    }
-                }
-
-                if (mc.player.onGround() && moving() && airAbove()
-                        && (this.stage > 0 || (!this.keepY.getValue() && jumpKeyDown()))) {
-                    if (this.onGroundTicks >= this.jumpDelayMin.getValue()) {
-                        // Flip almost backwards: the block behind the player becomes reachable.
-                        boolean diagonal = Math.abs(mc.player.getDeltaMovement().x) > 0.07D
-                                && Math.abs(mc.player.getDeltaMovement().z) > 0.07D;
-                        boolean positive = Mth.wrapDegrees(this.lastRotation[0] - mc.player.getYRot() - hardOffset()) > 0.0F;
-                        float turn = diagonal
-                                ? (this.yawNormal ? 157.0F : -157.0F)
-                                : (positive ? 157.0F : -157.0F);
-
-                        rotation = new float[]{Mth.wrapDegrees(mc.player.getYRot() - hardOffset() + turn), 80.0F};
-                        this.rotationTick = 0;
-                        this.canRotate = true;
-                    }
-                }
-
-                this.lastRotation = rotation;
-                instance.getRotationManager().request(rotation, 180.0F, correction());
-
-                return rotation;
-            }
-
-            case "Heypixel" -> {
-                if (this.lastRotation == null) {
-                    this.lastRotation = instance.getRotationManager().getServerRotation();
-                }
-
-                float[] rotation = target;
-
-                if (this.canRotate && (mc.player.getDeltaMovement().y > 0.0D
-                        || mc.player.getY() > this.placeY + 1.0D)) {
-                    float speed = this.rotationTick >= 2
-                            ? randomBetween(90.0F, 95.0F) : randomBetween(30.0F, 36.0F);
-                    float delta = Mth.wrapDegrees(rotation[0] - this.lastRotation[0]);
-
-                    if (Math.abs(delta) > speed) {
-                        rotation = new float[]{
-                                Mth.wrapDegrees(this.lastRotation[0] + Math.copySign(speed, delta)),
-                                rotation[1]
-                        };
-                        this.rotationTick = 0;
-                    }
-                }
-
-                if (mc.player.onGround() && moving() && airAbove()
-                        && (this.stage > 0 || (!this.keepY.getValue() && jumpKeyDown()))) {
-                    rotation = new float[]{mc.player.getYRot(), mc.player.getXRot()};
-                    this.rotationTick = 3;
-                    this.canRotate = true;
-                }
-
-                this.lastRotation = rotation;
-                instance.getRotationManager().request(rotation, 180.0F, correction());
-
-                return rotation;
-            }
-
-            default -> instance.getRotationManager().request(target, 180.0F, correction());
-        }
+        instance.getRotationManager().request(this, target, speed, correction());
 
         return target;
     }
@@ -399,35 +257,22 @@ public final class Scaffold extends Module {
         InteractionHand hand = mainHand ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
         BlockHitResult result = new BlockHitResult(hit.vec(), info.getDirection(), info.getBlockPos(), false);
 
-        // Anything echoed further out than four and a half blocks is rejected outright.
-        if (mc.player.getEyePosition().distanceToSqr(hit.vec()) > 20.25D && this.rotationMode.is("Heypixel")) {
-            return;
-        }
-
         if (!passesRaycast(info, hit, requested)) return;
 
         boolean placeNow = !this.mode.is("Telly")
-                || ((this.offGroundTicks > 2
-                || (mc.player.onGround() && this.onGroundTicks < this.jumpDelayMin.getValue()))
-                && !this.rotationMode.is("Heypixel"));
+                || this.offGroundTicks > 2
+                || (mc.player.onGround() && this.onGroundTicks < this.jumpDelayMin.getValue());
 
-        if (placeNow) {
-            mc.gameMode.useItemOn(mc.player, hand, result);
+        if (!placeNow) return;
+
+        InteractionResult placed = mc.gameMode.useItemOn(mc.player, hand, result);
+        if (placed.consumesAction() || placed == InteractionResult.SUCCESS) {
             swing(hand);
             this.placeTimer.reset();
-        } else if (this.rotationMode.is("Heypixel")) {
-            InteractionResult placed = mc.gameMode.useItemOn(mc.player, hand, result);
-            if (placed == InteractionResult.SUCCESS || placed.consumesAction()) {
-                swing(hand);
-                this.placeTimer.reset();
-            }
         }
     }
 
-    /**
-     * Optional pre-flight check. {@code Medium} re-casts with the rotation the server holds, which is
-     * the only variant that guarantees the packet will not be rejected.
-     */
+    /** Optional pre-flight check that the chosen face is really what we are looking at. */
     private boolean passesRaycast(PlaceInfo info, PlaceInfo.Hit hit, float[] requested) {
         switch (this.raycast.getValue()) {
             case "Simple" -> {
@@ -620,17 +465,9 @@ public final class Scaffold extends Module {
         return aura != null && aura.isEnabled() && aura.getTarget() != null;
     }
 
-    private boolean hypixelRotation() {
-        return this.rotationMode.is("Hypixel") || this.rotationMode.is("Heypixel");
-    }
-
     private boolean moving() {
         Vec3 velocity = mc.player.getDeltaMovement();
         return Math.abs(velocity.x) > 0.005D || Math.abs(velocity.z) > 0.005D;
-    }
-
-    private boolean airAbove() {
-        return mc.level.getBlockState(mc.player.blockPosition().above()).isAir();
     }
 
     private boolean jumpKeyDown() {
@@ -643,52 +480,5 @@ public final class Scaffold extends Module {
 
     private static boolean keyDown(net.minecraft.client.KeyMapping mapping) {
         return InputConstants.isKeyDown(mc.getWindow(), mapping.getDefaultKey().getValue());
-    }
-
-    /**
-     * How far the movement direction sits from the camera. Use raw key state rather than the input
-     * vector, because the vector may already have been rewritten by the movement fix.
-     */
-    private float hardOffset() {
-        if (mc.gui.screen() != null) return 180.0F;
-
-        boolean w = keyDown(mc.options.keyUp);
-        boolean s = keyDown(mc.options.keyDown);
-        boolean a = keyDown(mc.options.keyLeft);
-        boolean d = keyDown(mc.options.keyRight);
-        boolean both = a && d;
-
-        float offset = 0.0F;
-
-        if (w) {
-            offset -= 180.0F;
-            if (!both) {
-                if (a) offset += 45.0F;
-                if (d) offset -= 45.0F;
-            }
-        } else if (!s) {
-            offset -= 180.0F;
-            if (!both) {
-                if (a) offset += 90.0F;
-                if (d) offset -= 90.0F;
-            }
-        } else {
-            if (!both) {
-                if (a) offset -= 45.0F;
-                if (d) offset += 45.0F;
-            }
-        }
-
-        return offset;
-    }
-
-    private static float normalize(float yaw) {
-        float value = yaw % 360.0F;
-        if (value < 0.0F) value += 360.0F;
-        return value;
-    }
-
-    private float randomBetween(float min, float max) {
-        return min + this.random.nextFloat() * (max - min);
     }
 }

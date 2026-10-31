@@ -1,362 +1,213 @@
 package cn.leader.module.impl.combat;
-import cn.leader.Client;
 
-import cn.injection.accessor.MultiPlayerGameModeAccessor;
 import cn.leader.event.base.annotation.EventTarget;
-import cn.leader.event.impl.MotionEvent;
 import cn.leader.event.impl.UpdateEvent;
-import cn.leader.manager.RotationManager;
 import cn.leader.manager.movement.MovementCorrection;
 import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.ModeValue;
 import cn.leader.module.value.impl.NumberValue;
-import cn.leader.util.network.BlinkUtils;
-import cn.leader.util.network.PacketUtil;
 import cn.leader.util.player.AimUtil;
 import cn.leader.util.player.EntityUtil;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import cn.leader.util.player.RotationUtil;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * KillAura, second generation.
+ * KillAura.
  *
- * <p>Design notes:</p>
- * <ul>
- *   <li><b>Aim before damage.</b> A hit is only fired from {@link MotionEvent} post, i.e. after
- *       the movement packet carrying this tick's look direction has left the client. The target
- *       is the entity our own ray actually intersects with that rotation, so the server never
- *       sees an attack that disagrees with the look it has on file.</li>
- *   <li><b>Targets are scored, not filtered.</b> Distance, remaining health and the angular
- *       cost of turning to the target are blended, then the current target keeps a bonus until
- *       it is no longer attackable. That kills both the flicker between two equally good
- *       targets and the "two entities in one tick" packet pattern.</li>
- *   <li><b>Clicking is a schedule, not a timer.</b> Intervals come from a per-second CPS pick
- *       with gaussian jitter and the occasional human pause, so the packet rhythm never
- *       degenerates into a metronome.</li>
- * </ul>
- *
- * @author DSJ
+ * <p>Same flow as LiquidBounce: collect candidates, sort them, aim at the closest point of the
+ * hitbox, then click on a CPS schedule. The rotation is deliberately plain - either an instant snap
+ * or a linear turn at a fixed degrees per tick, nothing that tries to imitate mouse input.</p>
  */
 public class KillAura extends Module {
 
-    private final ModeValue sortMode = new ModeValue("Sort", "Adaptive", "Adaptive", "Distance", "Health", "Angle");
-    private final ModeValue switchMode = new ModeValue("Switch", "Hysteresis", "Off", "Hysteresis", "Cycle");
-    private final NumberValue switchBudget = new NumberValue("Switch Budget", 250, 0, 1000, 50, () -> !switchMode.is("Off"));
-
-    private final NumberValue range = new NumberValue("Range", 3.0F, 1.0F, 6.0F, 0.05F);
-    private final BoolValue throughWalls = new BoolValue("Through Walls", false);
-
-    private final NumberValue rotationSpeed = new NumberValue("Rot Speed", 180, 5, 180, 5);
-    private final ModeValue moveFix = new ModeValue("Move Fix", "Silent", "None", "Silent", "Strict");
-
-    private final ModeValue attackMode = new ModeValue("Attack", "Legit", "Legit", "Packet");
-    private final BoolValue keepSprint = new BoolValue("Keep Sprint", false);
-    private final NumberValue minCps = new NumberValue("Min CPS", 8, 1, 20, 1);
-    private final NumberValue maxCps = new NumberValue("Max CPS", 12, 1, 20, 1);
-
-    private final ModeValue autoBlock = new ModeValue("Auto Block", "None", "None", "Fake", "Legit");
-    private final NumberValue blockRange = new NumberValue("Block Range", 4.0F, 1.0F, 6.0F, 0.1F, () -> !autoBlock.is("None"));
-
-    private final BoolValue grimSafe = new BoolValue("Grim Safe", true);
-    private final BoolValue debug = new BoolValue("Debug", false);
-
-    /** Sword blocking state, consumed by NoSlow. */
+    /** NoSlow reads this to decide whether a sword has to be held for blocking. */
     public static boolean blocking;
 
-    private final List<LivingEntity> candidates = new ArrayList<>();
-    private final Random random = new Random();
+    private final NumberValue range = new NumberValue("Range", 3.0F, 1.0F, 6.0F, 0.1F);
+    private final BoolValue throughWalls = new BoolValue("Through Walls", false);
+    private final NumberValue wallsRange = new NumberValue("Walls Range", 3.0F, 1.0F, 6.0F, 0.1F,
+            () -> this.throughWalls.getValue());
+    private final ModeValue sort = new ModeValue("Sort", "Distance", "Distance", "Health", "Hurt Time");
+    private final BoolValue playersOnly = new BoolValue("Players Only", true);
+
+    private final ModeValue rotation = new ModeValue("Rotation", "Snap", "Snap", "Smooth");
+    private final NumberValue rotationSpeed = new NumberValue("Rotation Speed", 180, 20, 180, 10,
+            () -> this.rotation.is("Smooth"));
+    private final ModeValue moveFix = new ModeValue("Move Fix", "Silent", "Silent", "None");
+
+    private final NumberValue cpsMin = new NumberValue("CPS Min", 10, 1, 20, 1);
+    private final NumberValue cpsMax = new NumberValue("CPS Max", 14, 1, 20, 1);
+    private final BoolValue keepSprint = new BoolValue("Keep Sprint", true);
+    private final BoolValue swing = new BoolValue("Swing", true);
 
     private LivingEntity target;
     private float[] aimRotation;
     private long nextAttackAt;
-    private boolean requesting;
-    private long lastSwitchAt;
-    private boolean renderBlock;
-    private boolean useKeyPressedByUs;
 
     public KillAura() {
         super("KillAura", Category.Combat);
-        setDescription("Attack the best reachable target with server consistent aim.");
+        setDescription("Automatically attacks the closest valid target");
     }
 
     @Override
     public void onEnable() {
-        reset();
+        this.target = null;
+        this.aimRotation = null;
+        this.nextAttackAt = 0L;
+        blocking = false;
     }
 
     @Override
     public void onDisable() {
-        reset();
+        this.target = null;
+        this.aimRotation = null;
+        blocking = false;
+        release();
     }
 
-    private void reset() {
-        candidates.clear();
-        target = null;
-        aimRotation = null;
-        nextAttackAt = 0L;
-        lastSwitchAt = 0L;
-        releaseBlock();
-
-        releaseRotation();
-    }
-
-    /**
-     * Drop the rotation request only if we were the one holding it. The manager has a single slot, so
-     * an always-on clear would silently cancel Scaffold (or any other aim) every single tick.
-     */
-    private void releaseRotation() {
-        if (!this.requesting) return;
-
-        this.requesting = false;
-        if (instance != null && instance.getRotationManager() != null) {
-            instance.getRotationManager().clearRequest();
-        }
-    }
-
-    // ------------------------------------------------------------------ targeting
+    // ------------------------------------------------------------------ tick
 
     @EventTarget
     public void onUpdate(UpdateEvent event) {
-        if (!canRun()) {
+        if (mc.player == null || mc.level == null || mc.gameMode == null) {
             reset();
             return;
         }
 
-        collectCandidates();
-        selectTarget();
-
-        if (target == null) {
-            aimRotation = null;
-            releaseBlock();
-            releaseRotation();
-            if (debug.getValue()) setSuffix("idle");
+        if (mc.player.isDeadOrDying() || mc.gui.screen() != null) {
+            reset();
             return;
         }
 
-        updateAutoBlock();
+        this.target = selectTarget();
 
-        aimRotation = AimUtil.rotationTo(AimUtil.aimPoint(target));
-        this.requesting = true;
-        instance.getRotationManager().request(aimRotation, rotationSpeed.getValue(), movementCorrection());
-
-        if (debug.getValue()) setSuffix("target");
-    }
-
-    private boolean canRun() {
-        if (mc.player == null || mc.level == null || mc.getConnection() == null) return false;
-        if (instance == null || instance.getTargetManager() == null) return false;
-
-        return mc.player.isAlive() && !mc.player.isSpectator();
-    }
-
-    private void collectCandidates() {
-        candidates.clear();
-
-        // Turn towards targets slightly outside of attack range, so the aim is already there
-        // when they walk in. Attacks are still validated against the strict range below.
-        double scanRange = effectiveRange() + 0.6D;
-
-        for (LivingEntity entity : instance.getTargetManager().getTargets()) {
-            if (entity == mc.player) continue;
-            if (entity.isDeadOrDying() || !entity.isAlive() || entity.getHealth() <= 0.0F) continue;
-            if (!EntityUtil.isSelected(entity)) continue;
-            if (AimUtil.distanceToBox(entity) > scanRange) continue;
-
-            candidates.add(entity);
-        }
-    }
-
-    private void selectTarget() {
-        if (candidates.isEmpty()) {
-            target = null;
+        if (this.target == null) {
+            this.aimRotation = null;
+            release();
             return;
         }
 
+        this.aimRotation = RotationUtil.getRotations(AimUtil.aimPoint(this.target));
+        instance.getRotationManager().request(this, this.aimRotation, requestSpeed(), correction());
+
+        tryAttack();
+    }
+
+    private void tryAttack() {
         long now = System.currentTimeMillis();
-        boolean currentStillValid = target != null && candidates.contains(target);
+        if (now < this.nextAttackAt) return;
 
-        if (currentStillValid && switchMode.is("Hysteresis") && now - lastSwitchAt < switchBudget.getValue()) {
-            return;
+        // Respect the 1.9+ attack cooldown so hits are never weakened.
+        if (mc.player.getAttackStrengthScale(0.5F) < 1.0F) return;
+
+        if (!inRange(this.target)) return;
+
+        mc.gameMode.attack(mc.player, this.target);
+
+        if (this.swing.getValue()) {
+            mc.player.swing(InteractionHand.MAIN_HAND);
         }
 
-        LivingEntity best = candidates.stream().max(Comparator.comparingDouble(this::score)).orElse(null);
-
-        if (best == null) {
-            target = null;
-            return;
+        if (!this.keepSprint.getValue()) {
+            mc.player.setSprinting(false);
         }
 
-        // Keep the incumbent unless a challenger is clearly better; flipping targets every tick
-        // is both visually obvious and produces an unnatural packet pattern.
-        if (currentStillValid && best != target && score(best) - score(target) < 0.12D) {
-            return;
-        }
-
-        if (best != target) {
-            target = best;
-            lastSwitchAt = now;
-        }
+        this.nextAttackAt = now + clickInterval();
     }
 
-    private double score(LivingEntity entity) {
-        double distanceScore = 1.0D - Math.min(1.0D, AimUtil.distanceToBox(entity) / Math.max(0.1D, effectiveRange()));
-        double angleScore = 1.0D - Math.min(1.0D, AimUtil.angleTo(entity, serverRotation()) / 180.0D);
-        double healthScore = 1.0D - Math.min(1.0D, (entity.getHealth() + entity.getAbsorptionAmount()) / 20.0D);
+    private long clickInterval() {
+        float min = Math.min(this.cpsMin.getValue(), this.cpsMax.getValue());
+        float max = Math.max(this.cpsMin.getValue(), this.cpsMax.getValue());
+        float cps = min + ThreadLocalRandom.current().nextFloat() * (max - min);
 
-        return switch (sortMode.getValue()) {
-            case "Distance" -> distanceScore;
-            case "Health" -> healthScore;
-            case "Angle" -> angleScore;
-            default -> distanceScore * 0.45D + angleScore * 0.35D + healthScore * 0.20D;
+        return (long) (1000.0F / Math.max(1.0F, cps));
+    }
+
+    // ------------------------------------------------------------------ targeting
+
+    private LivingEntity selectTarget() {
+        double reach = effectiveRange();
+        AABB area = mc.player.getBoundingBox().inflate(reach + 1.0D);
+
+        List<LivingEntity> candidates = new ArrayList<>(mc.level.getEntitiesOfClass(LivingEntity.class, area,
+                entity -> entity != mc.player
+                        && EntityUtil.isSelected(entity)
+                        && (!this.playersOnly.getValue() || entity instanceof Player)
+                        && mc.player.distanceTo(entity) <= reach));
+
+        candidates.removeIf(entity -> !visible(entity));
+        if (candidates.isEmpty()) return null;
+
+        candidates.sort(comparator());
+        return candidates.get(0);
+    }
+
+    private Comparator<LivingEntity> comparator() {
+        return switch (this.sort.getValue()) {
+            case "Health" -> Comparator.comparingDouble(LivingEntity::getHealth);
+            case "Hurt Time" -> Comparator.comparingInt((LivingEntity entity) -> -entity.hurtTime);
+            default -> Comparator.comparingDouble(entity -> mc.player.distanceToSqr(entity));
         };
     }
 
-    private float[] serverRotation() {
-        float[] rotation = instance.getRotationManager().getServerRotation();
-        if (rotation != null) return rotation;
-
-        return new float[]{mc.player.getYRot(), mc.player.getXRot()};
+    private boolean inRange(LivingEntity entity) {
+        return mc.player.distanceTo(entity) <= effectiveRange() && visible(entity);
     }
 
-    // ------------------------------------------------------------------ attacking
-
-    @EventTarget
-    public void onMotion(MotionEvent event) {
-        if (!event.isPost()) return;
-        if (!canRun() || target == null) return;
-        if (mc.gui.screen() != null) return;
-
-        // While Blink is holding packets the server has not seen this tick's rotation yet, so an
-        // attack now would be judged against a stale look direction. Wait for the release.
-        if (BlinkUtils.blinking) {
-            if (debug.getValue()) setSuffix("blink");
-            return;
-        }
-
-        // This is the rotation the movement packet just carried. Validating against the event
-        // instead of the manager's field keeps the check independent of handler order.
-        float[] sent = {event.getYRot(), event.getXRot()};
-
-        // A miss on this check means the look direction the server holds misses the hitbox,
-        // so an attack right now would be rejected as an invalid hit. Wait for the next tick.
-        double reach = AimUtil.reach(target, sent);
-        if (reach < 0.0D) {
-            if (debug.getValue()) setSuffix("aim");
-            return;
-        }
-
-        if (reach > effectiveRange()) {
-            if (debug.getValue()) setSuffix("far");
-            return;
-        }
-
-        if (!throughWalls.getValue() && !AimUtil.isVisible(AimUtil.aimPoint(target))) {
-            if (debug.getValue()) setSuffix("wall");
-            return;
-        }
-
-        if (System.currentTimeMillis() < nextAttackAt) return;
-
-        attack(target);
-        scheduleNextAttack();
-
-        if (debug.getValue()) setSuffix("hit");
+    private double effectiveRange() {
+        return this.throughWalls.getValue()
+                ? this.wallsRange.getValue().doubleValue()
+                : this.range.getValue().doubleValue();
     }
 
-    private void attack(LivingEntity entity) {
-        if (mc.gameMode == null) return;
+    /** Line of sight to the aim point; skipped entirely when Through Walls is on. */
+    private boolean visible(LivingEntity entity) {
+        if (this.throughWalls.getValue()) return true;
 
-        boolean sprinting = mc.player.isSprinting();
+        Vec3 eye = mc.player.getEyePosition();
+        Vec3 point = AimUtil.aimPoint(entity);
 
-        if (attackMode.is("Packet") || keepSprint.getValue()) {
-            ((MultiPlayerGameModeAccessor) mc.gameMode).callSyncSelectedSlot();
-            PacketUtil.sendPacket(new ServerboundInteractPacket(entity.getId(), InteractionHand.MAIN_HAND, null, mc.player.isCrouching()));
-            mc.player.swing(InteractionHand.MAIN_HAND);
-        } else {
-            mc.gameMode.attack(mc.player, entity);
-            mc.player.swing(InteractionHand.MAIN_HAND);
-        }
+        BlockHitResult hit = mc.level.clip(new ClipContext(eye, point,
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
 
-        if (keepSprint.getValue() && sprinting) {
-            mc.player.setSprinting(true);
-        }
-    }
-
-    /**
-     * Human click rhythm: draw a CPS for this second, add gaussian jitter, and now and then
-     * insert a short pause the way a real hand loses its rhythm.
-     */
-    private void scheduleNextAttack() {
-        double min = Math.min(minCps.getValue(), maxCps.getValue());
-        double max = Math.max(minCps.getValue(), maxCps.getValue());
-        double cps = min + random.nextDouble() * (max - min);
-
-        double base = 1000.0D / Math.max(1.0D, cps);
-        double jitter = random.nextGaussian() * 0.12D * base;
-        double interval = base + jitter;
-
-        if (random.nextDouble() < 0.06D) {
-            interval += 40.0D + random.nextInt(60);
-        }
-
-        nextAttackAt = System.currentTimeMillis() + (long) Math.max(50.0D, Math.min(400.0D, interval));
-    }
-
-    // ------------------------------------------------------------------ blocking
-
-    private void updateAutoBlock() {
-        boolean inRange = target != null && AimUtil.distanceToBox(target) <= blockRange.getValue();
-        boolean shouldBlock = inRange && !autoBlock.is("None") && isHoldingSword();
-
-        if (!shouldBlock) {
-            releaseBlock();
-            return;
-        }
-
-        renderBlock = true;
-
-        if (autoBlock.is("Legit") && !blocking && mc.gui.screen() == null) {
-            mc.options.keyUse.setDown(true);
-            useKeyPressedByUs = true;
-            blocking = true;
-        }
-    }
-
-    private void releaseBlock() {
-        renderBlock = false;
-
-        if (useKeyPressedByUs) {
-            mc.options.keyUse.setDown(false);
-            useKeyPressedByUs = false;
-        }
-
-        blocking = false;
-    }
-
-    private boolean isHoldingSword() {
-        return mc.player != null && mc.player.getMainHandItem().is(net.minecraft.tags.ItemTags.SWORDS);
+        return hit.getType() == HitResult.Type.MISS;
     }
 
     // ------------------------------------------------------------------ helpers
 
-    private double effectiveRange() {
-        double configured = range.getValue();
-        // Vanilla survival interaction range is 3.0; above that is a measurable advantage.
-        return grimSafe.getValue() ? Math.min(3.0D, configured) : configured;
+    private float requestSpeed() {
+        return this.rotation.is("Smooth") ? this.rotationSpeed.getValue() : 180.0F;
     }
 
-    private MovementCorrection movementCorrection() {
-        if (moveFix.is("Silent")) return MovementCorrection.Silent;
-        if (moveFix.is("Strict")) return MovementCorrection.Strict;
-        return MovementCorrection.None;
+    private MovementCorrection correction() {
+        return this.moveFix.is("Silent") ? MovementCorrection.Silent : MovementCorrection.None;
+    }
+
+    private void reset() {
+        this.target = null;
+        this.aimRotation = null;
+        blocking = false;
+        release();
+    }
+
+    private void release() {
+        if (instance != null && instance.getRotationManager() != null) {
+            instance.getRotationManager().clearRequest(this);
+        }
     }
 
     public LivingEntity getTarget() {
@@ -371,16 +222,11 @@ public class KillAura extends Module {
         return this.nextAttackAt;
     }
 
-    public long getLastSwitchAt() {
-        return this.lastSwitchAt;
-    }
-
     public boolean isRenderBlock() {
-        return this.renderBlock;
+        return false;
     }
 
     public boolean isUseKeyPressedByUs() {
-        return this.useKeyPressedByUs;
+        return false;
     }
-
 }
