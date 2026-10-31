@@ -39,7 +39,7 @@ public class KillAura extends Module {
     private final ModeValue rotation = new ModeValue("Rotation", "Snap", "Snap", "Smooth");
     private final NumberValue rotationSpeed = new NumberValue("Rotation Speed", 180, 20, 180, 10,
             () -> this.rotation.is("Smooth"));
-    private final ModeValue moveFix = new ModeValue("Move Fix", "Silent", "Silent", "None");
+    private final ModeValue moveFix = new ModeValue("Move Fix", "Silent", "Silent", "Strict", "None");
 
     private final NumberValue cpsMin = new NumberValue("CPS Min", 10, 1, 20, 1);
     private final NumberValue cpsMax = new NumberValue("CPS Max", 14, 1, 20, 1);
@@ -100,12 +100,15 @@ public class KillAura extends Module {
     private void tryAttack() {
         long now = System.currentTimeMillis();
         if (now < this.nextAttackAt) return;
+        if (mc.player.isUsingItem())return;
 
-        if (mc.player.getAttackStrengthScale(0.5F) < 1.0F) return;
+        if (mc.player != null && mc.player.getAttackStrengthScale(0.5F) < 1.0F) return;
 
         if (!inRange(this.target)) return;
 
-        mc.gameMode.attack(mc.player, this.target);
+        if (mc.gameMode != null) {
+            mc.gameMode.attack(mc.player, this.target);
+        }
 
         if (this.swing.getValue()) {
             mc.player.swing(InteractionHand.MAIN_HAND);
@@ -164,7 +167,10 @@ public class KillAura extends Module {
     private boolean visible(LivingEntity entity) {
         if (this.throughWalls.getValue()) return true;
 
-        Vec3 eye = mc.player.getEyePosition();
+        Vec3 eye = null;
+        if (mc.player != null) {
+            eye = mc.player.getEyePosition();
+        }
         Vec3 point = AimUtil.aimPoint(entity);
 
         BlockHitResult hit = mc.level.clip(new ClipContext(eye, point,
@@ -178,7 +184,11 @@ public class KillAura extends Module {
     }
 
     private MovementCorrection correction() {
-        return this.moveFix.is("Silent") ? MovementCorrection.Silent : MovementCorrection.None;
+        return switch (this.moveFix.getValue()) {
+            case "Strict" -> MovementCorrection.Strict;
+            case "None" -> MovementCorrection.None;
+            default -> MovementCorrection.Silent;
+        };
     }
 
     private void reset() {

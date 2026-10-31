@@ -9,6 +9,8 @@ import cn.leader.module.value.impl.ModeValue;
 import cn.leader.module.value.impl.NumberValue;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket;
+import net.minecraft.network.protocol.common.ClientboundPingPacket;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.phys.Vec3;
 
@@ -86,6 +88,12 @@ public class Velocity extends Module {
         if (event.getType() != PacketEvent.Type.Received) return;
         if (event.getPacket() instanceof ClientboundPlayerPositionPacket) {
             this.pause = this.pauseOnFlag.getValue().intValue();
+
+            if (buffer) {
+                serverPackets.clear();
+                buffer = false;
+                bufferTick = -1;
+            }
             return;
         }
         if (buffer) {
@@ -109,9 +117,10 @@ public class Velocity extends Module {
                 if(!buffer){
                     buffer = true;
                     bufferTick = 0;
-                    event.setCancelled(true);
                     Packet<ClientGamePacketListener> typedPacket = (Packet<ClientGamePacketListener>) event.getPacket();
                     serverPackets.add(typedPacket);
+                    event.setCancelled(true);
+
                 }
             }
 
@@ -149,15 +158,38 @@ public class Velocity extends Module {
             bufferTick++;
         }
     }
+
     @EventTarget
-    public void onMotion(MotionEvent event) {
+    public void onUpdate(UpdateEvent event) {
         if (mc.player == null) return;
-        if (!event.isPost() || !buffer) return;
+
+        if (this.pause > 0) this.pause--;
+
+        releaseBuffer();
+
+        if (this.pending != null) {
+            if (--this.pendingTicks <= 0) {
+                apply(this.pending);
+                this.pending = null;
+            }
+        }
+    }
+
+    @EventTarget
+    public void onMoveInput(MoveInputEvent event) {
+        if (!this.jumpPending) return;
+
+        this.jumpPending = false;
+        event.setJumping(true);
+    }
+
+    private void releaseBuffer() {
+        if (!buffer) return;
 
         boolean released = bufferTick >= delayTicks.getValue().intValue()
                 || mc.player.isSprinting()
                 || (mc.player.getLastSentInput() != null && mc.player.getLastSentInput().sprint())
-                || clientOnGround();
+                || mc.player.onGround();
 
         if (!released) return;
 
@@ -185,26 +217,6 @@ public class Velocity extends Module {
         }
     }
 
-    @EventTarget
-    public void onUpdate(UpdateEvent event) {
-        if (this.pause > 0) this.pause--;
-
-        if (this.pending != null) {
-            if (--this.pendingTicks <= 0) {
-                apply(this.pending);
-                this.pending = null;
-            }
-        }
-    }
-
-    @EventTarget
-    public void onMoveInput(MoveInputEvent event) {
-        if (!this.jumpPending) return;
-
-        this.jumpPending = false;
-        event.setJumping(true);
-    }
-
     private void apply(Vec3 velocity) {
         if (mc.player == null) return;
         mc.player.setDeltaMovement(velocity);
@@ -213,7 +225,9 @@ public class Velocity extends Module {
         if (mc.player == null) return false;
 
         Packet<?> packet = event.getPacket();
-        return packet instanceof ClientboundSetHealthPacket
+        return packet instanceof ClientboundPingPacket
+                || packet instanceof ClientboundKeepAlivePacket
+                || packet instanceof ClientboundSetHealthPacket
                 || packet instanceof ClientboundPlayerPositionPacket
                 || packet instanceof ClientboundSoundPacket
                 || packet instanceof ClientboundPlayerChatPacket
