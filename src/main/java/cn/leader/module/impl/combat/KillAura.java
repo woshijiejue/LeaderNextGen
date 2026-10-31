@@ -77,6 +77,7 @@ public class KillAura extends Module {
     private LivingEntity target;
     private float[] aimRotation;
     private long nextAttackAt;
+    private boolean requesting;
     private long lastSwitchAt;
     private boolean renderBlock;
     private boolean useKeyPressedByUs;
@@ -104,6 +105,17 @@ public class KillAura extends Module {
         lastSwitchAt = 0L;
         releaseBlock();
 
+        releaseRotation();
+    }
+
+    /**
+     * Drop the rotation request only if we were the one holding it. The manager has a single slot, so
+     * an always-on clear would silently cancel Scaffold (or any other aim) every single tick.
+     */
+    private void releaseRotation() {
+        if (!this.requesting) return;
+
+        this.requesting = false;
         if (instance != null && instance.getRotationManager() != null) {
             instance.getRotationManager().clearRequest();
         }
@@ -124,7 +136,7 @@ public class KillAura extends Module {
         if (target == null) {
             aimRotation = null;
             releaseBlock();
-            instance.getRotationManager().clearRequest();
+            releaseRotation();
             if (debug.getValue()) setSuffix("idle");
             return;
         }
@@ -132,6 +144,7 @@ public class KillAura extends Module {
         updateAutoBlock();
 
         aimRotation = AimUtil.rotationTo(AimUtil.aimPoint(target));
+        this.requesting = true;
         instance.getRotationManager().request(aimRotation, rotationSpeed.getValue(), movementCorrection());
 
         if (debug.getValue()) setSuffix("target");
