@@ -73,26 +73,10 @@ public final class ModuleList extends Drag {
         }
         this.width = maxWidth;
 
-        // Zero spacing uses one compact background surface.  It deliberately
-        // skips the per-row post effect so adjacent rows do not build up into a
-        // heavy, full-column shadow.
+        // Zero spacing is still a background layout, but each row owns its own
+        // surface.  Never create one background rectangle for the whole list:
+        // that turns the ArrayList into a large black block.
         boolean compactLayout = gap <= 0.01F;
-
-        if (compactLayout && background.getValue() && maxWidth > 0.0F) {
-            float compactHeight = 0.0F;
-            for (Module module : modules) {
-                module.getAnimation().run(module.isEnabled() ? 1 : 0);
-                float progress = (float) module.getAnimation().getValue();
-                if (progress > 0.02F) compactHeight += rowHeight * progress;
-            }
-
-            if (compactHeight > 0.0F) {
-                float compactX = right ? renderX - maxWidth : renderX;
-                PanelRenderer.panel(canvas, compactX, renderY, maxWidth,
-                        Math.max(rowHeight, compactHeight), radius, 1.0F,
-                        PanelRenderer.accent(0), false);
-            }
-        }
 
         float offsetY = renderY;
         float contentBottom = renderY;
@@ -113,8 +97,12 @@ public final class ModuleList extends Drag {
             contentBottom = Math.max(contentBottom, y + rowHeight);
             int color = PanelRenderer.accent(index * 2);
 
-            if (background.getValue() && !compactLayout) {
-                PanelRenderer.panel(canvas, x, y, boxWidth, rowHeight, radius, progress, color);
+            if (background.getValue()) {
+                // In compact mode the rows touch, but remain separate panels.
+                // Keep post-processing enabled for normal spacing and use the
+                // lightweight panel path for zero spacing to avoid shadow buildup.
+                PanelRenderer.panel(canvas, x, y, boxWidth, rowHeight, radius,
+                        progress, color, !compactLayout);
             } else if (!compactLayout) {
                 SkiaRender.roundRect(canvas, x, y, boxWidth, rowHeight, radius,
                         SkiaRender.alpha(0xFF101014, 0.22F * progress));
