@@ -125,7 +125,7 @@ public class KillAura extends Module {
             aimRotation = null;
             releaseBlock();
             instance.getRotationManager().clearRequest();
-            setSuffix("");
+            if (debug.getValue()) setSuffix("idle");
             return;
         }
 
@@ -134,7 +134,7 @@ public class KillAura extends Module {
         aimRotation = AimUtil.rotationTo(AimUtil.aimPoint(target));
         instance.getRotationManager().request(aimRotation, rotationSpeed.getValue(), movementCorrection());
 
-        setSuffix(target.getName().getString());
+        if (debug.getValue()) setSuffix("target");
     }
 
     private boolean canRun() {
@@ -241,7 +241,7 @@ public class KillAura extends Module {
         }
 
         if (reach > effectiveRange()) {
-            if (debug.getValue()) setSuffix(String.format("far %.2f", reach));
+            if (debug.getValue()) setSuffix("far");
             return;
         }
 
@@ -255,7 +255,7 @@ public class KillAura extends Module {
         attack(target);
         scheduleNextAttack();
 
-        if (debug.getValue()) setSuffix(String.format("%.2f", reach));
+        if (debug.getValue()) setSuffix("hit");
     }
 
     private void attack(LivingEntity entity) {

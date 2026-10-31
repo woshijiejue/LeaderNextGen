@@ -86,6 +86,7 @@ public final class Scaffold extends Module {
     private int airTicks;
     private boolean canRotate;
     private float lastYaw;
+    private String lastMode = "";
 
     public Scaffold() {
         super("Scaffold", Category.Movement);
@@ -100,6 +101,8 @@ public final class Scaffold extends Module {
         airTicks = 0;
         canRotate = false;
         previousSlot = mc.player == null ? -1 : mc.player.getInventory().getSelectedSlot();
+        lastMode = "";
+        setSuffix(mode.getValue());
     }
 
     @Override
@@ -129,6 +132,11 @@ public final class Scaffold extends Module {
         } else {
             airTicks++;
             groundTicks = 0;
+        }
+
+        if (!mode.getValue().equals(lastMode)) {
+            lastMode = mode.getValue();
+            setSuffix(lastMode);
         }
 
         if (pauseOnAura.getValue() && auraBusy()) {
@@ -166,7 +174,7 @@ public final class Scaffold extends Module {
         instance.getRotationManager().request(new float[]{aim[0], aim[1]},
                 rotationSpeed.getValue(), MovementCorrection.Silent);
 
-        if (debug.getValue()) setSuffix(String.format("normal %.0f", aim[0]));
+        if (debug.getValue()) setSuffix("normal");
     }
 
     private void aimGrim() {
@@ -177,7 +185,7 @@ public final class Scaffold extends Module {
         instance.getRotationManager().request(new float[]{yaw, aim[1]},
                 rotationSpeed.getValue(), MovementCorrection.Silent);
 
-        if (debug.getValue()) setSuffix(String.format("grim %.0f", aim[0]));
+        if (debug.getValue()) setSuffix("grim");
     }
 
     /**
@@ -213,7 +221,7 @@ public final class Scaffold extends Module {
                     limit, MovementCorrection.Silent);
         }
 
-        if (debug.getValue()) setSuffix(String.format("hypixel %.0f", aim[0]));
+        if (debug.getValue()) setSuffix("hypixel");
     }
 
     // ------------------------------------------------------------------ placing
@@ -244,7 +252,7 @@ public final class Scaffold extends Module {
 
         BlockHitResult hit = raycast(server[0], server[1]);
         if (hit == null || !hit.getBlockPos().equals(placement.support)) {
-            if (debug.getValue()) setSuffix("wait rotation");
+            if (debug.getValue()) setSuffix("wait");
             return;
         }
 

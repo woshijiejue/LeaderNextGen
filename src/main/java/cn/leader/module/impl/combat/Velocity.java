@@ -160,7 +160,7 @@ public class Velocity extends Module {
 
         if (mode.is("Legit")) {
             ticksLeft = Mth.clamp((int) Math.ceil(horizontal / 0.12D), 2, window.getValue().intValue());
-            setSuffix(String.format("Legit %.2f", horizontal));
+            setSuffix("Legit");
             return;
         }
 
@@ -188,7 +188,7 @@ public class Velocity extends Module {
             armed = true;
         }
 
-        setSuffix(String.format("Hypixel %.2f", horizontal));
+        setSuffix("Hypixel");
     }
 
     /**
