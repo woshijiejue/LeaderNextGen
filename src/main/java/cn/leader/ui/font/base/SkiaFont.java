@@ -34,7 +34,7 @@ public class SkiaFont {
             FontMetrics fallbackMetrics = this.fallback.getMetrics();
             this.fallbackAscent = -fallbackMetrics.getAscent();
             this.fallbackDescent = fallbackMetrics.getDescent();
-            // Keep both font faces vertically centered on a shared baseline.
+
             this.fallbackShift = ((this.fallbackAscent - this.fallbackDescent)
                     - (this.ascent - this.primaryDescent)) * 0.5F;
         }
@@ -91,8 +91,7 @@ public class SkiaFont {
             if (seg.blob() != null) {
                 int rgb = seg.color() == FontCache.BASE_COLOR ? baseColor & 0xFFFFFF : seg.color();
                 paint.setColor(shadow ? (alpha << 24) : (alpha << 24) | rgb);
-                // Shaper.shape() stores glyphs around its own baseline. Normalize
-                // that baseline before applying our HUD baseline.
+
                 canvas.drawTextBlob(seg.blob(), offsetX,
                         baseline - seg.blobBaseline() + (seg.fallback() ? fallbackShift : 0), paint);
             }

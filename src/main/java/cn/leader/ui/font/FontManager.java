@@ -71,7 +71,7 @@ public class FontManager {
     }
 
     private static Typeface load(String file) {
-        try (InputStream is = SkiaFont.class.getResourceAsStream("/assets/clientbase/fonts/" + file)) {
+        try (InputStream is = SkiaFont.class.getResourceAsStream("/assets/leadernextgen/fonts/" + file)) {
             if (is == null) {
                 throw new IllegalStateException("Font resource not found: " + file);
             }

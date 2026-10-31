@@ -6,10 +6,6 @@ import cn.leader.module.Module;
 import cn.leader.util.Util;
 import net.minecraft.ChatFormatting;
 
-/**
- * Prints what build is actually running. Useful when a stale jar or stale build resources make
- * the version in the title bar disagree with what was expected.
- */
 public final class InfoCommand extends Command {
 
     public InfoCommand() {

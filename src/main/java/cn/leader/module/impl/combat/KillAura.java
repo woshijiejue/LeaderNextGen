@@ -25,16 +25,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * KillAura.
- *
- * <p>Same flow as LiquidBounce: collect candidates, sort them, aim at the closest point of the
- * hitbox, then click on a CPS schedule. The rotation is deliberately plain - either an instant snap
- * or a linear turn at a fixed degrees per tick, nothing that tries to imitate mouse input.</p>
- */
 public class KillAura extends Module {
 
-    /** NoSlow reads this to decide whether a sword has to be held for blocking. */
     public static boolean blocking;
 
     private final NumberValue range = new NumberValue("Range", 3.0F, 1.0F, 6.0F, 0.1F);
@@ -79,8 +71,6 @@ public class KillAura extends Module {
         release();
     }
 
-    // ------------------------------------------------------------------ tick
-
     @EventTarget
     public void onUpdate(UpdateEvent event) {
         if (mc.player == null || mc.level == null || mc.gameMode == null) {
@@ -111,7 +101,6 @@ public class KillAura extends Module {
         long now = System.currentTimeMillis();
         if (now < this.nextAttackAt) return;
 
-        // Respect the 1.9+ attack cooldown so hits are never weakened.
         if (mc.player.getAttackStrengthScale(0.5F) < 1.0F) return;
 
         if (!inRange(this.target)) return;
@@ -136,8 +125,6 @@ public class KillAura extends Module {
 
         return (long) (1000.0F / Math.max(1.0F, cps));
     }
-
-    // ------------------------------------------------------------------ targeting
 
     private LivingEntity selectTarget() {
         double reach = effectiveRange();
@@ -174,7 +161,6 @@ public class KillAura extends Module {
                 : this.range.getValue().doubleValue();
     }
 
-    /** Line of sight to the aim point; skipped entirely when Through Walls is on. */
     private boolean visible(LivingEntity entity) {
         if (this.throughWalls.getValue()) return true;
 
@@ -186,8 +172,6 @@ public class KillAura extends Module {
 
         return hit.getType() == HitResult.Type.MISS;
     }
-
-    // ------------------------------------------------------------------ helpers
 
     private float requestSpeed() {
         return this.rotation.is("Smooth") ? this.rotationSpeed.getValue() : 180.0F;

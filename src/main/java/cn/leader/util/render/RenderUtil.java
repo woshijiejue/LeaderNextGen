@@ -16,7 +16,7 @@ public final class RenderUtil implements IMinecraft {
     public static final Matrix4f lastWorldSpaceMatrix = new Matrix4f();
 
     public static @NotNull Vec3 worldSpaceToScreenSpace(@NotNull Vec3 pos) {
-        // projectPointToScreen returns normalised device coordinates (-1..1), not pixels.
+
         Vec3 ndc = mc.gameRenderer.projectPointToScreen(pos);
 
         double width = mc.getWindow().getGuiScaledWidth();
@@ -24,7 +24,7 @@ public final class RenderUtil implements IMinecraft {
 
         double screenX = (ndc.x + 1.0D) * 0.5D * width;
         double screenY = (1.0D - ndc.y) * 0.5D * height;
-        double depth = (ndc.z + 1.0D) * 0.5D; // 0 = at the camera, 1 = far plane
+        double depth = (ndc.z + 1.0D) * 0.5D;
 
         return new Vec3(screenX, screenY, depth);
     }
@@ -57,9 +57,6 @@ public final class RenderUtil implements IMinecraft {
         graphics.fill(Math.round(x), Math.round(y), Math.round(x + width), Math.round(y + height), color);
     }
 
-    /**
-     * 26.2 only offers a vertical gradient, so the horizontal case is emulated with strips.
-     */
     public static void drawGradientRect(GuiGraphicsExtractor graphics, float x, float y, float width, float height,
                                  int startColor, int endColor, boolean horizontal) {
         if (!horizontal) {

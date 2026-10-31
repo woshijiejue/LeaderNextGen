@@ -77,7 +77,6 @@ public class MotionEvent extends Event.StateEvent {
         this.horizontalCollision = horizontalCollision;
     }
 
-
     public float getYRot() {
         return this.yaw;
     }

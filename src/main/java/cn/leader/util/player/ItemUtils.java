@@ -24,7 +24,6 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.item.BlockItem;
 
-
 public class ItemUtils {
     public static final List<Block> blacklistedBlocks = Arrays.asList(
             Blocks.AIR, Blocks.WATER, Blocks.LAVA, Blocks.ENCHANTING_TABLE,
@@ -145,9 +144,9 @@ public class ItemUtils {
                 if (effect.getDescriptionId().contains("jump_boost")) {
                     return true;
                 }
-//                if (effect.getCategory() == StatusEffectCategory.HARMFUL)
+
             }
-//            return Client.moduleManager.getModule(InventoryManager.class).keepPotion.get();
+
         }
 
         if (stack.getItem() == Items.COMPASS) return true;

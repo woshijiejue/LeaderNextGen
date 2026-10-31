@@ -1,6 +1,5 @@
 package cn.leader.util.animation;
 
-
 public class EasingAnimation {
 
     private Easing easing;
@@ -19,11 +18,6 @@ public class EasingAnimation {
         this.duration = duration;
     }
 
-    /**
-     * Updates the animation by using the easing function and time
-     *
-     * @param destinationValue the value that the animation is going to reach
-     */
     public void run(final double destinationValue) {
         this.millis = System.currentTimeMillis();
         if (this.destinationValue != destinationValue) {
@@ -45,18 +39,10 @@ public class EasingAnimation {
         }
     }
 
-    /**
-     * Returns the progress of the animation
-     *
-     * @return value between 0 and 1
-     */
     public double getProgress() {
         return (double) (System.currentTimeMillis() - this.startTime) / (double) this.duration;
     }
 
-    /**
-     * Resets the animation to the start value
-     */
     public void reset() {
         this.startTime = System.currentTimeMillis();
         this.startValue = value;

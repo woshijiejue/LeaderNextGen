@@ -9,12 +9,6 @@ import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.NumberValue;
 import cn.leader.util.misc.TimerUtil;
 
-/**
- * Small periodic movement so an idle session does not get kicked for inactivity.
- *
- * <p>Everything here goes through normal input and normal look packets, so it is indistinguishable
- * from a player wiggling the mouse and tapping space.</p>
- */
 public final class AntiAFK extends Module {
 
     private final NumberValue interval = new NumberValue("Interval", 1800, 200, 8000, 100);

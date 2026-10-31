@@ -20,8 +20,6 @@ public final class PacketUtil implements IMinecraft {
         sendPacket(packet);
     }
 
-
-
     @SuppressWarnings("unchecked")
     public static void receivePacket(Packet<?> packet) {
         if (mc.getConnection() == null) return;

@@ -7,12 +7,6 @@ import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.NumberValue;
 
-/**
- * Keeps the vanilla "use item" cooldown pinned to a small value.
- *
- * <p>Only the client side cooldown is touched; the server still decides how often an use packet is
- * accepted, so this is a responsiveness feature rather than a placement speed hack.</p>
- */
 public final class FastPlace extends Module {
 
     private final NumberValue cooldown = new NumberValue("Cooldown", 0, 0, 4, 1);

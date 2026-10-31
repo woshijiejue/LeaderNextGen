@@ -107,7 +107,6 @@ public abstract class Module implements IMinecraft {
         this.key = value;
     }
 
-
     public List<Value> getValues() {
         return this.values;
     }

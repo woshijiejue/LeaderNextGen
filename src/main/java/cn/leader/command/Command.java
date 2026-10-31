@@ -1,6 +1,5 @@
 package cn.leader.command;
 
-
 import java.util.ArrayList;
 import java.util.List;
 

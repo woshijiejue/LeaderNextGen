@@ -151,8 +151,6 @@ public final class InventoryUtils {
     }
     @SuppressWarnings("RedundantIfStatement")
 
-
-
     public static float getBestSwordDamage() {
         return getAllItems().stream().filter(item -> !item.isEmpty() && item.is(net.minecraft.tags.ItemTags.SWORDS) && ItemUtils.isValidItem(item)).map(InventoryUtils::getSwordDamage).max(Float::compareTo).orElse(0f);
     }
@@ -500,11 +498,10 @@ public final class InventoryUtils {
         if (stack.isEmpty()) {
             return false;
         } else {
-            // 判断是否为金斧头且 Sharpness 附魔等级大于 100
+
             return stack.getItem() == Items.GOLDEN_AXE && getEnchantLevel(stack, Enchantments.SHARPNESS) > 100;
         }
     }
-
 
     public static boolean isEnchantedGApple(ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE;
@@ -529,7 +526,6 @@ public final class InventoryUtils {
             return stack.getItem() == Items.STICK && getEnchantLevel(stack, Enchantments.KNOCKBACK) > 1;
         }
     }
-
 
     public static int getPunchLevel(ItemStack stack) {
         return getEnchantLevel(stack, Enchantments.PUNCH);

@@ -32,16 +32,6 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.Random;
 
-/**
- * Automatic bridging.
- *
- * <p>Placement logic follows Epsilon's Scaffold: search for an existing block that can be clicked to
- * fill the hole below us, aim at a verified point on its face, then place. The click is fired from
- * the top of the player tick, before this tick's movement packet exists.</p>
- *
- * <p>Rotation is intentionally primitive: {@code Snap} turns instantly, {@code Smooth} turns at
- * {@code Rotation Speed} degrees per tick. Nothing emulates mouse input.</p>
- */
 public final class Scaffold extends Module {
 
     private final ModeValue mode = new ModeValue("Mode", "Normal", "Normal", "Telly");
@@ -61,18 +51,15 @@ public final class Scaffold extends Module {
     private final NumberValue placeDelayMin = new NumberValue("Min Place Delay", 0, 0, 200, 1);
     private final NumberValue placeDelayMax = new NumberValue("Max Place Delay", 50, 0, 200, 1);
 
-    // Reduced rotation point tuning
     private final NumberValue searchStep = new NumberValue("Search Step", 0.02F, 0.01F, 0.1F, 0.01F,
             () -> this.rotationPoint.is("Reduced"));
     private final NumberValue inset = new NumberValue("Inset", 0.1F, 0.05F, 0.1F, 0.01F,
             () -> this.rotationPoint.is("Reduced"));
     private final BoolValue jitter = new BoolValue("Jitter", true, () -> this.rotationPoint.is("Reduced"));
 
-    // Addons
     private final BoolValue keepY = new BoolValue("Keep Y", false);
     private final BoolValue autoSneak = new BoolValue("Auto Sneak", false);
 
-    // Telly timing
     private final ModeValue placeableMode = new ModeValue("Placeable Mode", "Check Height",
             () -> this.mode.is("Telly"), "Check Height", "Check Tick", "Off");
     private final NumberValue height = new NumberValue("Height", 0.5F, 0, 1.25F, 0.05F,
@@ -86,7 +73,6 @@ public final class Scaffold extends Module {
     private final NumberValue jumpDelayMin = new NumberValue("Min Jump Delay", 1, 0, 3, 1, () -> this.mode.is("Telly"));
     private final NumberValue jumpDelayMax = new NumberValue("Max Jump Delay", 2, 0, 3, 1, () -> this.mode.is("Telly"));
 
-    // Movement fix, plus how far a forward-facing turn may swing the view
     private final ModeValue moveFix = new ModeValue("Move Fix", "Silent", "Silent", "Strict", "None");
     private final NumberValue forwardYawLimit = new NumberValue("Forward Yaw Limit", 180, 15, 180, 5);
 
@@ -135,13 +121,10 @@ public final class Scaffold extends Module {
         }
     }
 
-    // ------------------------------------------------------------------ tick
-
     @EventTarget
     public void onUpdate(UpdateEvent event) {
         if (mc.player == null || mc.level == null || mc.gameMode == null) return;
 
-        // One rotation slot: never fight the aura for the view.
         if (auraBusy()) {
             this.canPlace = false;
             return;
@@ -218,7 +201,6 @@ public final class Scaffold extends Module {
         place(info, hit, requested);
     }
 
-    /** Where the search measures angles from: our current aim, otherwise the camera. */
     private float[] referenceRotation() {
         if (instance.getRotationManager() != null && instance.getRotationManager().isActive()) {
             return RotationManager.currentRotations;
@@ -235,8 +217,6 @@ public final class Scaffold extends Module {
 
         return target;
     }
-
-    // ------------------------------------------------------------------ placing
 
     private void place(PlaceInfo info, PlaceInfo.Hit hit, float[] requested) {
         if (hit.vec() == null || !shouldBuild()) return;
@@ -272,7 +252,6 @@ public final class Scaffold extends Module {
         }
     }
 
-    /** Optional pre-flight check that the chosen face is really what we are looking at. */
     private boolean passesRaycast(PlaceInfo info, PlaceInfo.Hit hit, float[] requested) {
         switch (this.raycast.getValue()) {
             case "Simple" -> {
@@ -316,8 +295,6 @@ public final class Scaffold extends Module {
         }
     }
 
-    // ------------------------------------------------------------------ movement
-
     @EventTarget
     public void onMoveInput(MoveInputEvent event) {
         if (!this.mode.is("Telly") || mc.player == null) return;
@@ -334,8 +311,6 @@ public final class Scaffold extends Module {
     public void onWorldChange(WorldEvent event) {
         setEnabled(false);
     }
-
-    // ------------------------------------------------------------------ inventory
 
     private void switchBlock() {
         if (ItemUtils.isNotInBlockBlacklist(mc.player.getOffhandItem())) return;
@@ -391,9 +366,6 @@ public final class Scaffold extends Module {
         return best;
     }
 
-    // ------------------------------------------------------------------ helpers
-
-    /** Lock the build row to the one the player started on, unless they are jumping. */
     private int computePlaceY() {
         if (jumpKeyDown() && !this.keepY.getValue()) {
             return this.baseY = Mth.floor(mc.player.getY() - 1.0D);
@@ -406,7 +378,6 @@ public final class Scaffold extends Module {
         return this.baseY;
     }
 
-    /** Only build while the space under the feet is actually empty. */
     private boolean shouldBuild() {
         BlockPos under = BlockPos.containing(mc.player.getX(), mc.player.getY() - 0.5D, mc.player.getZ());
         return mc.level.getBlockState(under).isAir();
@@ -446,7 +417,6 @@ public final class Scaffold extends Module {
         };
     }
 
-    /** Keeps forward bridging from swinging the view past the configured limit. */
     private float[] clampForward(float[] rotation) {
         float limit = this.forwardYawLimit.getValue();
         if (limit >= 180.0F || !forwardKeyDown()) return rotation;

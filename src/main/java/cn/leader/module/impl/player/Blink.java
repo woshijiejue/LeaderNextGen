@@ -6,12 +6,6 @@ import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.util.network.BlinkUtils;
 
-/**
- * Holds outgoing packets and flushes them on disable.
- *
- * <p>Useful for short disconnects and for testing, but note that a long blink is a visible
- * teleport to the server: any movement simulation will treat it as such.</p>
- */
 public final class Blink extends Module {
 
     public Blink() {

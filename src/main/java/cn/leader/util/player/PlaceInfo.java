@@ -18,22 +18,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-/**
- * A block we already know how to reach: {@link #getBlockPos()} is the existing block that has to be
- * clicked, {@link #getDirection()} is the face of that block facing the hole we want to fill.
- *
- * <p>The point of this class is that a placement packet is only accepted when the look direction the
- * <em>server</em> holds actually intersects that face - not when it merely points somewhere close.
- * Every rotation produced here is therefore verified with a ray cast before it is returned.</p>
- *
- * @author Jon_awa (original), ported to 26.2
- */
 public final class PlaceInfo implements IMinecraft {
 
-    /**
-     * Sample grid on a block face, 1/32 apart. Fine enough to always land inside the face while
-     * staying cheap: at most 16 x 16 rays per axis.
-     */
     private static final double[] PLACE_OFFSETS = {
             0.03125D, 0.09375D, 0.15625D, 0.21875D, 0.28125D, 0.34375D, 0.40625D, 0.46875D,
             0.53125D, 0.59375D, 0.65625D, 0.71875D, 0.78125D, 0.84375D, 0.90625D, 0.96875D
@@ -68,12 +54,6 @@ public final class PlaceInfo implements IMinecraft {
         };
     }
 
-    // ------------------------------------------------------------------ rotation points
-
-    /**
-     * Face centres first (the cheapest and most forgiving rays), then fall back to the nearest point
-     * on the face so a partially occluded block still gets a usable angle.
-     */
     private Hit normal(float[] reference) {
         Vec3 eye = mc.player.getEyePosition();
         Vec3 base = Vec3.atLowerCornerOf(this.blockPos);
@@ -98,7 +78,6 @@ public final class PlaceInfo implements IMinecraft {
         return reference == null ? null : nearest(reference);
     }
 
-    /** Closest of the two corners on the side the player is already looking from. */
     private Hit corner(float[] reference) {
         if (reference == null) return null;
 
@@ -131,10 +110,6 @@ public final class PlaceInfo implements IMinecraft {
         return new Hit(corner, rotationTo(eye, corner));
     }
 
-    /**
-     * Grid sweep over the clicked face: pick the sample whose angle is cheapest to reach from the
-     * reference rotation. This is what keeps bridging from snapping the view around wildly.
-     */
     private Hit nearest(float[] reference) {
         double[] xs = PLACE_OFFSETS;
         double[] ys = PLACE_OFFSETS;
@@ -177,10 +152,6 @@ public final class PlaceInfo implements IMinecraft {
         return reference == null ? null : new Hit(null, reference);
     }
 
-    /**
-     * Full search with configurable inset and step. Candidates are sorted by how little they differ
-     * from the current rotation, then verified one by one until the ray lands on the expected face.
-     */
     private Hit reduced(float[] reference, SearchSettings settings) {
         if (reference == null) return nearest(null);
 
@@ -260,8 +231,6 @@ public final class PlaceInfo implements IMinecraft {
         return nearest(reference);
     }
 
-    // ------------------------------------------------------------------ helpers
-
     public static boolean canPlaceOnSide(ItemStack stack, BlockPos pos, Direction side) {
         if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem blockItem)) return false;
 
@@ -311,7 +280,6 @@ public final class PlaceInfo implements IMinecraft {
         return Math.abs(Mth.wrapDegrees(rotation[0] - baseYaw)) + Math.abs(rotation[1] - basePitch);
     }
 
-    /** Neutralise the 360 wrap so the value can be fed back into a rotation request. */
     private static float normalize(float yaw) {
         float value = yaw % 360.0F;
         if (value < 0.0F) value += 360.0F;
@@ -319,14 +287,10 @@ public final class PlaceInfo implements IMinecraft {
         return value;
     }
 
-    /** Rotate a normalised yaw back into the branch closest to the previous yaw. */
     private static float unwrap(float yaw, float reference) {
         return reference + Mth.wrapDegrees(yaw - reference);
     }
 
-    // ------------------------------------------------------------------ types
-
-    /** Resolved aim. {@code vec} is null when no ray could be verified, in which case nothing is placed. */
     public record Hit(Vec3 vec, float[] rotation) {
         public float yaw() {
             return this.rotation[0];
@@ -337,7 +301,6 @@ public final class PlaceInfo implements IMinecraft {
         }
     }
 
-    /** Tweaking for the {@code Reduced} search point, exposed on the module. */
     public record SearchSettings(double inset, double step, boolean jitter) {
     }
 

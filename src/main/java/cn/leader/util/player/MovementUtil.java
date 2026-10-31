@@ -55,30 +55,19 @@ public final class MovementUtil implements IMinecraft {
 
         float forward = event.getForward();
         float strafe = event.getStrafe();
-        double angle = Mth.wrapDegrees(Math.toDegrees(getDirection(mc.player.getYRot(), forward, strafe)));
 
-        if (forward == 0 && strafe == 0) return;
+        if (forward == 0.0F && strafe == 0.0F) return;
 
-        float closestForward = 0, closestStrafe = 0;
-        float closestDifference = Float.MAX_VALUE;
+        float delta = Mth.wrapDegrees(mc.player.getYRot() - yaw);
+        float radians = delta * ((float) Math.PI / 180.0F);
+        float cos = Mth.cos(radians);
+        float sin = Mth.sin(radians);
 
-        for (float predictedForward = -1F; predictedForward <= 1F; predictedForward += 1F) {
-            for (float predictedStrafe = -1F; predictedStrafe <= 1F; predictedStrafe += 1F) {
-                if (predictedStrafe == 0 && predictedForward == 0) continue;
+        float rotatedStrafe = strafe * cos - forward * sin;
+        float rotatedForward = forward * cos + strafe * sin;
 
-                double predictedAngle = Mth.wrapDegrees(Math.toDegrees(getDirection(yaw, predictedForward, predictedStrafe)));
-                double difference = Math.abs(angle - predictedAngle);
-
-                if (difference < closestDifference) {
-                    closestDifference = (float) difference;
-                    closestForward = predictedForward;
-                    closestStrafe = predictedStrafe;
-                }
-            }
-        }
-
-        event.setForward(closestForward);
-        event.setStrafe(closestStrafe);
+        event.setStrafe(Math.round(rotatedStrafe));
+        event.setForward(Math.round(rotatedForward));
     }
 
     public static Vec3 movementInputToVelocity(Vec3 movementInput, float speed, float yaw) {

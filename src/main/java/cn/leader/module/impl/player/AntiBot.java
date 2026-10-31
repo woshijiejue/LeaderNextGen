@@ -6,12 +6,6 @@ import cn.leader.module.value.impl.BoolValue;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
-/**
- * Filters server side NPCs out of targeting.
- *
- * <p>Two cheap and reliable signals: an entity that renders like a player but is missing from the
- * tab list is not a real player, and two entities sharing a name cannot both be real.</p>
- */
 public final class AntiBot extends Module {
 
     private final BoolValue notInTab = new BoolValue("Not In Tab", true);

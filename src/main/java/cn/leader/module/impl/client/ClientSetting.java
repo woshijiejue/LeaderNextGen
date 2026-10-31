@@ -27,7 +27,6 @@ public class ClientSetting extends Module {
         setEnabled(true);
     }
 
-
     public MultiBoolValue getTarget() {
         return this.target;
     }

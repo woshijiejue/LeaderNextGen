@@ -12,7 +12,7 @@
   "environment": "client",
   "entrypoints": {},
   "mixins": [
-    "clientbase.mixins.json"
+    "leadernextgen.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",

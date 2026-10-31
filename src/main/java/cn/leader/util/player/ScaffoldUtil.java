@@ -28,22 +28,12 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Finds a block that can be clicked to fill the hole below the player.
- *
- * <p>Two search strategies, both returning a {@link PlaceInfo} (the block to click plus the face):
- * {@code Normal} walks outwards from the hole and takes the first solid neighbour, {@code Distance}
- * scans the area around the feet and picks whatever is closest, which is what telly bridging needs
- * because the support is usually behind or below rather than beside.</p>
- */
 public final class ScaffoldUtil implements IMinecraft {
 
-    /** Faces worth checking around a hole: the four sides and the block below. */
     private static final Direction[] SEARCH_FACES = {
             Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH, Direction.UP
     };
 
-    /** Neighbour offsets, index aligned with {@link #PLACE_FACES}. */
     private static final int[][] NEIGHBOUR_OFFSETS = {
             {0, 1, 0},
             {1, 0, 0},
@@ -68,12 +58,6 @@ public final class ScaffoldUtil implements IMinecraft {
         };
     }
 
-    // ------------------------------------------------------------------ normal
-
-    /**
-     * Breadth first outwards from the hole. The immediate neighbours are checked first, then two
-     * extra rings (so a block two cells away still counts), then the floor below.
-     */
     private static PlaceInfo searchNormal(BlockPos origin) {
         if (mc.level == null) return null;
 
@@ -106,12 +90,6 @@ public final class ScaffoldUtil implements IMinecraft {
         return null;
     }
 
-    // ------------------------------------------------------------------ distance
-
-    /**
-     * Area scan used while telly bridging: take the solid block closest to the feet, then pick the
-     * neighbouring cell that both accepts a placement and is closer than the block itself.
-     */
     private static PlaceInfo searchDistance(BlockPos origin) {
         if (mc.player == null || mc.level == null) return null;
 
@@ -173,8 +151,7 @@ public final class ScaffoldUtil implements IMinecraft {
         int bz = blockPos.getZ();
 
         for (int index = 0; index < NEIGHBOUR_OFFSETS.length; index++) {
-            // Placing straight up is only worth it while rising, otherwise we would build into our
-            // own head every tick.
+
             if (index == 0 && !jumping) continue;
 
             int[] offset = NEIGHBOUR_OFFSETS[index];
@@ -208,7 +185,6 @@ public final class ScaffoldUtil implements IMinecraft {
         return bestDistance < current ? bestFace : null;
     }
 
-    /** Rough reachability test for the block above: the face must be in front of the eyes. */
     private static boolean hasLineOfSight(BlockPos pos, Direction face) {
         if (mc.player == null) return false;
 
@@ -240,9 +216,6 @@ public final class ScaffoldUtil implements IMinecraft {
                 Mth.clamp(feet.z, pos.getZ() + box.minZ + 0.05D, pos.getZ() + box.maxZ - 0.05D));
     }
 
-    // ------------------------------------------------------------------ shared checks
-
-    /** True when a block can be put down at this position (air, replaceable, low snow). */
     public static boolean canPlaceAt(BlockPos pos) {
         if (mc.level == null) return false;
 
@@ -259,7 +232,6 @@ public final class ScaffoldUtil implements IMinecraft {
         return state.canBeReplaced();
     }
 
-    /** A block worth clicking: solid and not air. */
     public static boolean isAttachable(BlockPos pos) {
         if (mc.level == null) return false;
 
@@ -267,7 +239,6 @@ public final class ScaffoldUtil implements IMinecraft {
         return !state.isAir() && !state.getCollisionShape(mc.level, pos).isEmpty();
     }
 
-    /** Blocks that open a screen when clicked - never use them as scaffolding support. */
     public static boolean isInteractable(BlockPos pos) {
         if (mc.level == null) return false;
 
@@ -286,7 +257,6 @@ public final class ScaffoldUtil implements IMinecraft {
                 || block instanceof JukeboxBlock;
     }
 
-    /** Raw key state, independent of whether a screen currently swallows the key mapping. */
     private static boolean jumpKeyDown() {
         return InputConstants.isKeyDown(mc.getWindow(), mc.options.keyJump.getDefaultKey().getValue());
     }

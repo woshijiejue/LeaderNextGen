@@ -149,11 +149,9 @@ public final class RotationUtil implements IMinecraft {
                 pitch -= (float) (Math.random() / 200000000);
             }
 
-            // Fixing GCD
             float[] rotations = new float[]{yaw, pitch};
             float[] fixedRotations = applySensitivityPatch(rotations);
 
-            // Setting rotations
             if (fixedRotations != null) {
                 yaw = fixedRotations[0];
                 pitch = Mth.clamp(fixedRotations[1], -90.0F, 90.0F);

@@ -19,7 +19,6 @@ import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 
 import java.util.concurrent.LinkedBlockingDeque;
 
-
 public class BlinkUtils implements IMinecraft {
     private static final LinkedBlockingDeque<Packet<ClientGamePacketListener>> serverPackets = new LinkedBlockingDeque<>();
     private static final LinkedBlockingDeque<Packet<?>> clientPackets = new LinkedBlockingDeque<>();
@@ -137,6 +136,5 @@ public class BlinkUtils implements IMinecraft {
             }
         }
     }
-
 
 }

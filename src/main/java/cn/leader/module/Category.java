@@ -1,6 +1,5 @@
 package cn.leader.module;
 
-
 public enum Category {
     Combat("Combat"),
     Movement("Movement"),

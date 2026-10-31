@@ -8,9 +8,6 @@ import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
 import net.minecraft.client.gui.screens.DeathScreen;
 
-/**
- * Leaves the death screen as soon as it appears.
- */
 public final class AutoRespawn extends Module {
 
     private final BoolValue closeScreen = new BoolValue("Close Screen", true);

@@ -9,12 +9,11 @@ import org.jetbrains.skija.SamplingMode;
 import java.io.IOException;
 import java.io.InputStream;
 
-/** Small original UI accents for the white-and-gold dragon theme. */
 public final class DragonTheme {
     public static final int WHITE = 0xFFF2F4F7;
     public static final int GOLD = 0xFFD5B56D;
 
-    private static final String PORTRAIT_RESOURCE = "/assets/clientbase/images/gpt-white-dragon-portrait.png";
+    private static final String PORTRAIT_RESOURCE = "/assets/leadernextgen/images/gpt-white-dragon-portrait.png";
     private static Image portraitImage;
 
     public static void drawCrest(Canvas canvas, float x, float y, float size, float alpha) {
@@ -22,7 +21,6 @@ public final class DragonTheme {
         int white = SkiaRender.alpha(WHITE, alpha);
         int gold = SkiaRender.alpha(GOLD, alpha);
 
-        // A compact, geometric horn-and-scale mark drawn from primitives.
         SkiaRender.line(canvas, x + size * 0.34F, y + size * 0.57F,
                 x + size * 0.17F, y + size * 0.12F, stroke, gold);
         SkiaRender.line(canvas, x + size * 0.17F, y + size * 0.12F,

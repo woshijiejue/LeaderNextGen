@@ -73,9 +73,6 @@ public final class ModuleList extends Drag {
         }
         this.width = maxWidth;
 
-        // Zero spacing is still a background layout, but each row owns its own
-        // surface.  Never create one background rectangle for the whole list:
-        // that turns the ArrayList into a large black block.
         boolean compactLayout = gap <= 0.01F;
 
         float offsetY = renderY;
@@ -98,9 +95,7 @@ public final class ModuleList extends Drag {
             int color = PanelRenderer.accent(index * 2);
 
             if (background.getValue()) {
-                // In compact mode the rows touch, but remain separate panels.
-                // Keep post-processing enabled for normal spacing and use the
-                // lightweight panel path for zero spacing to avoid shadow buildup.
+
                 PanelRenderer.panel(canvas, x, y, boxWidth, rowHeight, radius,
                         progress, color, !compactLayout);
             } else if (!compactLayout) {

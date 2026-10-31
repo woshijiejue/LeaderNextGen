@@ -8,25 +8,13 @@ import cn.leader.util.IMinecraft;
 import cn.leader.util.player.MovementUtil;
 import net.minecraft.util.Mth;
 
-/**
- * Rotation manager.
- *
- * <p>Deliberately simple: a module posts a target rotation, the manager walks towards it by at most
- * {@code speed} degrees per tick and writes the result into the outgoing packets. There is no mouse
- * GCD quantisation, no jitter, no "humanised" curve - just linear interpolation with an instant
- * option ({@code speed >= 180}).</p>
- *
- * <p>Movement correction is applied on the input and jump vectors so that a silent rotation does not
- * push the player in the wrong direction.</p>
- */
 public class RotationManager implements IMinecraft {
 
-    /** Rotation the player actually sees (the camera is untouched, this is our internal value). */
     public static float[] currentRotations = {0.0F, 0.0F};
     public static float[] lastRotations = {0.0F, 0.0F};
-    /** Where the active request wants to end up. */
+
     public static float[] targetRotations = {0.0F, 0.0F};
-    /** Last rotation written into a movement packet, i.e. what the server knows about us. */
+
     public static float[] serverRotations = {0.0F, 0.0F};
 
     private static final float INSTANT = 180.0F;
@@ -40,17 +28,10 @@ public class RotationManager implements IMinecraft {
         instance.getEventManager().register(this);
     }
 
-    // ------------------------------------------------------------------ requests
-
-    /** Ask for a rotation for the next two ticks; refresh every tick to keep it alive. */
     public void request(float[] rotations, float speedPerTick, MovementCorrection correction) {
         request(null, rotations, speedPerTick, correction);
     }
 
-    /**
-     * Same, but tagged with the requesting module. A tagged request can only be cleared by its owner,
-     * so an idle module cannot wipe somebody else's aim.
-     */
     public void request(Object requester, float[] rotations, float speedPerTick, MovementCorrection correction) {
         if (rotations == null) return;
 
@@ -61,7 +42,6 @@ public class RotationManager implements IMinecraft {
         requestTicks = 2;
     }
 
-    /** Snap to the rotation on the next tick. */
     public void snap(Object requester, float[] rotations, MovementCorrection correction) {
         request(requester, rotations, INSTANT, correction);
     }
@@ -72,7 +52,6 @@ public class RotationManager implements IMinecraft {
         correctMovement = MovementCorrection.None;
     }
 
-    /** Untag and drop the request only if the caller is the current owner. */
     public void clearRequest(Object requester) {
         if (requester != null && owner != null && owner != requester) return;
         clearRequest();
@@ -86,12 +65,9 @@ public class RotationManager implements IMinecraft {
         return rotationSpeed >= INSTANT;
     }
 
-    /** Rotation the server currently believes we are looking at. */
     public float[] getServerRotation() {
         return serverRotations;
     }
-
-    // ------------------------------------------------------------------ stepping
 
     @EventTarget
     @EventPriority(999)
@@ -111,7 +87,6 @@ public class RotationManager implements IMinecraft {
         requestTicks = Math.max(0, requestTicks - 1);
     }
 
-    /** Linear interpolation, clamped to {@code maxStep} degrees on both axes. */
     private static float[] step(float[] from, float[] to, float maxStep) {
         if (maxStep >= INSTANT) {
             return new float[]{Mth.wrapDegrees(to[0]), to[1]};
@@ -125,8 +100,6 @@ public class RotationManager implements IMinecraft {
 
         return new float[]{Mth.wrapDegrees(yaw), Mth.clamp(pitch, -90.0F, 90.0F)};
     }
-
-    // ------------------------------------------------------------------ hooks
 
     @EventTarget
     @EventPriority(999)

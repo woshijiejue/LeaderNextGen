@@ -9,7 +9,6 @@ public final class Util implements IMinecraft{
     public static int skipTicks = 0;
     public static float timer = 1;
 
-
     public static void addChatMessage(String message) {
         if (mc.player == null) return;
 

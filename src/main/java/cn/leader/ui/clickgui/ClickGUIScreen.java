@@ -65,8 +65,6 @@ public class ClickGUIScreen extends Screen implements IMinecraft {
         float width = mc.getWindow().getGuiScaledWidth();
         float height = mc.getWindow().getGuiScaledHeight();
 
-        // Give the screen a calm, opaque surface instead of letting the game
-        // world compete with the controls behind every panel.
         SkiaRender.verticalGradient(canvas, 0, 0, width, height, 0,
                 SkiaRender.alpha(0xFF0B0B12, 0.94F * progress),
                 SkiaRender.alpha(0xFF171421, 0.94F * progress));
@@ -105,7 +103,7 @@ public class ClickGUIScreen extends Screen implements IMinecraft {
     }
 
     private void layoutPanels(float width, float height) {
-        // Keep the portrait in the lower-right corner clear of the panel grid.
+
         float portraitSpace = width >= 300.0F ? 154.0F : 0.0F;
         gridLeft = 14.0F;
         gridGap = 10.0F;
@@ -133,7 +131,7 @@ public class ClickGUIScreen extends Screen implements IMinecraft {
         float portraitHeight = 226;
         float x = Math.max(8.0F, width - portraitWidth - 10.0F);
         float y = Math.max(8.0F, height - portraitHeight - 10.0F);
-        // The portrait is intentionally standalone: no card, label or overlay.
+
         DragonTheme.drawPortrait(canvas, x, y, portraitWidth, portraitHeight, alpha);
     }
 

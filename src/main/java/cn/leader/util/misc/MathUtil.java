@@ -1,6 +1,5 @@
 package cn.leader.util.misc;
 
-
 import java.security.SecureRandom;
 
 public final class MathUtil {

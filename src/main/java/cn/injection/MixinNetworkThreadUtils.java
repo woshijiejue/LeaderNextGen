@@ -11,10 +11,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * 26.2 routes incoming packets through {@link PacketUtils#ensureRunningOnSameThread} with a
- * PacketProcessor instead of the old ThreadExecutor, so the receive hook lives here now.
- */
 @Mixin(PacketUtils.class)
 public class MixinNetworkThreadUtils implements IMinecraft {
 

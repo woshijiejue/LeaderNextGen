@@ -8,20 +8,10 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.ClipContext;
 
-
-/**
- * Aim helpers shared by the combat modules: where to point at a hitbox, how far it is, and whether
- * the point is reachable. Rotation stepping itself lives in {@code RotationManager}.
- */
 public final class AimUtil implements IMinecraft {
 
-    /** Shrink factor so an aim point is strictly inside the hitbox instead of on its edge. */
     private static final double SURFACE_INSET = 1.0E-4D;
 
-    /**
-     * Closest point of the hitbox to the eyes, pulled slightly inside the box so that a ray
-     * aimed at it always intersects the real box (instead of grazing the boundary).
-     */
     public static Vec3 aimPoint(LivingEntity entity) {
         AABB box = entity.getBoundingBox().deflate(SURFACE_INSET);
 
@@ -37,12 +27,10 @@ public final class AimUtil implements IMinecraft {
         );
     }
 
-    /** Yaw/pitch pair that points at the given world position. */
     public static float[] rotationTo(Vec3 point) {
         return RotationUtil.getRotations(point);
     }
 
-    /** Shortest eye to hitbox distance, used for range filtering without any raycast cost. */
     public static double distanceToBox(LivingEntity entity) {
         if (mc.player == null) return Double.MAX_VALUE;
 
@@ -56,7 +44,6 @@ public final class AimUtil implements IMinecraft {
         return eye.distanceTo(nearest);
     }
 
-    /** Angle in degrees between the given look direction and the direction to the entity centre. */
     public static double angleTo(LivingEntity entity, float[] rotation) {
         if (mc.player == null || rotation == null) return 0.0D;
 
@@ -69,10 +56,6 @@ public final class AimUtil implements IMinecraft {
         return Math.toDegrees(Math.acos(Mth.clamp(dot, -1.0D, 1.0D)));
     }
 
-    /**
-     * Distance from the eyes to the first intersection of the given look direction with the
-     * hitbox, or {@code -1} when the direction misses the box completely.
-     */
     public static double reach(LivingEntity entity, float[] rotation) {
         if (mc.player == null || rotation == null) return -1.0D;
 
@@ -82,7 +65,6 @@ public final class AimUtil implements IMinecraft {
         return hit == null ? -1.0D : eye.distanceTo(hit);
     }
 
-    /** Slab method ray/AABB intersection, returns the entry point or {@code null}. */
     public static Vec3 intersect(AABB box, Vec3 origin, Vec3 direction) {
         double[] o = {origin.x, origin.y, origin.z};
         double[] d = {direction.x, direction.y, direction.z};
@@ -115,7 +97,6 @@ public final class AimUtil implements IMinecraft {
         return origin.add(direction.scale(near));
     }
 
-    /** True when no collidable block sits between the eyes and the point. */
     public static boolean isVisible(Vec3 point) {
         if (mc.player == null || mc.level == null) return false;
 

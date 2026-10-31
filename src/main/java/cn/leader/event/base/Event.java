@@ -1,6 +1,5 @@
 package cn.leader.event.base;
 
-
 public class Event {
     private boolean cancelled;
 

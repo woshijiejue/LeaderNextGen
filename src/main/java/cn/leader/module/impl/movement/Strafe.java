@@ -13,7 +13,6 @@ public class Strafe extends Module {
         setDescription("Aerial agility");
     }
 
-
     @EventTarget
     public void onMotion(MotionEvent e) {
         MovementUtil.strafe();

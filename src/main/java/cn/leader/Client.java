@@ -15,10 +15,6 @@ import cn.leader.util.render.DragonTheme;
 import net.minecraft.ChatFormatting;
 import org.apache.logging.log4j.Logger;
 
-/**
- * Client Base.
- * @author DSJ
- */
 public class Client implements IMinecraft {
     public static Client instance;
     public static Logger logger;
@@ -55,7 +51,6 @@ public class Client implements IMinecraft {
         logger.info("{} {} initialized (Minecraft {}, Fabric Loader {})", name, version, minecraftVersion, loaderVersion);
     }
 
-    /** One chat line on the first tick that has a player, i.e. once per game session. */
     public void announce() {
         if (announced || mc.player == null) return;
         announced = true;

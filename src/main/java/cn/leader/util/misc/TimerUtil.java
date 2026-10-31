@@ -1,6 +1,5 @@
 package cn.leader.util.misc;
 
-
 public class TimerUtil {
     public long time;
 
@@ -27,7 +26,6 @@ public class TimerUtil {
     public long getTime() {
         return System.currentTimeMillis() - time;
     }
-
 
     public void setTime(long value) {
         this.time = value;

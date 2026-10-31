@@ -11,13 +11,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 
-/**
- * Swaps to the fastest tool for whatever block is being mined, and back again when mining stops.
- */
 public final class AutoTool extends Module {
 
     private final BoolValue swapBack = new BoolValue("Swap Back", true);
-    /** Tools below this multiplier are not worth the inventory packet. */
+
     private final NumberValue minSpeed = new NumberValue("Min Speed", 1.4F, 1.0F, 12.0F, 0.1F);
 
     private int previousSlot = -1;

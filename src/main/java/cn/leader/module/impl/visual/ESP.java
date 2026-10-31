@@ -137,7 +137,7 @@ public final class ESP extends Module {
         float nameWidth = nameFont.getStringWidth(name);
         float healthWidth = numberFont.getStringWidth(health);
         float distanceWidth = numberFont.getStringWidth(distance);
-        // 6px outer padding on each side plus 5px separators between columns.
+
         float width = nameWidth + healthWidth + distanceWidth + 22;
         float height = 17;
         float x = centerX - width / 2;
