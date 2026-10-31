@@ -61,6 +61,9 @@ public class Velocity extends Module {
     private final BoolValue attackReduce = new BoolValue("Attack Reduce", false, () -> mode.is("Hypixel"));
     private final BoolValue counterYaw = new BoolValue("Counter Yaw", false, () -> mode.is("Hypixel"));
     private final BoolValue onlyPlayers = new BoolValue("Only Players", true, () -> mode.is("Hypixel"));
+    private final BoolValue airpush = new BoolValue("Air Push", false, () -> mode.is("Hypixel"));
+    private final NumberValue airpushRange = new NumberValue("Air Push Range", 12, 6, 30, 1,
+            () -> mode.is("Hypixel") && airpush.getValue());
 
     // Legit
     private final BoolValue counterInput = new BoolValue("Counter Input", true, () -> mode.is("Legit"));
@@ -85,6 +88,7 @@ public class Velocity extends Module {
     private boolean armed;
     private boolean jumped;
     private boolean reducePending;
+    private boolean airpushPending;
     private int windowTotal;
 
     public Velocity() {
@@ -111,6 +115,7 @@ public class Velocity extends Module {
         armed = false;
         jumped = false;
         reducePending = false;
+        airpushPending = false;
         held.clear();
     }
 
@@ -171,6 +176,10 @@ public class Velocity extends Module {
             // at once and answer with a counter hit instead of buffering.
             armed = true;
             reducePending = attackReduce.getValue() && nearby;
+        } else if (!nearby && airpush.getValue() && !grounded) {
+            // Nothing in reach to fight back with: the push has to be answered by a hit on
+            // something far away, which is what makes the server treat it as our own attack.
+            airpushPending = true;
         } else if (buffer.getValue() && bufferTicks.getValue().intValue() > 0 && !grounded && nearby) {
             holdAge = 0;
             event.setCancelled(true);
@@ -253,6 +262,11 @@ public class Velocity extends Module {
             if (reducePending) {
                 reducePending = false;
                 counterAttack();
+            }
+
+            if (airpushPending) {
+                airpushPending = false;
+                airpush();
             }
 
             if (counterYaw.getValue() && armed && ticksLeft > 0) {
@@ -339,6 +353,47 @@ public class Velocity extends Module {
         Vec3 velocity = mc.player.getDeltaMovement();
         mc.player.setDeltaMovement(velocity.x * 0.6D, velocity.y, velocity.z * 0.6D);
         mc.player.setSprinting(false);
+    }
+
+    /**
+     * Hits whatever is furthest away inside the configured reach. The hit itself will not land,
+     * but the attack packet still cuts our own momentum the same way a sprint reset does.
+     */
+    private void airpush() {
+        if (mc.gameMode == null || mc.level == null) return;
+
+        LivingEntity target = farthestTarget(airpushRange.getValue().doubleValue(), 6.0D);
+        if (target == null) return;
+
+        mc.gameMode.attack(mc.player, target);
+        mc.player.swing(InteractionHand.MAIN_HAND);
+
+        Vec3 velocity = mc.player.getDeltaMovement();
+        mc.player.setDeltaMovement(velocity.x * 0.6D, velocity.y, velocity.z * 0.6D);
+        mc.player.setSprinting(false);
+    }
+
+    private LivingEntity farthestTarget(double range, double minDistance) {
+        if (mc.player == null || mc.level == null) return null;
+
+        AABB area = mc.player.getBoundingBox().inflate(range);
+        boolean playersOnly = onlyPlayers.getValue();
+
+        LivingEntity best = null;
+        double bestDistance = minDistance;
+
+        for (LivingEntity entity : mc.level.getEntitiesOfClass(LivingEntity.class, area, candidate -> {
+            if (candidate == mc.player || !candidate.isAlive()) return false;
+            return !playersOnly || candidate instanceof Player;
+        })) {
+            double distance = mc.player.distanceTo(entity);
+            if (distance > bestDistance) {
+                bestDistance = distance;
+                best = entity;
+            }
+        }
+
+        return best;
     }
 
     private LivingEntity nearestTarget(double range) {

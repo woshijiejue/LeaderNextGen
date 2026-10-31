@@ -9,6 +9,7 @@ import cn.leader.module.impl.combat.Velocity;
 import cn.leader.module.impl.misc.Timer;
 import cn.leader.module.impl.movement.FastWeb;
 import cn.leader.module.impl.movement.NoSlow;
+import cn.leader.module.impl.movement.Scaffold;
 import cn.leader.module.impl.movement.Sprint;
 import cn.leader.module.impl.movement.Strafe;
 import cn.leader.module.impl.player.AntiAFK;
@@ -53,6 +54,7 @@ public class ModuleManager implements IMinecraft {
                  new ClientSetting(),
                  new ESP(),
                  new FastWeb(),
+                 new Scaffold(),
                  new TargetHUD(),
                  new InfoHUD(),
                  new PotionHUD(),
