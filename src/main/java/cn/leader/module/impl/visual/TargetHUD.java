@@ -3,6 +3,7 @@ package cn.leader.module.impl.visual;
 import cn.injection.accessor.GuiAccessor;
 import cn.leader.module.impl.combat.KillAura;
 import cn.leader.module.value.impl.BoolValue;
+import cn.leader.module.value.impl.ModeValue;
 import cn.leader.ui.font.base.SkiaFont;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.animation.Easing;
@@ -11,20 +12,27 @@ import cn.leader.util.render.Fonts;
 import cn.leader.util.render.PanelRenderer;
 import cn.leader.util.render.SkiaRender;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.skija.Canvas;
 
 public final class TargetHUD extends Drag {
-    private final BoolValue healthBar = new BoolValue("Health Bar", true);
-    private final BoolValue showDistance = new BoolValue("Distance", true);
-    private final BoolValue showArmor = new BoolValue("Armor", true);
-    private final BoolValue showAbsorption = new BoolValue("Absorption", true);
-    private final BoolValue showEquipment = new BoolValue("Equipment Slots", true);
-    private final BoolValue background = new BoolValue("Background", true);
-    private final BoolValue showHeader = new BoolValue("Header", false);
+    private final ModeValue style = new ModeValue("Style", "Classic", "Classic", "Minimal");
+    private final BoolValue healthBar = new BoolValue("Health Bar", true, () -> style.is("Classic"));
+    private final BoolValue showDistance = new BoolValue("Distance", true, () -> style.is("Classic"));
+    private final BoolValue showArmor = new BoolValue("Armor", true, () -> style.is("Classic"));
+    private final BoolValue showAbsorption = new BoolValue("Absorption", true, () -> style.is("Classic"));
+    private final BoolValue showEquipment = new BoolValue("Equipment Slots", true, () -> style.is("Classic"));
+    private final BoolValue background = new BoolValue("Background", true, () -> style.is("Classic"));
+    private final BoolValue showHeader = new BoolValue("Header", false, () -> style.is("Classic"));
 
     private final EasingAnimation healthAnimation = new EasingAnimation(Easing.EASE_OUT_QUART, 300);
     private final EasingAnimation fadeAnimation = new EasingAnimation(Easing.EASE_OUT_QUART, 200);
@@ -65,6 +73,10 @@ public final class TargetHUD extends Drag {
         }
 
         LivingEntity entity = lastTarget;
+        if (style.is("Minimal")) {
+            renderMinimal(canvas, entity, alpha);
+            return;
+        }
         SkiaFont nameFont = Fonts.medium(9.0F);
         SkiaFont infoFont = Fonts.regular(7.5F);
         SkiaFont numberFont = Fonts.number(7.5F);
@@ -72,7 +84,6 @@ public final class TargetHUD extends Drag {
         float padding = 6.0F;
         float avatar = 22.0F;
         float top = showHeader.getValue() ? 16.0F : padding;
-        float equipmentWidth = showEquipment.getValue() ? 76.0F : 0.0F;
         width = showEquipment.getValue() ? 178.0F : 145.0F;
         height = top + avatar + (healthBar.getValue() ? 7.0F : 0.0F) + padding;
 
@@ -101,12 +112,9 @@ public final class TargetHUD extends Drag {
         SkiaRender.roundRectOutline(canvas, avatarX, avatarY, avatar, avatar, 4.0F, 0.5F,
                 SkiaRender.alpha(accent, 0.55F * alpha));
 
+        drawHead(canvas, entity, avatarX, avatarY, (int) avatar, alpha);
+
         String name = entity.getName().getString();
-        String initial = name.isEmpty() ? "?" : name.substring(0, name.offsetByCodePoints(0, 1)).toUpperCase(java.util.Locale.ROOT);
-        SkiaFont initialFont = Fonts.bold(12.0F);
-        initialFont.drawStringCenteredY(canvas, initial,
-                avatarX + avatar / 2.0F - initialFont.getStringWidth(initial) / 2.0F,
-                avatarY + avatar / 2.0F, SkiaRender.alpha(0xFFF0F0F2, alpha), false);
 
         float textX = avatarX + avatar + 6.0F;
         float equipmentX = renderX + width - padding - 70.0F;
@@ -152,6 +160,73 @@ public final class TargetHUD extends Drag {
 
         if (showEquipment.getValue()) drawEquipmentSlots(entity, canvas, equipmentX, renderY + top + 3.0F, alpha);
         canvas.restore();
+    }
+
+    private void renderMinimal(Canvas canvas, LivingEntity entity, float alpha) {
+        width = 164.0F;
+        height = 42.0F;
+        int accent = 0xFFCCAD74;
+        float x = renderX;
+        float y = renderY;
+        PanelRenderer.panel(canvas, x, y, width, height, 6.0F, alpha, accent, true);
+        SkiaRender.roundRect(canvas, x + 7.0F, y + 8.0F, 1.5F, 25.0F, 0.75F,
+                SkiaRender.alpha(accent, alpha));
+
+        SkiaRender.roundRect(canvas, x + 13.0F, y + 8.0F, 25.0F, 25.0F, 4.0F,
+                SkiaRender.alpha(0xFF18191F, alpha));
+        drawHead(canvas, entity, x + 14.0F, y + 9.0F, 23, alpha);
+
+        float textX = x + 45.0F;
+        float textRight = x + width - 10.0F;
+        SkiaFont nameFont = Fonts.semibold(9.0F);
+        SkiaFont detailFont = Fonts.number(7.0F);
+        String name = entity.getName().getString();
+        nameFont.drawStringCenteredY(canvas, trim(nameFont, name, textRight - textX),
+                textX, y + 14.0F, SkiaRender.alpha(0xFFF4F2EE, alpha), false);
+
+        float health = Math.max(0.0F, entity.getHealth());
+        String detail = String.format(java.util.Locale.ROOT, "%.0f HP  /  %.1fm", health,
+                mc.player.distanceTo(entity));
+        detailFont.drawStringCenteredY(canvas, trim(detailFont, detail, textRight - textX),
+                textX, y + 25.0F, SkiaRender.alpha(0xFFB9B6AE, alpha), false);
+
+        float ratio = Math.max(0.0F, Math.min(1.0F, health / Math.max(1.0F, entity.getMaxHealth())));
+        healthAnimation.run(ratio);
+        float animated = Math.max(0.0F, Math.min(1.0F, (float) healthAnimation.getValue()));
+        float barWidth = textRight - textX;
+        SkiaRender.roundRect(canvas, textX, y + 33.0F, barWidth, 2.0F, 1.0F,
+                SkiaRender.alpha(0xFF797B80, 0.45F * alpha));
+        if (animated > 0.0F) {
+            SkiaRender.roundRect(canvas, textX, y + 33.0F, barWidth * animated, 2.0F, 1.0F,
+                    SkiaRender.alpha(accent, alpha));
+        }
+    }
+
+    private void drawHead(Canvas canvas, LivingEntity entity, float x, float y, int size, float alpha) {
+        PlayerSkin skin = null;
+        if (entity instanceof AbstractClientPlayer clientPlayer) {
+            skin = clientPlayer.getSkin();
+        } else if (entity instanceof Player) {
+            PlayerInfo info = mc.getConnection() == null ? null : mc.getConnection().getPlayerInfo(entity.getUUID());
+            skin = info == null ? DefaultPlayerSkin.get(entity.getUUID()) : info.getSkin();
+        }
+
+        if (skin != null) {
+            int guiWidth = mc.getWindow().getGuiScaledWidth();
+            int guiHeight = mc.getWindow().getGuiScaledHeight();
+            GuiGraphicsExtractor graphics = new GuiGraphicsExtractor(mc,
+                    ((GuiAccessor) (Object) mc.gui).clientbase$getGuiRenderState(), guiWidth, guiHeight);
+            int tint = (Math.round(Math.max(0.0F, Math.min(1.0F, alpha)) * 255.0F) << 24) | 0xFFFFFF;
+            PlayerFaceExtractor.extractRenderState(graphics, skin, Math.round(x), Math.round(y), size, tint);
+            return;
+        }
+
+        String name = entity.getName().getString();
+        String initial = name.isEmpty() ? "?" : name.substring(0, name.offsetByCodePoints(0, 1))
+                .toUpperCase(java.util.Locale.ROOT);
+        SkiaFont font = Fonts.bold(size * 0.55F);
+        font.drawStringCenteredY(canvas, initial, x + (size - font.getStringWidth(initial)) / 2.0F,
+                y + size / 2.0F, SkiaRender.alpha(0xFFF0F0F2, alpha), false);
     }
 
     private void drawEquipmentSlots(LivingEntity entity, Canvas canvas, float x, float y, float alpha) {

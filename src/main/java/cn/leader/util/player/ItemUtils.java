@@ -23,6 +23,12 @@ import static cn.leader.util.IMinecraft.mc;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ExperienceBottleItem;
+import net.minecraft.world.item.FireworkRocketItem;
+import net.minecraft.world.item.KnowledgeBookItem;
+import net.minecraft.world.item.WritableBookItem;
+import net.minecraft.world.item.WrittenBookItem;
+import net.minecraft.world.level.block.Block;
 
 public class ItemUtils {
     public static final List<Block> blacklistedBlocks = Arrays.asList(
@@ -282,5 +288,42 @@ public class ItemUtils {
 
     public static FoodProperties getFoodComponent(ItemStack stack) {
         return stack.get(DataComponents.FOOD);
+    }
+
+    public static boolean isCommonItemUseful(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return true;
+        }
+
+        Item item = stack.getItem();
+
+        if (item instanceof BlockItem blockItem) {
+            Block block = blockItem.getBlock();
+            return block != Blocks.ENCHANTING_TABLE && block != Blocks.COBWEB;
+        }
+
+        if (item instanceof WritableBookItem || item instanceof WrittenBookItem || item instanceof KnowledgeBookItem) {
+            return false;
+        }
+
+        if (item instanceof ExperienceBottleItem || item instanceof FireworkRocketItem) {
+            return false;
+        }
+
+        if (item == Items.WHEAT_SEEDS || item == Items.BEETROOT_SEEDS
+                || item == Items.MELON_SEEDS || item == Items.PUMPKIN_SEEDS) {
+            return false;
+        }
+
+        return item != Items.FLINT_AND_STEEL;
+    }
+
+    public static boolean isSharpnessAxe(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || !stack.is(ItemTags.AXES)) {
+            return false;
+        }
+
+        int level = getEnchantLevel(stack, Enchantments.SHARPNESS);
+        return level >= 8 && level < 50;
     }
 }

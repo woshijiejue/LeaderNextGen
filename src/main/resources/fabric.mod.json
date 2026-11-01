@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "clientbase",
   "version": "${version}",
-  "name": "Leader Nextgen",
-  "description": "Leader Nextgen - a Fabric utility client for Minecraft ${minecraft_version}.",
+  "name": "LeaderNextGen",
+  "description": "LeaderNextGen - a Fabric utility client for Minecraft ${minecraft_version}.",
   "authors": [
     "DSJ"
   ],

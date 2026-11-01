@@ -7,7 +7,6 @@ import cn.leader.event.impl.SlowEvent;
 import cn.leader.event.impl.UpdateEvent;
 import cn.leader.module.Category;
 import cn.leader.module.Module;
-import cn.leader.module.impl.combat.KillAura;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.ModeValue;
 import cn.leader.util.network.BlinkUtils;
@@ -48,7 +47,7 @@ public class NoSlow extends Module {
     private void handlePrediction(MotionEvent event) {
         boolean holdingSword = !mc.player.getMainHandItem().isEmpty()
                 && mc.player.getMainHandItem().is(net.minecraft.tags.ItemTags.SWORDS);
-        boolean wantBlock = holdingSword && (KillAura.blocking || mc.options.keyUse.isDown());
+        boolean wantBlock = holdingSword && mc.options.keyUse.isDown();
 
         if (interactingBlockThisTick) return;
 

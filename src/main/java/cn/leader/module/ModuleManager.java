@@ -17,6 +17,8 @@ import cn.leader.module.impl.player.AntiBot;
 import cn.leader.module.impl.player.AutoRespawn;
 import cn.leader.module.impl.player.AutoTool;
 import cn.leader.module.impl.player.Blink;
+import cn.leader.module.impl.player.ChestStealer;
+import cn.leader.module.impl.player.InvManager;
 import cn.leader.module.impl.player.FastPlace;
 import cn.leader.module.impl.player.NoJumpDelay;
 import cn.leader.module.impl.visual.*;
@@ -63,7 +65,9 @@ public class ModuleManager implements IMinecraft {
                  new AutoRespawn(),
                  new AntiAFK(),
                  new AntiBot(),
-                 new Blink()
+                 new Blink(),
+                 new ChestStealer(),
+                 new InvManager()
         );
 
         sortModules();

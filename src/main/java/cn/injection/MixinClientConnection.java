@@ -2,11 +2,13 @@ package cn.injection;
 
 import cn.leader.event.impl.PacketEvent;
 import cn.leader.util.IMinecraft;
+import cn.leader.util.network.IncomingPacketGate;
 import cn.leader.util.network.PacketUtil;
 import net.minecraft.network.Connection;
 import io.netty.channel.ChannelFutureListener;
+import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,6 +26,20 @@ public abstract class MixinClientConnection implements IMinecraft {
         instance.getEventManager().call(event);
 
         if (event.isCancelled()) {
+            ci.cancel();
+        }
+    }
+
+    /**
+     * Packet delivery point. Cancelling here skips {@code packet.handle(listener)} completely,
+     * which {@code PacketUtils.ensureRunningOnSameThread} cannot do.
+     */
+    @Inject(method = "genericsFtw", at = @At("HEAD"), cancellable = true, require = 1)
+    private static <T extends PacketListener> void receive(Packet<T> packet, PacketListener listener, CallbackInfo ci) {
+        if (!(listener instanceof ClientGamePacketListener)) return;
+        if (!IncomingPacketGate.hasInterceptors()) return;
+
+        if (IncomingPacketGate.intercept(packet)) {
             ci.cancel();
         }
     }

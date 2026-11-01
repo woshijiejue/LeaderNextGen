@@ -1,14 +1,19 @@
 package cn.leader.module.impl.visual;
 
+import cn.injection.accessor.GuiAccessor;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.ui.font.base.SkiaFont;
 import cn.leader.ui.hud.Drag;
 import cn.leader.util.render.Fonts;
 import cn.leader.util.render.PanelRenderer;
 import cn.leader.util.render.SkiaRender;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.jetbrains.skija.Canvas;
@@ -69,10 +74,9 @@ public final class PotionHUD extends Drag {
 
         SkiaFont nameFont = Fonts.regular(8.0F);
         SkiaFont timeFont = Fonts.number(7.5F);
-        SkiaFont iconFont = Fonts.bold(6.5F);
         float padding = 6.0F;
         float headerHeight = showHeader.getValue() ? 15.0F : 0.0F;
-        float rowHeight = progressBar.getValue() ? 21.0F : 18.0F;
+        float rowHeight = progressBar.getValue() ? 24.0F : 20.0F;
         float nameWidth = 0.0F;
         float timeWidth = 0.0F;
         for (MobEffectInstance effect : effects) {
@@ -80,9 +84,15 @@ public final class PotionHUD extends Drag {
             if (showDuration.getValue()) timeWidth = Math.max(timeWidth, timeFont.getStringWidth(duration(effect)));
         }
 
-        width = Math.max(138.0F, padding * 2.0F + 19.0F + nameWidth + timeWidth + 12.0F);
+        width = Math.max(138.0F, padding * 2.0F + 22.0F + nameWidth + timeWidth + 10.0F);
         height = padding * 2.0F + headerHeight + rowHeight * effects.size();
         drawBackground(canvas);
+
+        // Text/background use Skia; vanilla effect icons are queued into the GUI
+        // render state and drawn after the Skia HUD, like the TargetHUD skin.
+        GuiGraphicsExtractor graphics = new GuiGraphicsExtractor(mc,
+                ((GuiAccessor) (Object) mc.gui).clientbase$getGuiRenderState(),
+                mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
 
         if (showHeader.getValue()) {
             Fonts.medium(7.0F).drawStringCenteredY(canvas, "EFFECTS", renderX + padding,
@@ -99,15 +109,16 @@ public final class PotionHUD extends Drag {
             float centerY = y + rowHeight / 2.0F;
 
             String effectName = name(effect);
-            float iconX = renderX + padding;
-            SkiaRender.roundRect(canvas, iconX, centerY - 7.0F, 14.0F, 14.0F, 4.0F,
-                    SkiaRender.alpha(color, 0.18F));
-            SkiaRender.roundRectOutline(canvas, iconX, centerY - 7.0F, 14.0F, 14.0F, 4.0F, 0.5F,
-                    SkiaRender.alpha(color, 0.8F));
-            String icon = effectName.isEmpty() ? "?" : effectName.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
-            iconFont.drawStringCenteredY(canvas, icon, iconX + 7.0F - iconFont.getStringWidth(icon) / 2.0F,
-                    centerY, SkiaRender.alpha(color, 1.0F), false);
-            float nameX = renderX + padding + 19.0F;
+            Identifier effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.getEffect().value());
+            if (effectId != null) {
+                Identifier texture = Identifier.fromNamespaceAndPath(effectId.getNamespace(),
+                        "textures/mob_effect/" + effectId.getPath() + ".png");
+                // The vanilla icon is 18x18; scale the entire texture to 16x16.
+                graphics.blit(RenderPipelines.GUI_TEXTURED, texture,
+                        Math.round(renderX + padding), Math.round(centerY - 8.0F),
+                        0.0F, 0.0F, 16, 16, 18, 18, 18, 18, 0xFFFFFFFF);
+            }
+            float nameX = renderX + padding + 22.0F;
             float timeSpace = showDuration.getValue() ? timeWidth + 5.0F : 0.0F;
             nameFont.drawStringCenteredY(canvas, trim(nameFont, effectName,
                             Math.max(20.0F, width - padding - (nameX - renderX) - timeSpace)),
@@ -125,8 +136,8 @@ public final class PotionHUD extends Drag {
                 int max = maxDurations.merge(effect.getEffect(), Math.max(1, effect.getDuration()), Math::max);
                 float ratio = effect.isInfiniteDuration() ? 1.0F
                         : Math.min(1.0F, effect.getDuration() / (float) Math.max(1, max));
-                float barX = renderX + padding + 19.0F;
-                float barWidth = width - padding * 2.0F - 19.0F;
+                float barX = renderX + padding + 22.0F;
+                float barWidth = width - padding * 2.0F - 22.0F;
                 SkiaRender.roundRect(canvas, barX, y + rowHeight - 3.0F, barWidth, 1.0F, 0.5F, 0x35FFFFFF);
                 if (ratio > 0.0F) {
                     SkiaRender.roundRect(canvas, barX, y + rowHeight - 3.0F,

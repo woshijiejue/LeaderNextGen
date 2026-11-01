@@ -19,7 +19,7 @@ public abstract class MixinKeyboardInput extends ClientInput implements IMinecra
         Vec2 move = this.getMoveVector();
         Input keys = this.keyPresses;
 
-        MoveInputEvent event = new MoveInputEvent(move.y, move.x, keys.jump(), keys.shift());
+        MoveInputEvent event = new MoveInputEvent(move.y, move.x, keys.jump(), keys.shift(), keys.sprint());
         instance.getEventManager().call(event);
 
         this.moveVector = new Vec2(event.getStrafe(), event.getForward());
@@ -30,7 +30,7 @@ public abstract class MixinKeyboardInput extends ClientInput implements IMinecra
                 event.getStrafe() < 0.0F,
                 event.isJumping(),
                 event.isSneaking(),
-                keys.sprint()
+                event.isSprint()
         );
     }
 }

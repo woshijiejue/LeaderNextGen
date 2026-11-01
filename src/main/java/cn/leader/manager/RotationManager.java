@@ -24,8 +24,39 @@ public class RotationManager implements IMinecraft {
     private static int requestTicks;
     private static Object owner;
 
+    private static float sentYaw;
+    private static boolean sentYawReady;
+
     public RotationManager() {
         instance.getEventManager().register(this);
+    }
+
+    /**
+     * Vanilla never wraps the yaw it sends (Entity.setYRot only sanitises non-finite values), so a
+     * normal player's yaw drifts past +-360 while spinning. Wrapping into [-180, 180] instead makes
+     * every +-180 boundary crossing look like a ~360 degree snap in the packet stream, which is what
+     * Grim's AimModulo360 flags (raw deltaYaw > 320 with a small previous delta).
+     * <p>
+     * Accumulating the shortest path delta keeps the sent yaw continuous.
+     */
+    public static float toSentYaw(float target) {
+        if (!sentYawReady) {
+            sentYaw = target;
+            sentYawReady = true;
+            return sentYaw;
+        }
+
+        sentYaw += Mth.wrapDegrees(target - sentYaw);
+        return sentYaw;
+    }
+
+    public static float getSentYaw() {
+        return sentYaw;
+    }
+
+    public static void resetSentYaw() {
+        sentYaw = 0.0F;
+        sentYawReady = false;
     }
 
     public void request(float[] rotations, float speedPerTick, MovementCorrection correction) {
@@ -55,6 +86,11 @@ public class RotationManager implements IMinecraft {
     public void clearRequest(Object requester) {
         if (requester != null && owner != null && owner != requester) return;
         clearRequest();
+    }
+
+    @EventTarget
+    public void onWorld(WorldEvent event) {
+        resetSentYaw();
     }
 
     public boolean isActive() {
@@ -149,15 +185,15 @@ public class RotationManager implements IMinecraft {
         if (mc.player == null) return;
 
         if (!event.isPre()) {
-            serverRotations = isActive()
-                    ? new float[]{currentRotations[0], currentRotations[1]}
-                    : new float[]{event.getYRot(), event.getXRot()};
+            serverRotations = new float[]{event.getYRot(), event.getXRot()};
             return;
         }
 
-        if (!isActive()) return;
+        float targetYaw = isActive() ? currentRotations[0] : event.getYRot();
+        event.setYRot(toSentYaw(targetYaw));
 
-        event.setYRot(currentRotations[0]);
-        event.setXRot(currentRotations[1]);
+        if (isActive()) {
+            event.setXRot(currentRotations[1]);
+        }
     }
 }

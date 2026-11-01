@@ -5,7 +5,7 @@ import net.minecraft.SharedConstants;
 
 public final class ClientMeta {
 
-    public static final String NAME = "Leader Nextgen";
+    public static final String NAME = "LeaderNextGen";
 
     public static final String VERSION = resolveVersion();
 

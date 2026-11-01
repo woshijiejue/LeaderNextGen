@@ -43,6 +43,7 @@ public class Client implements IMinecraft {
         configManager = new ConfigManager();
         targetManager = new TargetManager();
         rotationManager  = new RotationManager();
+        new cn.leader.util.network.PacketOrderGuard();
 
         clickGUIScreen  = new ClickGUIScreen();
         skiaManager = new SkiaManager();
