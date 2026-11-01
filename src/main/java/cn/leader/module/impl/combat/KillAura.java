@@ -64,6 +64,13 @@ public class KillAura extends Module {
     private final NumberValue blockRefresh = new NumberValue("Block Refresh", 5, 0, 20, 1,
             () -> this.autoBlock.is("Hypixel"));
     /**
+     * 严格模式：release / use / attack 各占一个 tick 窗口，这是 Grim 的 PacketOrderI / J 的硬要求。
+     * 关掉之后 release 和 attack（或 use）会挤在同一拍连发，跟 Leader Lite 的 Without No Slow 一致，
+     * 手感最好，但只有不跑 Grim 的服务器能这么干。
+     */
+    private final BoolValue strictOrder = new BoolValue("Strict Order", true,
+            () -> !this.autoBlock.is("Off"));
+    /**
      * 1.8 服务端把"举剑"当成真正使用物品，会按 0.2 倍速度预测位移，客户端也得同步减速，否则会被 Simulation 抓。
      * 现代服务端（剑不可用）根本不会减速，这时候绝不能自己减速，默认关掉。
      */
@@ -88,6 +95,8 @@ public class KillAura extends Module {
     private int refreshTicks;
     /** Post 模式：这一拍已经把盾放下去了，下一个窗口用来攻击 */
     private boolean postArmed;
+    /** 同拍模式（Strict Order 关闭）下，一次组合动作共用同一个窗口 */
+    private boolean bypassWindow;
 
     public KillAura() {
         super("KillAura", Category.Combat);
@@ -218,7 +227,15 @@ public class KillAura extends Module {
         int interval = refreshInterval();
         if (interval > 0 && --this.refreshTicks <= 0) {
             if (stopBlocking()) {
-                this.pendingReuse = true;
+                if (relaxed()) {
+                    this.bypassWindow = true;
+                    if (startBlocking()) {
+                        this.refreshTicks = interval;
+                    }
+                    this.bypassWindow = false;
+                } else {
+                    this.pendingReuse = true;
+                }
             }
             return;
         }
@@ -248,8 +265,24 @@ public class KillAura extends Module {
         if (!attackReady()) return;
 
         if (stopBlocking()) {
-            this.postArmed = true;
+            if (relaxed()) {
+                // 同拍：放盾立刻打，再下一拍补 use（Leader Lite 的 Without No Slow 就是这个形状）
+                this.bypassWindow = true;
+                tryAttack();
+                this.bypassWindow = false;
+                this.postArmed = false;
+            } else {
+                this.postArmed = true;
+            }
         }
+    }
+
+    private boolean relaxed() {
+        return !this.strictOrder.getValue();
+    }
+
+    private boolean reserve() {
+        return this.bypassWindow || ActionWindow.tryUse();
     }
 
     private int refreshInterval() {
@@ -268,7 +301,7 @@ public class KillAura extends Module {
 
     private boolean startBlocking() {
         if (mc.player == null || mc.gameMode == null) return false;
-        if (!ActionWindow.tryUse()) return false;
+        if (!reserve()) return false;
 
         EntityUtil.interactItem(mc.player, InteractionHand.MAIN_HAND);
         this.serverUsing = true;
@@ -287,7 +320,7 @@ public class KillAura extends Module {
             return true;
         }
 
-        if (!ActionWindow.tryUse()) return false;
+        if (!reserve()) return false;
 
         this.serverUsing = false;
         PacketUtil.sendPacket(new ServerboundPlayerActionPacket(
@@ -337,7 +370,7 @@ public class KillAura extends Module {
 
         if (!this.firstHit && pauseSprint()) return false;
 
-        if (!ActionWindow.tryUse()) return false;
+        if (!reserve()) return false;
 
         if (mc.gameMode != null) {
             mc.gameMode.attack(mc.player, this.target);
