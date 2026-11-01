@@ -72,6 +72,8 @@ public class KillAura extends Module {
 
     private boolean serverUsing;
     private boolean blinking;
+    private boolean usePending;
+    private boolean releasePending;
     private int blockPhase;
 
     public KillAura() {
@@ -91,6 +93,8 @@ public class KillAura extends Module {
         this.lastTarget = null;
         this.serverUsing = false;
         this.blinking = false;
+        this.usePending = false;
+        this.releasePending = false;
         this.blockPhase = 0;
     }
 
@@ -124,6 +128,7 @@ public class KillAura extends Module {
         endBlink();
 
         if (this.autoBlock.is("Off")) {
+            this.usePending = false;
             releaseUse();
         }
 
@@ -161,7 +166,28 @@ public class KillAura extends Module {
 
     @EventTarget
     public void onMotion(MotionEvent event) {
-        if (mc.player == null || !this.autoBlock.is("Post")) return;
+        if (mc.player == null) return;
+
+        if (this.autoBlock.is("Hypixel")) {
+            if (!event.isPost()) return;
+
+            if (this.releasePending) {
+                this.releasePending = false;
+                releaseUse();
+                return;
+            }
+
+            if (this.usePending) {
+                this.usePending = false;
+
+                if (wantsBlock()) {
+                    startUse();
+                }
+            }
+            return;
+        }
+
+        if (!this.autoBlock.is("Post")) return;
 
         if (!wantsBlock()) {
             endBlink();
@@ -184,6 +210,8 @@ public class KillAura extends Module {
     private void tickAutoBlock() {
         if (!wantsBlock()) {
             this.blockPhase = 0;
+            this.usePending = false;
+            this.releasePending = false;
             endBlink();
             releaseUse();
             return;
@@ -191,10 +219,10 @@ public class KillAura extends Module {
 
         if (this.blockPhase == 0) {
             this.blockPhase = 1;
-            startUse();
+            this.usePending = true;
         } else {
             this.blockPhase = 0;
-            releaseUse();
+            this.releasePending = true;
         }
     }
 
@@ -304,7 +332,7 @@ public class KillAura extends Module {
             event.setSprint(false);
         }
 
-        if (this.autoBlock.is("Hypixel") && this.serverUsing && !noSlowEnabled()) {
+        if (this.serverUsing && !noSlowEnabled()) {
             event.setForward(event.getForward() * BLOCK_SLOW);
             event.setStrafe(event.getStrafe() * BLOCK_SLOW);
         }
