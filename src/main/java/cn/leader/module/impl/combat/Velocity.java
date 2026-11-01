@@ -237,6 +237,9 @@ public class Velocity extends Module {
 
                 if (knockback) {
                     this.delayTicksRemaining = this.delayModeTicks.getValue().intValue();
+                    event.setCancelled(true);
+                    this.delayPackets.add((Packet<ClientGamePacketListener>) motion);
+                    return true;
                 }
             }
 
