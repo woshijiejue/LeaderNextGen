@@ -58,6 +58,12 @@ public class KillAura extends Module {
     private final NumberValue blockRange = new NumberValue("Block Range", 4.0F, 0.0F, 6.0F, 0.1F,
             () -> !this.autoBlock.is("Off"));
     /**
+     * 1.8 服务端的 itemInUse 会被挨打 / 攻击清掉，光举一次盾撑不了多久，必须周期性重新发 use。
+     * 0 = 不主动刷新（只在状态丢了以后重举），数值越小举得越勤、留给攻击的窗口越少。
+     */
+    private final NumberValue blockRefresh = new NumberValue("Block Refresh", 5, 0, 20, 1,
+            () -> this.autoBlock.is("Hypixel"));
+    /**
      * 1.8 服务端把"举剑"当成真正使用物品，会按 0.2 倍速度预测位移，客户端也得同步减速，否则会被 Simulation 抓。
      * 现代服务端（剑不可用）根本不会减速，这时候绝不能自己减速，默认关掉。
      */
@@ -76,6 +82,10 @@ public class KillAura extends Module {
 
     /** 服务端是否还认为我们在"使用物品"（1.8 手里举着剑格挡），只由我们自己发出去的 use / release 维护 */
     private boolean serverUsing;
+    /** Hypixel：刷新流程走完 release 之后，下一拍补 use */
+    private boolean pendingReuse;
+    /** Hypixel：距离下一次刷新还有几拍 */
+    private int refreshTicks;
     /** Post 模式：这一拍已经把盾放下去了，下一个窗口用来攻击 */
     private boolean postArmed;
 
@@ -95,6 +105,8 @@ public class KillAura extends Module {
         this.firstHit = true;
         this.lastTarget = null;
         this.serverUsing = false;
+        this.pendingReuse = false;
+        this.refreshTicks = 0;
         this.postArmed = false;
     }
 
@@ -124,6 +136,8 @@ public class KillAura extends Module {
 
         this.sprintArmed = this.sprintPaused;
         this.sprintPaused = false;
+
+        updateSuffix();
 
         this.target = selectTarget();
 
@@ -166,6 +180,7 @@ public class KillAura extends Module {
     private void tickAutoBlock() {
         if (!wantsBlock()) {
             this.postArmed = false;
+            this.pendingReuse = false;
             stopBlocking();
             return;
         }
@@ -178,12 +193,33 @@ public class KillAura extends Module {
     }
 
     /**
-     * Hypixel：进范围就一直举着盾（服务端持续处于 using 状态，挨打时有减伤），
-     * 每个窗口空闲时补一次攻击。举盾和攻击不会同窗口，攻击频率也不受放盾影响。
+     * Hypixel：格挡常驻，攻击不占格挡（1.8 允许边举盾边打）。
+     * <p>
+     * 关键点是"刷新"：1.8 的 itemInUse 会在挨打 / 攻击之后被服务端清掉，setItemInUse 对同一把剑又是空操作，
+     * 所以必须周期性 release + use 才能把盾重新举起来——只发一次 use 的话，掉一次状态就再也不防砍了。
+     * 刷新走两拍（release 一拍、use 一拍），其余每一拍都可以攻击，且永远一窗一包。
      */
     private void tickHypixelBlock() {
+        if (this.pendingReuse) {
+            if (startBlocking()) {
+                this.pendingReuse = false;
+                this.refreshTicks = refreshInterval();
+            }
+            return;
+        }
+
         if (!this.serverUsing) {
-            startBlocking();
+            if (startBlocking()) {
+                this.refreshTicks = refreshInterval();
+            }
+            return;
+        }
+
+        int interval = refreshInterval();
+        if (interval > 0 && --this.refreshTicks <= 0) {
+            if (stopBlocking()) {
+                this.pendingReuse = true;
+            }
             return;
         }
 
@@ -192,12 +228,15 @@ public class KillAura extends Module {
 
     /**
      * Post：一次攻击拆成 release -> attack -> use 三步，每步独占一个窗口。
-     * 攻击落在"已经放盾"的窗口上（1.8 攻击时才不会被格挡吃掉），打完下一个窗口立刻重新举盾。
+     * 攻击落在"已经放盾"的窗口上（服务端里攻击时不在格挡状态，伤害不打折），打完下一个窗口立刻重新举盾。
      */
     private void tickPostBlock() {
         if (this.postArmed) {
             this.postArmed = false;
-            tryAttack();
+
+            if (!tryAttack() && attackReady()) {
+                this.postArmed = true; // 这一拍窗口被别人占了，顺延一拍继续打，别退回举盾
+            }
             return;
         }
 
@@ -213,12 +252,27 @@ public class KillAura extends Module {
         }
     }
 
-    private void startBlocking() {
-        if (mc.player == null || mc.gameMode == null) return;
-        if (!ActionWindow.tryUse()) return;
+    private int refreshInterval() {
+        return this.blockRefresh.getValue().intValue();
+    }
+
+    /** HUD 上直接能看到现在到底有没有举着盾，方便判断 autoblock 是不是真的生效 */
+    private void updateSuffix() {
+        if (this.autoBlock.is("Off")) {
+            setSuffix("");
+            return;
+        }
+
+        setSuffix(this.autoBlock.getValue() + (this.serverUsing ? " · Block" : ""));
+    }
+
+    private boolean startBlocking() {
+        if (mc.player == null || mc.gameMode == null) return false;
+        if (!ActionWindow.tryUse()) return false;
 
         EntityUtil.interactItem(mc.player, InteractionHand.MAIN_HAND);
         this.serverUsing = true;
+        return true;
     }
 
     /**
@@ -276,14 +330,14 @@ public class KillAura extends Module {
         return inRange(this.target);
     }
 
-    private void tryAttack() {
-        if (!attackReady()) return;
+    private boolean tryAttack() {
+        if (!attackReady()) return false;
 
-        if (this.keepSprintMode.is("Legit") && this.target.hurtTime > 2) return;
+        if (this.keepSprintMode.is("Legit") && this.target.hurtTime > 2) return false;
 
-        if (!this.firstHit && pauseSprint()) return;
+        if (!this.firstHit && pauseSprint()) return false;
 
-        if (!ActionWindow.tryUse()) return;
+        if (!ActionWindow.tryUse()) return false;
 
         if (mc.gameMode != null) {
             mc.gameMode.attack(mc.player, this.target);
@@ -297,6 +351,7 @@ public class KillAura extends Module {
         this.sprintTries = 0;
         this.firstHit = false;
         this.nextAttackAt = System.currentTimeMillis() + clickInterval();
+        return true;
     }
 
     private boolean pauseSprint() {

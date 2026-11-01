@@ -331,8 +331,10 @@ public final class InventoryUtils {
     }
 
     private static float fallbackDamage(ItemStack stack) {
-        String id = net.minecraft.core.registries.BuiltInRegistries.ITEM
-                .getKey(stack.getItem()).getPath();
+        var key = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem());
+        if (key == null) return 0F;
+
+        String id = key.getPath();
 
         if (id.contains("netherite")) return 8F;
         if (id.contains("diamond")) return 7F;
@@ -349,8 +351,26 @@ public final class InventoryUtils {
 
         float score = getWeaponDamage(stack);
         score += getEnchantLevel(stack, Enchantments.FIRE_ASPECT) * 3.0F;
+        score += stack.getMaxDamage() * 0.0005F;
 
-        return score + stack.getMaxDamage() * 0.0005F;
+        // 属性/材质都读不出来时给个保底，避免整把武器被判成 0 分而永远不捡
+        return Math.max(score, 1.0F);
+    }
+
+    public static float getBestSwordWeaponScore() {
+        return getAllItems().stream()
+                .filter(item -> !item.isEmpty() && item.is(ItemTags.SWORDS) && ItemUtils.isValidItem(item))
+                .map(InventoryUtils::getWeaponScore)
+                .max(Float::compareTo)
+                .orElse(0F);
+    }
+
+    public static float getBestAxeWeaponScore() {
+        return getAllItems().stream()
+                .filter(item -> !item.isEmpty() && item.is(ItemTags.AXES) && ItemUtils.isValidItem(item))
+                .map(InventoryUtils::getWeaponScore)
+                .max(Float::compareTo)
+                .orElse(0F);
     }
 
     public static float getBestWeaponScore() {

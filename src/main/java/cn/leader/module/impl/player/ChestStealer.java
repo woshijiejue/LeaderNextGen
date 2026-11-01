@@ -134,13 +134,13 @@ public final class ChestStealer extends Module {
         }
 
         if (stack.is(ItemTags.SWORDS)) {
-            return InventoryUtils.getWeaponScore(stack) > InventoryUtils.getBestWeaponScore();
+            return isStrongerWeapon(stack, InventoryUtils.getBestSwordWeaponScore());
         }
         if (stack.is(ItemTags.PICKAXES)) {
             return InventoryUtils.getToolScore(stack) > bestToolScore(ItemTags.PICKAXES);
         }
         if (stack.is(ItemTags.AXES)) {
-            return InventoryUtils.getWeaponScore(stack) > InventoryUtils.getBestWeaponScore();
+            return isStrongerWeapon(stack, InventoryUtils.getBestAxeWeaponScore());
         }
         if (stack.is(ItemTags.SHOVELS)) {
             return InventoryUtils.getToolScore(stack) > bestToolScore(ItemTags.SHOVELS);
@@ -184,6 +184,14 @@ public final class ChestStealer extends Module {
         }
 
         return !(stack.getItem() instanceof StandingAndWallBlockItem) && ItemUtils.isCommonItemUseful(stack);
+    }
+
+    private boolean isStrongerWeapon(ItemStack stack, float bestScore) {
+        float score = InventoryUtils.getWeaponScore(stack);
+
+        if (score <= 0F) return false;
+
+        return bestScore <= 0F || score > bestScore + 0.01F;
     }
 
     private boolean isBestItemInChest(ChestMenu menu, ItemStack stack) {
