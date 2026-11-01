@@ -20,6 +20,10 @@ public class MixinNetworkThreadUtils implements IMinecraft {
             cancellable = true
     )
     private static <T extends PacketListener> void leaderNextgen$receive(Packet<T> packet, T listener, PacketProcessor processor, CallbackInfo ci) {
+        if (!processor.isSameThread()) {
+            return;
+        }
+
         PacketEvent event = new PacketEvent(packet, PacketEvent.Type.Received);
         instance.getEventManager().call(event);
 
