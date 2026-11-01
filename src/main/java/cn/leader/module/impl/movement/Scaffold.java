@@ -15,6 +15,7 @@ import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.ModeValue;
 import cn.leader.module.value.impl.NumberValue;
 import cn.leader.util.misc.TimerUtil;
+import cn.leader.util.network.ActionWindow;
 import cn.leader.util.network.PacketOrderGuard;
 import cn.leader.util.player.ItemUtils;
 import cn.leader.util.player.PlaceInfo;
@@ -276,6 +277,9 @@ public final class Scaffold extends Module {
 
             if (!overBlock(current, this.blockPos, face)) return;
         }
+
+        // 一个 tick 窗口只允许一个冲突动作，被占用就放弃这一拍，避免和 KillAura / NoSlow 撞 PacketOrder
+        if (!ActionWindow.tryUse()) return;
 
         InteractionHand hand = swap();
         if (hand == null) return;

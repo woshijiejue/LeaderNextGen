@@ -1,18 +1,16 @@
 package cn.leader.module.impl.combat;
 
 import cn.leader.event.base.annotation.EventTarget;
-import cn.leader.event.impl.MotionEvent;
 import cn.leader.event.impl.MoveInputEvent;
 import cn.leader.event.impl.UpdateEvent;
 import cn.leader.manager.movement.MovementCorrection;
 import cn.leader.module.Category;
 import cn.leader.module.Module;
-import cn.leader.module.impl.movement.NoSlow;
 import cn.leader.module.impl.movement.Scaffold;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.ModeValue;
 import cn.leader.module.value.impl.NumberValue;
-import cn.leader.util.network.BlinkUtils;
+import cn.leader.util.network.ActionWindow;
 import cn.leader.util.network.PacketUtil;
 import cn.leader.util.player.AimUtil;
 import cn.leader.util.player.EntityUtil;
@@ -59,6 +57,12 @@ public class KillAura extends Module {
     private final ModeValue autoBlock = new ModeValue("Auto Block", "Off", "Off", "Hypixel", "Post");
     private final NumberValue blockRange = new NumberValue("Block Range", 4.0F, 0.0F, 6.0F, 0.1F,
             () -> !this.autoBlock.is("Off"));
+    /**
+     * 1.8 服务端把"举剑"当成真正使用物品，会按 0.2 倍速度预测位移，客户端也得同步减速，否则会被 Simulation 抓。
+     * 现代服务端（剑不可用）根本不会减速，这时候绝不能自己减速，默认关掉。
+     */
+    private final BoolValue blockSlow = new BoolValue("Block Slow", false,
+            () -> !this.autoBlock.is("Off"));
 
     private LivingEntity target;
     private float[] aimRotation;
@@ -70,11 +74,10 @@ public class KillAura extends Module {
     private boolean firstHit;
     private LivingEntity lastTarget;
 
+    /** 服务端是否还认为我们在"使用物品"（1.8 手里举着剑格挡），只由我们自己发出去的 use / release 维护 */
     private boolean serverUsing;
-    private boolean blinking;
-    private boolean usePending;
-    private boolean releasePending;
-    private int blockPhase;
+    /** Post 模式：这一拍已经把盾放下去了，下一个窗口用来攻击 */
+    private boolean postArmed;
 
     public KillAura() {
         super("KillAura", Category.Combat);
@@ -92,21 +95,18 @@ public class KillAura extends Module {
         this.firstHit = true;
         this.lastTarget = null;
         this.serverUsing = false;
-        this.blinking = false;
-        this.usePending = false;
-        this.releasePending = false;
-        this.blockPhase = 0;
+        this.postArmed = false;
     }
 
     @Override
     public void onDisable() {
-        endBlink();
-        releaseUse();
+        forceRelease();
         this.target = null;
         this.aimRotation = null;
         this.sprintPaused = false;
         this.sprintArmed = false;
         this.sprintTries = 0;
+        this.postArmed = false;
         release();
     }
 
@@ -125,18 +125,6 @@ public class KillAura extends Module {
         this.sprintArmed = this.sprintPaused;
         this.sprintPaused = false;
 
-        endBlink();
-
-        if (this.autoBlock.is("Off")) {
-            this.usePending = false;
-            releaseUse();
-        }
-
-        if (this.autoBlock.is("Hypixel") && this.target != null && this.blockPhase == 0) {
-            BlinkUtils.startBlink();
-            this.blinking = true;
-        }
-
         this.target = selectTarget();
 
         if (this.target != this.lastTarget) {
@@ -146,119 +134,115 @@ public class KillAura extends Module {
 
         if (this.target == null) {
             this.aimRotation = null;
-            endBlink();
+            this.postArmed = false;
             release();
-            releaseUse();
+            stopBlocking();
             return;
         }
 
         this.aimRotation = RotationUtil.getRotations(AimUtil.aimPoint(this.target));
         instance.getRotationManager().request(this, this.aimRotation, requestSpeed(), correction());
 
-        if (this.autoBlock.is("Post")) return;
-
-        tryAttack();
-
-        if (this.autoBlock.is("Hypixel")) {
-            tickAutoBlock();
-        }
-    }
-
-    @EventTarget
-    public void onMotion(MotionEvent event) {
-        if (mc.player == null) return;
-
-        if (this.autoBlock.is("Hypixel")) {
-            if (!event.isPost()) return;
-
-            if (this.releasePending) {
-                this.releasePending = false;
-                releaseUse();
-                return;
-            }
-
-            if (this.usePending) {
-                this.usePending = false;
-
-                if (wantsBlock()) {
-                    startUse();
-                }
-            }
-            return;
-        }
-
-        if (!this.autoBlock.is("Post")) return;
-
-        if (!wantsBlock()) {
-            endBlink();
-            releaseUse();
-            return;
-        }
-
-        if (event.isPre()) {
-            BlinkUtils.startBlink();
-            this.blinking = true;
-            sendRelease();
+        if (this.autoBlock.is("Off")) {
+            this.postArmed = false;
+            stopBlocking();
             tryAttack();
             return;
         }
 
-        startUse();
-        endBlink();
+        tickAutoBlock();
     }
 
+    /**
+     * 所有动作都在 tick 头部（原版 handleKeybinds 的位置，移动包之前）发出，
+     * 并且保证同一个 tick 窗口里只发一个"冲突动作"：
+     * 攻击 / use / release 三者互斥，永远不会落进同一个 Grim 窗口。
+     * <p>
+     * 之前把 use / release 挪到移动包之后（post motion）是错的：
+     * 那会让攻击（下一个 tick 头部，仍属于同一窗口）和 use 撞在一起触发 PacketOrderI，
+     * 而且 release 发生在移动包之前、客户端减速却发生在下一次 aiStep，预测位移和实际位移差一拍，
+     * Simulation 就是这么爆出来的。
+     */
     private void tickAutoBlock() {
         if (!wantsBlock()) {
-            this.blockPhase = 0;
-            this.usePending = false;
-            this.releasePending = false;
-            endBlink();
-            releaseUse();
+            this.postArmed = false;
+            stopBlocking();
             return;
         }
 
-        if (this.blockPhase == 0) {
-            this.blockPhase = 1;
-            this.usePending = true;
+        if (this.autoBlock.is("Post")) {
+            tickPostBlock();
         } else {
-            this.blockPhase = 0;
-            this.releasePending = true;
+            tickHypixelBlock();
         }
     }
 
-    private void endBlink() {
-        if (!this.blinking) return;
+    /**
+     * Hypixel：进范围就一直举着盾（服务端持续处于 using 状态，挨打时有减伤），
+     * 每个窗口空闲时补一次攻击。举盾和攻击不会同窗口，攻击频率也不受放盾影响。
+     */
+    private void tickHypixelBlock() {
+        if (!this.serverUsing) {
+            startBlocking();
+            return;
+        }
 
-        this.blinking = false;
-        BlinkUtils.stopBlink();
+        tryAttack();
     }
 
-    private boolean wantsBlock() {
-        return !this.autoBlock.is("Off")
-                && this.target != null
-                && this.target.isAlive()
-                && mc.player.getMainHandItem().is(ItemTags.SWORDS)
-                && !scaffoldBusy()
-                && mc.player.distanceTo(this.target) <= this.blockRange.getValue().doubleValue();
+    /**
+     * Post：一次攻击拆成 release -> attack -> use 三步，每步独占一个窗口。
+     * 攻击落在"已经放盾"的窗口上（1.8 攻击时才不会被格挡吃掉），打完下一个窗口立刻重新举盾。
+     */
+    private void tickPostBlock() {
+        if (this.postArmed) {
+            this.postArmed = false;
+            tryAttack();
+            return;
+        }
+
+        if (!this.serverUsing) {
+            startBlocking();
+            return;
+        }
+
+        if (!attackReady()) return;
+
+        if (stopBlocking()) {
+            this.postArmed = true;
+        }
     }
 
-    private void startUse() {
+    private void startBlocking() {
         if (mc.player == null || mc.gameMode == null) return;
+        if (!ActionWindow.tryUse()) return;
 
         EntityUtil.interactItem(mc.player, InteractionHand.MAIN_HAND);
         this.serverUsing = true;
     }
 
-    private void sendRelease() {
+    /**
+     * 放盾，返回 true 表示这一拍真的把 RELEASE_USE_ITEM 发出去了。
+     * 窗口被别人占用时返回 false，下一个 tick 再试，绝不硬塞进同一个窗口。
+     */
+    private boolean stopBlocking() {
+        if (!this.serverUsing) return false;
+
+        if (mc.getConnection() == null) {
+            this.serverUsing = false;
+            return true;
+        }
+
+        if (!ActionWindow.tryUse()) return false;
+
         this.serverUsing = false;
-
-        if (mc.getConnection() == null) return;
-
         PacketUtil.sendPacket(new ServerboundPlayerActionPacket(
                 ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN));
+        return true;
     }
 
-    private void releaseUse() {
+    /** 关闭模块 / 死亡时用，不再考虑窗口占用，状态一定要收干净 */
+    private void forceRelease() {
         if (!this.serverUsing) return;
 
         this.serverUsing = false;
@@ -269,9 +253,13 @@ public class KillAura extends Module {
                 ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN));
     }
 
-    private boolean noSlowEnabled() {
-        NoSlow noSlow = getModule(NoSlow.class);
-        return noSlow != null && noSlow.isEnabled();
+    private boolean wantsBlock() {
+        return !this.autoBlock.is("Off")
+                && this.target != null
+                && this.target.isAlive()
+                && mc.player.getMainHandItem().is(ItemTags.SWORDS)
+                && !scaffoldBusy()
+                && mc.player.distanceTo(this.target) <= this.blockRange.getValue().doubleValue();
     }
 
     private boolean scaffoldBusy() {
@@ -295,7 +283,7 @@ public class KillAura extends Module {
 
         if (!this.firstHit && pauseSprint()) return;
 
-        if (wantsBlock() && this.blockPhase == 1) return;
+        if (!ActionWindow.tryUse()) return;
 
         if (mc.gameMode != null) {
             mc.gameMode.attack(mc.player, this.target);
@@ -332,7 +320,9 @@ public class KillAura extends Module {
             event.setSprint(false);
         }
 
-        if (this.serverUsing && !noSlowEnabled()) {
+        // serverUsing 在 tick 头部（移动包之前）就已经翻转，这里同步减速，
+        // 和 Grim 按包序算出来的 tick 完全对齐
+        if (this.blockSlow.getValue() && this.serverUsing) {
             event.setForward(event.getForward() * BLOCK_SLOW);
             event.setStrafe(event.getStrafe() * BLOCK_SLOW);
         }
@@ -406,13 +396,11 @@ public class KillAura extends Module {
     }
 
     private void reset() {
-        if (this.blinking) {
-            endBlink();
-        }
-        releaseUse();
+        forceRelease();
         this.target = null;
         this.aimRotation = null;
-        this.release();
+        this.postArmed = false;
+        release();
     }
 
     private void release() {

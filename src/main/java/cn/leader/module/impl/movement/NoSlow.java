@@ -9,6 +9,7 @@ import cn.leader.module.Category;
 import cn.leader.module.Module;
 import cn.leader.module.value.impl.BoolValue;
 import cn.leader.module.value.impl.ModeValue;
+import cn.leader.util.network.ActionWindow;
 import cn.leader.util.network.BlinkUtils;
 import cn.leader.util.network.PacketUtil;
 import cn.leader.util.player.EntityUtil;
@@ -54,6 +55,9 @@ public class NoSlow extends Module {
         if (wantBlock) {
             if (unblockState) {
                 if (event.isPost()) {
+                    // 移动包已经发出，这是新窗口的起点：占住它，
+                    // 免得 KillAura 下一拍头部补的攻击跟这个 use 落进同一个窗口
+                    ActionWindow.tryUse();
                     EntityUtil.doItemUseWithoutBlock();
                     serverBlocking = true;
                     BlinkUtils.stopBlink();
@@ -62,6 +66,7 @@ public class NoSlow extends Module {
                 }
             } else {
                 if (event.isPre()) {
+                    if (!ActionWindow.tryUse()) return;
                     BlinkUtils.startBlink();
                     noSlowBlinked = true;
                     PacketUtil.sendPacket(
@@ -83,10 +88,12 @@ public class NoSlow extends Module {
                 noSlowBlinked = false;
             }
             if (serverBlocking) {
-                PacketUtil.sendPacket(
-                        new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
-                                BlockPos.ZERO, Direction.DOWN));
-                serverBlocking = false;
+                if (ActionWindow.tryUse()) {
+                    PacketUtil.sendPacket(
+                            new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
+                                    BlockPos.ZERO, Direction.DOWN));
+                    serverBlocking = false;
+                }
             }
             unblockState = false;
             shouldSetState = false;
