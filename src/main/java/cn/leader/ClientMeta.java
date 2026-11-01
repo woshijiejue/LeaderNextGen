@@ -7,6 +7,9 @@ public final class ClientMeta {
 
     public static final String NAME = "LeaderNextGen";
 
+    /** 配置根目录名，沿用旧名，避免已保存的配置（主题色等）丢失。 */
+    public static final String DIRECTORY = "Leader Nextgen";
+
     public static final String VERSION = resolveVersion();
 
     public static final String MINECRAFT_VERSION = SharedConstants.getCurrentVersion().name();

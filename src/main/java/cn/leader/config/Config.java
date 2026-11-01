@@ -1,6 +1,7 @@
 package cn.leader.config;
 
 import cn.leader.Client;
+import cn.leader.ClientMeta;
 import cn.leader.util.IMinecraft;
 
 import java.io.File;
@@ -10,7 +11,7 @@ public abstract class Config implements IMinecraft {
     private final File file;
 
     public Config(final String name) {
-        final File directory = new File(Client.name, "configs");
+        final File directory = new File(ClientMeta.DIRECTORY, "configs");
 
         if (!directory.exists() && !directory.mkdirs()) {
             Client.logger.debug("Failed to create configs directory: {}", directory.getPath());
