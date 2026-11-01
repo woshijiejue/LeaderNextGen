@@ -134,13 +134,13 @@ public final class ChestStealer extends Module {
         }
 
         if (stack.is(ItemTags.SWORDS)) {
-            return InventoryUtils.getSwordDamage(stack) > InventoryUtils.getBestSwordDamage();
+            return InventoryUtils.getWeaponScore(stack) > InventoryUtils.getBestWeaponScore();
         }
         if (stack.is(ItemTags.PICKAXES)) {
             return InventoryUtils.getToolScore(stack) > bestToolScore(ItemTags.PICKAXES);
         }
         if (stack.is(ItemTags.AXES)) {
-            return InventoryUtils.getToolScore(stack) > bestToolScore(ItemTags.AXES);
+            return InventoryUtils.getWeaponScore(stack) > InventoryUtils.getBestWeaponScore();
         }
         if (stack.is(ItemTags.SHOVELS)) {
             return InventoryUtils.getToolScore(stack) > bestToolScore(ItemTags.SHOVELS);
@@ -198,12 +198,9 @@ public final class ChestStealer extends Module {
                         && InventoryUtils.getProtection(other) > InventoryUtils.getProtection(stack)) {
                     return false;
                 }
-            } else if (stack.is(ItemTags.SWORDS) && other.is(ItemTags.SWORDS)) {
-                if (InventoryUtils.getSwordDamage(other) > InventoryUtils.getSwordDamage(stack)) {
-                    return false;
-                }
-            } else if (stack.is(ItemTags.AXES) && other.is(ItemTags.AXES)) {
-                if (InventoryUtils.getToolScore(other) > InventoryUtils.getToolScore(stack)) {
+            } else if ((stack.is(ItemTags.SWORDS) || stack.is(ItemTags.AXES))
+                    && (other.is(ItemTags.SWORDS) || other.is(ItemTags.AXES))) {
+                if (InventoryUtils.getWeaponScore(other) > InventoryUtils.getWeaponScore(stack)) {
                     return false;
                 }
             } else if (stack.is(ItemTags.PICKAXES) && other.is(ItemTags.PICKAXES)) {

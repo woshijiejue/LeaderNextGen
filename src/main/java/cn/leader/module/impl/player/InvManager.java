@@ -415,7 +415,7 @@ public final class InvManager extends Module {
             ItemStack best = bestSword();
 
             ItemStack specialAxe = bestSpecialAxe();
-            if (specialAxe != null && InventoryUtils.getAttackDamage(specialAxe) > swordScore(best)) {
+            if (specialAxe != null && score(specialAxe) > swordScore(best)) {
                 best = specialAxe;
             }
 
@@ -661,19 +661,14 @@ public final class InvManager extends Module {
     private static float swordScore(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !stack.is(ItemTags.SWORDS)) return 0.0F;
 
-        float score = Math.max(InventoryUtils.getSwordDamage(stack), InventoryUtils.getAttackDamage(stack));
-        if (score <= 0.0F) {
-            score = stack.getMaxDamage() * 0.01F;
-        }
-
-        return score + ItemUtils.getEnchantLevel(stack, Enchantments.SHARPNESS) * 0.5F;
+        return InventoryUtils.getWeaponScore(stack);
     }
 
     private static float score(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return 0.0F;
 
-        return stack.is(ItemTags.SWORDS)
-                ? swordScore(stack)
+        return stack.is(ItemTags.SWORDS) || stack.is(ItemTags.AXES)
+                ? InventoryUtils.getWeaponScore(stack)
                 : InventoryUtils.getAttackDamage(stack);
     }
 
@@ -686,7 +681,7 @@ public final class InvManager extends Module {
             if (!ItemUtils.isSharpnessAxe(stack) && !InventoryUtils.isGodAxe(stack)) continue;
             if (!ItemUtils.isValidItem(stack)) continue;
 
-            float damage = InventoryUtils.getAttackDamage(stack);
+            float damage = InventoryUtils.getWeaponScore(stack);
             if (damage > bestDamage) {
                 bestDamage = damage;
                 best = stack;
@@ -704,7 +699,7 @@ public final class InvManager extends Module {
             if (stack.isEmpty() || stack == exclude || !stack.is(ItemTags.AXES)) continue;
             if (!ItemUtils.isValidItem(stack)) continue;
 
-            float score = InventoryUtils.getAxeScore(stack);
+            float score = InventoryUtils.getWeaponScore(stack);
             if (score > bestScore) {
                 bestScore = score;
                 best = stack;

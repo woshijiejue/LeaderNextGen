@@ -316,6 +316,51 @@ public final class InventoryUtils {
         return damage;
     }
 
+    public static float getWeaponDamage(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 0F;
+        }
+
+        float damage = Math.max(getSwordDamage(stack), getAttackDamage(stack));
+
+        if (damage <= 0F) {
+            damage = fallbackDamage(stack);
+        }
+
+        return damage;
+    }
+
+    private static float fallbackDamage(ItemStack stack) {
+        String id = net.minecraft.core.registries.BuiltInRegistries.ITEM
+                .getKey(stack.getItem()).getPath();
+
+        if (id.contains("netherite")) return 8F;
+        if (id.contains("diamond")) return 7F;
+        if (id.contains("iron")) return 6F;
+        if (id.contains("stone")) return 5F;
+        if (id.contains("golden") || id.contains("wooden")) return 4F;
+
+        return 0F;
+    }
+
+    public static float getWeaponScore(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return 0F;
+        if (!stack.is(ItemTags.SWORDS) && !stack.is(ItemTags.AXES)) return 0F;
+
+        float score = getWeaponDamage(stack);
+        score += getEnchantLevel(stack, Enchantments.FIRE_ASPECT) * 3.0F;
+
+        return score + stack.getMaxDamage() * 0.0005F;
+    }
+
+    public static float getBestWeaponScore() {
+        return getAllItems().stream()
+                .filter(item -> !item.isEmpty() && ItemUtils.isValidItem(item))
+                .map(InventoryUtils::getWeaponScore)
+                .max(Float::compareTo)
+                .orElse(0F);
+    }
+
     public static float getAxeScore(ItemStack stack) {
         float valence = getToolScore(stack);
 
