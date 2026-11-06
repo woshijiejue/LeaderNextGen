@@ -321,13 +321,42 @@ public final class InventoryUtils {
             return 0F;
         }
 
-        float damage = Math.max(getSwordDamage(stack), getAttackDamage(stack));
-
+        float damage = attributeDamage(stack);
         if (damage <= 0F) {
             damage = fallbackDamage(stack);
         }
 
+        int sharpness = getEnchantLevel(stack, Enchantments.SHARPNESS);
+        if (sharpness > 0) {
+            damage += 0.5F * sharpness + 0.5F;
+        }
+
         return damage;
+    }
+
+    private static float attributeDamage(ItemStack stack) {
+        var comp = stack.getComponents().get(DataComponents.ATTRIBUTE_MODIFIERS);
+        if (comp == null) return 0F;
+
+        double add = 0;
+        double addBase = 0;
+        double addTotal = 0;
+
+        for (var entry : comp.modifiers()) {
+            if (entry.slot() != EquipmentSlotGroup.MAINHAND || !entry.attribute().is(Attributes.ATTACK_DAMAGE)) {
+                continue;
+            }
+
+            var mod = entry.modifier();
+
+            switch (mod.operation()) {
+                case ADD_VALUE -> add += mod.amount();
+                case ADD_MULTIPLIED_BASE -> addBase += mod.amount();
+                case ADD_MULTIPLIED_TOTAL -> addTotal += mod.amount();
+            }
+        }
+
+        return (float) ((add * (1 + addBase)) * (1 + addTotal));
     }
 
     private static float fallbackDamage(ItemStack stack) {
