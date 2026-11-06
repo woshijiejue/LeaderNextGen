@@ -379,7 +379,7 @@ public final class InventoryUtils {
         if (!stack.is(ItemTags.SWORDS) && !stack.is(ItemTags.AXES)) return 0F;
 
         float score = getWeaponDamage(stack);
-        score += getEnchantLevel(stack, Enchantments.FIRE_ASPECT) * 3.0F;
+        score += getEnchantLevel(stack, Enchantments.FIRE_ASPECT) * 0.5F;
         score += stack.getMaxDamage() * 0.0005F;
 
         // 属性/材质都读不出来时给个保底，避免整把武器被判成 0 分而永远不捡
